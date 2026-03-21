@@ -562,6 +562,10 @@
       <HintPath>Library\PackageCache\com.unity.nuget.newtonsoft-json@74deb55db2a0\Runtime\Newtonsoft.Json.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Markdig">
+      <HintPath>Assets\QFramework\Toolkits\_CoreKit\PackageKit\Markdown\Markdig.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="netstandard">
       <HintPath>D:\Program Files (x86)\6000.0.71f1\Editor\Data\NetStandard\ref\2.1.0\netstandard.dll</HintPath>
       <Private>False</Private>
@@ -1260,6 +1264,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="QFramework.CoreKit.csproj" />
+    <ProjectReference Include="SupportOldQF.csproj" />
+    <ProjectReference Include="ResKit.Editor.csproj" />
+    <ProjectReference Include="AudioKit.csproj" />
+    <ProjectReference Include="QFramework.csproj" />
+    <ProjectReference Include="ResKit.csproj" />
+    <ProjectReference Include="UIKit.Editor.csproj" />
+    <ProjectReference Include="UIKit.csproj" />
   </ItemGroup>
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
   <ItemGroup>
