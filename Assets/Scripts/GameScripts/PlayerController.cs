@@ -13,6 +13,9 @@ public class PlayerController : MonoBehaviour
     public float mouseSensitivity = 2f;
     public float maxLookAngle = 85f;
 
+    [Header("Shooting")]
+    public float bulletSpeed = 20f;
+
     private CharacterController controller;
     private Transform cameraTransform;
     private Vector3 velocity;
@@ -21,6 +24,7 @@ public class PlayerController : MonoBehaviour
     private InputAction moveAction;
     private InputAction lookAction;
     private InputAction jumpAction;
+    private InputAction fireAction;
 
     void Start()
     {
@@ -36,6 +40,7 @@ public class PlayerController : MonoBehaviour
             moveAction = playerInput.actions["Move"];
             lookAction = playerInput.actions["Look"];
             jumpAction = playerInput.actions["Jump"];
+            fireAction = playerInput.actions["Attack"];
         }
         else
         {
@@ -43,6 +48,7 @@ public class PlayerController : MonoBehaviour
             moveAction = InputSystem.actions.FindAction("Move");
             lookAction = InputSystem.actions.FindAction("Look");
             jumpAction = InputSystem.actions.FindAction("Jump");
+            fireAction = InputSystem.actions.FindAction("Attack");
         }
     }
 
@@ -50,6 +56,7 @@ public class PlayerController : MonoBehaviour
     {
         HandleMouseLook();
         HandleMovement();
+        HandleShooting();
     }
 
     void HandleMouseLook()
@@ -81,5 +88,21 @@ public class PlayerController : MonoBehaviour
 
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
+    }
+
+    void HandleShooting()
+    {
+        if (fireAction.WasPressedThisFrame())
+        {
+            GameObject bullet = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            bullet.transform.position = cameraTransform.position + cameraTransform.forward;
+            bullet.transform.localScale = Vector3.one * 0.2f;
+
+            Rigidbody rb = bullet.AddComponent<Rigidbody>();
+            rb.useGravity = false;
+            rb.linearVelocity = cameraTransform.forward * bulletSpeed;
+
+            bullet.AddComponent<BulletController>();
+        }
     }
 }
