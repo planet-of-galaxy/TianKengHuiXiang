@@ -20,6 +20,7 @@ public class PlayerController : MonoBehaviour
     private Transform cameraTransform;
     private Vector3 velocity;
     private float xRotation;
+    private float yRotation;
 
     private InputAction moveAction;
     private InputAction lookAction;
@@ -66,8 +67,10 @@ public class PlayerController : MonoBehaviour
         xRotation -= lookInput.y;
         xRotation = Mathf.Clamp(xRotation, -maxLookAngle, maxLookAngle);
 
+        yRotation += lookInput.x;
+
         cameraTransform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
-        transform.Rotate(Vector3.up * lookInput.x);
+        transform.rotation = Quaternion.Euler(0f, yRotation, 0f);
     }
 
     void HandleMovement()
