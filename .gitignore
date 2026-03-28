@@ -4,3 +4,11 @@ Temp.meta
 .claude/
 Library/
 Logs/
+*.csproj
+*.sln
+*.unityproj
+*.booproj
+.vsconfig
+.vs/
+obj/
+UserSettings/
