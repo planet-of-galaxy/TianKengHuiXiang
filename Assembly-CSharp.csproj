@@ -56,7 +56,6 @@
     <Compile Include="Assets\Scripts\Json\LitJson\Lexer.cs" />
     <Compile Include="Assets\ArtRes\Top-Down Graveyard\_Origin\Standard Assets\Effects\ImageEffects\Scripts\PostEffectsBase.cs" />
     <Compile Include="Assets\ArtRes\Tower Defense\Standard Assets\Water (Pro Only)\Sources\Scripts\Water.cs" />
-    <Compile Include="Assets\Scripts\Model\GameInfo.cs" />
     <Compile Include="Assets\ArtRes\PureNature\Scripts\FreeCamera.cs" />
     <Compile Include="Assets\ArtRes\Top-Down Graveyard\_Origin\Standard Assets\Effects\ImageEffects\Scripts\DepthOfField.cs" />
     <Compile Include="Assets\ArtRes\Tower Defense\Standard Assets\Water (Pro Only)\Water4\Sources\Scripts\WaterTile.cs" />
@@ -68,19 +67,16 @@
     <Compile Include="Assets\Scripts\Json\LitJson\JsonReader.cs" />
     <Compile Include="Assets\ArtRes\Top-Down Graveyard\_Origin\Standard Assets\Effects\ImageEffects\Scripts\CreaseShading.cs" />
     <Compile Include="Assets\ArtRes\Top-Down Graveyard\_Origin\Standard Assets\Effects\ImageEffects\Scripts\BloomOptimized.cs" />
-    <Compile Include="Assets\Scripts\GameScripts\BulletController.cs" />
     <Compile Include="Assets\ArtRes\Top-Down Graveyard\_Origin\Standard Assets\Effects\ImageEffects\Scripts\Antialiasing.cs" />
     <Compile Include="Assets\ArtRes\Top-Down Graveyard\_Origin\Standard Assets\Effects\ImageEffects\Scripts\SepiaTone.cs" />
     <Compile Include="Assets\ArtRes\GabrielAguiarProductions\Unique_Projectiles_Volume_1\Scripts\UniqueProjectiles\SpawnProjectilesScript.cs" />
     <Compile Include="Assets\ArtRes\Top-Down Graveyard\_Origin\Standard Assets\Effects\ImageEffects\Scripts\NoiseAndScratches.cs" />
     <Compile Include="Assets\ArtRes\Tower Defense\Standard Assets\Image Effects (Pro Only)\SSAOEffect.cs" />
     <Compile Include="Assets\ArtRes\Tower Defense\Standard Assets\Water (Pro Only)\Water4\Sources\Scripts\PlanarReflection.cs" />
-    <Compile Include="Assets\Scripts\System\AchievementSystem.cs" />
     <Compile Include="Assets\ArtRes\Tower Defense\Standard Assets\Water (Pro Only)\Water4\Sources\Scripts\WaterBase.cs" />
     <Compile Include="Assets\ArtRes\Top-Down Graveyard\_Origin\Standard Assets\Effects\ImageEffects\Scripts\ImageEffects.cs" />
     <Compile Include="Assets\ArtRes\GabrielAguiarProductions\Unique_Projectiles_Volume_1\Scripts\CameraShakeSimpleScript.cs" />
     <Compile Include="Assets\ArtRes\Top-Down Graveyard\_Origin\Standard Assets\Effects\ImageEffects\Scripts\ScreenSpaceAmbientOcclusion.cs" />
-    <Compile Include="Assets\Scripts\GameScripts\PlayerController.cs" />
     <Compile Include="Assets\ArtRes\Tower Defense\Standard Assets\Image Effects (Pro Only)\ColorCorrectionEffect.cs" />
     <Compile Include="Assets\ArtRes\MagicArsenal\Effects\Scripts\MagicLightFlicker.cs" />
     <Compile Include="Assets\ArtRes\Tower Defense\Standard Assets\Image Effects (Pro Only)\SepiaToneEffect.cs" />
@@ -99,11 +95,9 @@
     <Compile Include="Assets\ArtRes\MagicArsenal\Demo\Scripts\MagicFireProjectile.cs" />
     <Compile Include="Assets\Scripts\Json\LitJson\JsonException.cs" />
     <Compile Include="Assets\ArtRes\GabrielAguiarProductions\Unique_Projectiles_Volume_1\Scripts\UniqueProjectiles\RotateToMouseScript.cs" />
-    <Compile Include="Assets\Scripts\GameScripts\MonsterController.cs" />
     <Compile Include="Assets\ArtRes\PureNature\Scripts\EnvironmentManager.cs" />
     <Compile Include="Assets\ArtRes\Top-Down Graveyard\_Origin\Standard Assets\Effects\ImageEffects\Scripts\BlurOptimized.cs" />
     <Compile Include="Assets\ArtRes\MagicArsenal\Effects\Scripts\MagicLightFade.cs" />
-    <Compile Include="Assets\Scripts\Command\KilledCommand.cs" />
     <Compile Include="Assets\ArtRes\GabrielAguiarProductions\Unique_Projectiles_Volume_1\Scripts\ParticleSystemController\SaveParticleSystemScript.cs" />
     <Compile Include="Assets\ArtRes\GabrielAguiarProductions\Unique_Projectiles_Volume_1\Scripts\UniqueProjectiles\ProjectileMoveScript.cs" />
     <Compile Include="Assets\Scripts\Json\LitJson\JsonWriter.cs" />
@@ -111,7 +105,6 @@
     <Compile Include="Assets\ArtRes\GabrielAguiarProductions\Unique_Projectiles_Volume_1\Scripts\ParticleSystemController\ParticleSystemControllerEditor.cs" />
     <Compile Include="Assets\ArtRes\Top-Down Graveyard\_Origin\Standard Assets\Effects\ImageEffects\Scripts\VignetteAndChromaticAberration.cs" />
     <Compile Include="Assets\ArtRes\GabrielAguiarProductions\Unique_Projectiles_Volume_1\Scripts\ParticleSystemController\Serializables.cs" />
-    <Compile Include="Assets\Scripts\Architecture\GameApp.cs" />
     <Compile Include="Assets\Scripts\Json\JsonMgr.cs" />
     <Compile Include="Assets\ArtRes\PureNature\Scripts\WaterReflection.cs" />
     <Compile Include="Assets\ArtRes\MagicArsenal\Effects\Scripts\MagicRotation.cs" />
