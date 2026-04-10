@@ -6,11 +6,13 @@ public class TianArchitecture : Architecture<TianArchitecture>
     protected override void Init()
     {
         Debug.Log("Tian Keng architecture initializing.");
+
+        // 注册Utility
+
         // 注册Model
 
         // 注册System
-
-        // 注册Storage
+        this.RegisterSystem<IGameProcedureSystem>(new GameProcedureSystem());
 
         Debug.Log("Tian Keng architecture initialized.");
     }
