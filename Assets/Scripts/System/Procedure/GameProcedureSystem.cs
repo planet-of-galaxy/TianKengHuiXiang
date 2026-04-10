@@ -34,9 +34,6 @@ public class GameProcedureSystem : AbstractSystem, IGameProcedureSystem
         UnityEngine.Object.DontDestroyOnLoad(go);
         _updater = go.AddComponent<GameProcedureUpdater>();
         _updater.Init(this);
-
-        // 启动初始状态
-        StartProcedure<StartState>();
     }
 
     protected override void OnDeinit()
