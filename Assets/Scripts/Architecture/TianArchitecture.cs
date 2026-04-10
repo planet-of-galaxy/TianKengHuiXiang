@@ -5,12 +5,13 @@ public class TianArchitecture : Architecture<TianArchitecture>
 {
     protected override void Init()
     {
-        // 注册 Model、System、Utility
-    }
+        Debug.Log("Tian Keng architecture initializing.");
+        // 注册Model
 
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
-    public static void AutoInit()
-    {
-        InitArchitecture();
+        // 注册System
+
+        // 注册Storage
+
+        Debug.Log("Tian Keng architecture initialized.");
     }
 }
