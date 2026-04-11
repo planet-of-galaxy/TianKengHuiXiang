@@ -8,6 +8,7 @@ public class TianArchitecture : Architecture<TianArchitecture>
         Debug.Log("Tian Keng architecture initializing.");
 
         // 注册Utility
+        this.RegisterUtility<IJsonStorage>(new JsonStorage());
 
         // 注册Model
 
