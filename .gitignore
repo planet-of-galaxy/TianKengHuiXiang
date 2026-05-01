@@ -13,3 +13,6 @@ Logs/
 obj/
 UserSettings/
 .slnx
+Assets/Test/
+Assets/Test.meta
+.sln
