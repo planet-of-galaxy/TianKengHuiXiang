@@ -7,7 +7,7 @@ public class PrepareState : GameProcedureStateBase
     public override void OnEnter()
     {
         Debug.Log("[GameProcedure] 进入 PrepareState");
-        SceneManager.LoadScene("PrepareScence");
+        SceneManager.LoadScene("PrepareScene");
     }
 
     public override void OnExit()
