@@ -1,6 +1,7 @@
+using QFramework;
 using UnityEngine;
 
-public class StartController : MonoBehaviour
+public class StartController : MonoBehaviour, IController
 {
     [SerializeField] private StartPanel _panel;
 
@@ -55,4 +56,9 @@ public class StartController : MonoBehaviour
         Application.Quit();
         #endif
     }
+
+	public IArchitecture GetArchitecture()
+	{
+		return TianArchitecture.Interface;
+	}
 }

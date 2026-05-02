@@ -3,7 +3,7 @@ using UnityEngine.UI;
 using UnityEngine;
 using UnityEngine.Events;
 
-public class StartPanel : UIPanel, IController
+public class StartPanel : UIPanel
 {
     [SerializeField] private Button _startBtn;
     [SerializeField] private Button _settingBtn;
