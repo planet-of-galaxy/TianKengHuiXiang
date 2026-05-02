@@ -14,6 +14,7 @@ public class TianArchitecture : Architecture<TianArchitecture>
 
         // 注册System
         this.RegisterSystem<IGameProcedureSystem>(new GameProcedureSystem());
+        this.RegisterSystem<ICameraSystem>(new CameraSystem());
 
         Debug.Log("Tian Keng architecture initialized.");
     }
