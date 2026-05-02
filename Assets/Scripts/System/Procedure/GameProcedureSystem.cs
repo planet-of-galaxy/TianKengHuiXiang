@@ -28,6 +28,7 @@ public class GameProcedureSystem : AbstractSystem, IGameProcedureSystem
 
         // 注册流程状态
         AddState(new StartState());
+        AddState(new PrepareState());
 
         // 创建 MonoBehaviour 驱动器
         var go = new GameObject("[GameProcedureUpdater]");

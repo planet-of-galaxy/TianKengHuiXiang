@@ -31,7 +31,7 @@ public class StartController : MonoBehaviour, IController
     private void OnStartBtnClicked()
     {
         Debug.Log("开始游戏");
-        // TODO: 实现开始游戏逻辑
+        this.SendCommand<ChangeToPrepareCmd>();
     }
 
     private void OnSettingBtnClicked()
