@@ -1,9 +1,10 @@
 using QFramework;
 using UnityEngine;
 
+[RequireComponent(typeof(StartPanel))]
 public class StartController : MonoBehaviour, IController
 {
-    [SerializeField] private StartPanel _panel;
+    private StartPanel _panel;
 
     void Awake()
     {
