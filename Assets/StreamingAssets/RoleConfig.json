@@ -1,0 +1,10 @@
+{
+  "roles": [
+    {
+      "roleId": 0,
+      "name": "DefaultRole",
+      "moveSpeed": 5.0,
+      "health": 100.0
+    }
+  ]
+}
