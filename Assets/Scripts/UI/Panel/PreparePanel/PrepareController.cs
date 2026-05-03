@@ -6,6 +6,9 @@ public class PrepareController : MonoBehaviour, IController
 {
     private PreparePanel _panel;
 
+    // 虚拟相机切换速度
+    private float _transCamSpeed = 2f;
+
     void Awake()
     {
         _panel = GetComponent<PreparePanel>();
@@ -59,33 +62,24 @@ public class PrepareController : MonoBehaviour, IController
 
     private void OnLetSGoBtnHoverEnter()
     {
-        this.SendCommand(new TransitionCameraCmd("LetSGo"));
+        this.SendCommand(new TransitionCameraCmd("LetSGo", _transCamSpeed));
     }
 
-    private void OnLetSGoBtnHoverExit()
-    {
-        this.SendCommand(new TransitionCameraCmd("LetSGo"));
-    }
+    private void OnLetSGoBtnHoverExit() { }
 
     private void OnStudyBtnHoverEnter()
     {
-        this.SendCommand(new TransitionCameraCmd("Study"));
+        this.SendCommand(new TransitionCameraCmd("Study", _transCamSpeed));
     }
 
-    private void OnStudyBtnHoverExit()
-    {
-        this.SendCommand(new TransitionCameraCmd("LetSGo"));
-    }
+    private void OnStudyBtnHoverExit() { }
 
     private void OnWorkBtnHoverEnter()
     {
-        this.SendCommand(new TransitionCameraCmd("Work"));
+        this.SendCommand(new TransitionCameraCmd("Work", _transCamSpeed));
     }
 
-    private void OnWorkBtnHoverExit()
-    {
-        this.SendCommand(new TransitionCameraCmd("LetSGo"));
-    }
+    private void OnWorkBtnHoverExit() { }
 
     public IArchitecture GetArchitecture()
     {
