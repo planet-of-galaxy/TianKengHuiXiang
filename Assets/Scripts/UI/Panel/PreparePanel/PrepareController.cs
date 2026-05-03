@@ -44,8 +44,7 @@ public class PrepareController : MonoBehaviour, IController
 
     private void OnLetSGoBtnClicked()
     {
-        Debug.Log("出发！");
-        // TODO: 实现出发逻辑
+        this.SendCommand<ChangeProcedureStateCmd<MineCaveState>>();
     }
 
     private void OnStudyBtnClicked()
