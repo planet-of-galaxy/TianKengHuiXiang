@@ -11,8 +11,9 @@ public class PrepareState : GameProcedureStateBase
         Debug.Log("[GameProcedure] 进入 PrepareState");
         SceneManager.LoadScene("PrepareScene");
 
-        var prefab = Resources.Load<GameObject>("Prefabe/CinemaChineCamera/PrepareSceneCinemaChineCamera");
+        var prefab = this.GetUtility<IResourceStorage>().Load<GameObject>("Prefabe/CinemaChineCamera/PrepareCinemaChineCamera");
         _cameraRoot = Object.Instantiate(prefab);
+        Object.DontDestroyOnLoad(_cameraRoot);
 
         this.GetSystem<ICinemaChineCameraSystem>().SetCinemaChineCamera("LetSGo");
 

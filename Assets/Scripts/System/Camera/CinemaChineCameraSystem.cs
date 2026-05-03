@@ -30,7 +30,17 @@ public class CinemaChineCameraSystem : AbstractSystem, ICinemaChineCameraSystem
 
     public void RegisterCinemaChineCamera(string key, CinemachineCamera camera)
     {
-        if (string.IsNullOrEmpty(key) || camera == null) return;
+        if (string.IsNullOrEmpty(key))
+        {
+            Debug.LogError($"{nameof(CinemaChineCameraSystem)}: 注册相机失败，key为空");
+            return;
+        }
+
+        if (camera == null)
+        {
+            Debug.LogError($"{nameof(CinemaChineCameraSystem)}: 注册相机失败，camera为null (key: {key})");
+            return;
+        }
 
         _cameras[key] = camera;
         camera.Priority = new PrioritySettings { Enabled = true };
@@ -39,7 +49,17 @@ public class CinemaChineCameraSystem : AbstractSystem, ICinemaChineCameraSystem
 
     public void UnregisterCinemaChineCamera(string key)
     {
-        if (string.IsNullOrEmpty(key)) return;
+        if (string.IsNullOrEmpty(key))
+        {
+            Debug.LogError($"{nameof(CinemaChineCameraSystem)}: 注销相机失败，key为空");
+            return;
+        }
+
+        if (!_cameras.ContainsKey(key))
+        {
+            Debug.LogWarning($"{nameof(CinemaChineCameraSystem)}: 注销相机失败，不存在key: {key}");
+        }
+
         _cameras.Remove(key);
     }
 
@@ -105,14 +125,19 @@ public class CinemaChineCameraSystem : AbstractSystem, ICinemaChineCameraSystem
         camera = null;
         if (string.IsNullOrEmpty(key))
         {
-            Debug.LogError($"{nameof(CinemaChineCameraSystem)} 不存在key: {key}");
+            Debug.LogError($"{nameof(CinemaChineCameraSystem)}: key为空");
             return false;
         }
 
-        if (!_cameras.TryGetValue(key, out camera)) return false;
+        if (!_cameras.TryGetValue(key, out camera))
+        {
+            Debug.LogError($"{nameof(CinemaChineCameraSystem)}: 不存在key: {key}");
+            return false;
+        }
 
         if (camera == null)
         {
+            Debug.LogError($"{nameof(CinemaChineCameraSystem)}: 相机已被销毁 (key: {key})");
             _cameras.Remove(key);
             return false;
         }
@@ -125,8 +150,16 @@ public class CinemaChineCameraSystem : AbstractSystem, ICinemaChineCameraSystem
         if (_brain != null) return;
 
         var mainCam = Camera.main;
-        if (mainCam == null) return;
+        if (mainCam == null)
+        {
+            Debug.LogError($"{nameof(CinemaChineCameraSystem)}: 未找到主相机 (Camera.main)");
+            return;
+        }
 
         _brain = mainCam.GetComponent<CinemachineBrain>();
+        if (_brain == null)
+        {
+            _brain = mainCam.gameObject.AddComponent<CinemachineBrain>();
+        }
     }
 }

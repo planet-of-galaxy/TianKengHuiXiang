@@ -9,9 +9,22 @@ public class CinemaChineCameraRegister : MonoBehaviour, ICanGetSystem
 
     private void Awake()
     {
-        if (string.IsNullOrEmpty(key)) return;
+        Debug.Log($"[CinemaChineCameraRegister] Awake called for key: '{key}'");
+
+        if (string.IsNullOrEmpty(key))
+        {
+            Debug.LogWarning($"[CinemaChineCameraRegister] Key is empty on {gameObject.name}");
+            return;
+        }
 
         var camera = GetComponent<CinemachineCamera>();
+        if (camera == null)
+        {
+            Debug.LogError($"[CinemaChineCameraRegister] No CinemachineCamera found on {gameObject.name}");
+            return;
+        }
+
+        Debug.Log($"[CinemaChineCameraRegister] Registering camera with key: {key}");
         this.GetSystem<ICinemaChineCameraSystem>().RegisterCinemaChineCamera(key, camera);
     }
 
@@ -19,6 +32,7 @@ public class CinemaChineCameraRegister : MonoBehaviour, ICanGetSystem
     {
         if (string.IsNullOrEmpty(key)) return;
 
+        Debug.Log($"[CinemaChineCameraRegister] UnRegistering camera with key: {key}");
         this.GetSystem<ICinemaChineCameraSystem>()?.UnregisterCinemaChineCamera(key);
     }
 

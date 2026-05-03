@@ -9,6 +9,7 @@ public class TianArchitecture : Architecture<TianArchitecture>
 
         // 注册Utility
         this.RegisterUtility<IJsonStorage>(new JsonStorage());
+        this.RegisterUtility<IResourceStorage>(new ResourceStorage());
 
         // 注册Model
 

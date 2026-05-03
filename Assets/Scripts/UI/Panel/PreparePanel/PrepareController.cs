@@ -13,6 +13,13 @@ public class PrepareController : MonoBehaviour, IController
         _panel.onLetSGoBtnClicked += OnLetSGoBtnClicked;
         _panel.onStudyBtnClicked += OnStudyBtnClicked;
         _panel.onWorkBtnClicked += OnWorkBtnClicked;
+
+        _panel.onLetSGoBtnHoverEnter += OnLetSGoBtnHoverEnter;
+        _panel.onLetSGoBtnHoverExit += OnLetSGoBtnHoverExit;
+        _panel.onStudyBtnHoverEnter += OnStudyBtnHoverEnter;
+        _panel.onStudyBtnHoverExit += OnStudyBtnHoverExit;
+        _panel.onWorkBtnHoverEnter += OnWorkBtnHoverEnter;
+        _panel.onWorkBtnHoverExit += OnWorkBtnHoverExit;
     }
 
     void OnDestroy()
@@ -22,6 +29,13 @@ public class PrepareController : MonoBehaviour, IController
             _panel.onLetSGoBtnClicked -= OnLetSGoBtnClicked;
             _panel.onStudyBtnClicked -= OnStudyBtnClicked;
             _panel.onWorkBtnClicked -= OnWorkBtnClicked;
+
+            _panel.onLetSGoBtnHoverEnter -= OnLetSGoBtnHoverEnter;
+            _panel.onLetSGoBtnHoverExit -= OnLetSGoBtnHoverExit;
+            _panel.onStudyBtnHoverEnter -= OnStudyBtnHoverEnter;
+            _panel.onStudyBtnHoverExit -= OnStudyBtnHoverExit;
+            _panel.onWorkBtnHoverEnter -= OnWorkBtnHoverEnter;
+            _panel.onWorkBtnHoverExit -= OnWorkBtnHoverExit;
         }
     }
 
@@ -41,6 +55,36 @@ public class PrepareController : MonoBehaviour, IController
     {
         Debug.Log("工作");
         // TODO: 实现工作逻辑
+    }
+
+    private void OnLetSGoBtnHoverEnter()
+    {
+        this.SendCommand(new TransitionCameraCmd("LetSGo"));
+    }
+
+    private void OnLetSGoBtnHoverExit()
+    {
+        this.SendCommand(new TransitionCameraCmd("LetSGo"));
+    }
+
+    private void OnStudyBtnHoverEnter()
+    {
+        this.SendCommand(new TransitionCameraCmd("Study"));
+    }
+
+    private void OnStudyBtnHoverExit()
+    {
+        this.SendCommand(new TransitionCameraCmd("LetSGo"));
+    }
+
+    private void OnWorkBtnHoverEnter()
+    {
+        this.SendCommand(new TransitionCameraCmd("Work"));
+    }
+
+    private void OnWorkBtnHoverExit()
+    {
+        this.SendCommand(new TransitionCameraCmd("LetSGo"));
     }
 
     public IArchitecture GetArchitecture()
