@@ -2,9 +2,15 @@ using System;
 using QFramework;
 using UnityEngine;
 
-public abstract class GameProcedureStateBase : StateBase<GameProcedureSystem>
+public abstract class GameProcedureStateBase : StateBase<GameProcedureSystem>, IController
 {
     protected IArchitecture Architecture => Owner.GetArchitecture();
+
+	public IArchitecture GetArchitecture()
+	{
+		return Architecture;
+	}
+
 }
 
 public interface IGameProcedureSystem : ISystem
