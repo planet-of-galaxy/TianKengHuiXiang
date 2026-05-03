@@ -4,11 +4,9 @@ using UnityEngine;
 
 public abstract class GameProcedureStateBase : StateBase<GameProcedureSystem>, IController
 {
-    protected IArchitecture Architecture => Owner.GetArchitecture();
-
 	public IArchitecture GetArchitecture()
 	{
-		return Architecture;
+		return ((IBelongToArchitecture)Owner).GetArchitecture();
 	}
 
 }
@@ -90,10 +88,6 @@ public class GameProcedureSystem : AbstractSystem, IGameProcedureSystem
         _fsm.FixedUpdate(fixedDeltaTime);
     }
 
-    public IArchitecture GetArchitecture()
-    {
-        return ((IBelongToArchitecture)this).GetArchitecture();
-    }
 }
 
 public class GameProcedureUpdater : MonoBehaviour
