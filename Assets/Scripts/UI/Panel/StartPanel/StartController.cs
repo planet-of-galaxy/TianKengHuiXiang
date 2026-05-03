@@ -32,7 +32,7 @@ public class StartController : MonoBehaviour, IController
     private void OnStartBtnClicked()
     {
         Debug.Log("开始游戏");
-        this.SendCommand<ChangeToPrepareCmd>();
+        this.SendCommand<ChangeProcedureStateCmd<PrepareState>>();
     }
 
     private void OnSettingBtnClicked()
