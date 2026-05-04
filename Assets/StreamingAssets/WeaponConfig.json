@@ -2,6 +2,7 @@
   "weapons": [
     {
       "weaponId": 0,
+      "name": "defaultWeapon",
       "attackSpeed": 1.0,
       "attackPower": 10.0
     }

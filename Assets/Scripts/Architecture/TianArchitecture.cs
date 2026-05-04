@@ -19,6 +19,7 @@ public class TianArchitecture : Architecture<TianArchitecture>
         this.RegisterSystem<ICinemaChineCameraSystem>(new CinemaChineCameraSystem());
         this.RegisterSystem<IRoleSystem>(new RoleSystem());
         this.RegisterSystem<IPlayerSystem>(new PlayerSystem());
+        this.RegisterSystem<IWeaponConfigSystem>(new WeaponConfigSystem());
 
         Debug.Log("Tian Keng architecture initialized.");
     }
