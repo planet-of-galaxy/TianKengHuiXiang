@@ -1,0 +1,9 @@
+{
+  "weapons": [
+    {
+      "weaponId": 0,
+      "attackSpeed": 1.0,
+      "attackPower": 10.0
+    }
+  ]
+}
