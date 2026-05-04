@@ -12,11 +12,13 @@ public class TianArchitecture : Architecture<TianArchitecture>
         this.RegisterUtility<IResourceStorage>(new ResourceStorage());
 
         // 注册Model
+        this.RegisterModel(new PlayerDataModel());
 
         // 注册System
         this.RegisterSystem<IGameProcedureSystem>(new GameProcedureSystem());
         this.RegisterSystem<ICinemaChineCameraSystem>(new CinemaChineCameraSystem());
         this.RegisterSystem<IRoleSystem>(new RoleSystem());
+        this.RegisterSystem<IPlayerSystem>(new PlayerSystem());
 
         Debug.Log("Tian Keng architecture initialized.");
     }
