@@ -12,13 +12,12 @@ Logs/
 .vs/
 obj/
 UserSettings/
-.slnx
 Assets/Test/
 Assets/Test.meta
-.sln
 Assets/MeshyImports/
 Assets/MeshyImports.meta
 .DS_Store
 Assets/.DS_Store
 Assets/_TerrainAutoUpgrade
 Assets/_TerrainAutoUpgrade.meta
+*.slnx
