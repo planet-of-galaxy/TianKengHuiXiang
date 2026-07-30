@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1001 &8227324714815985891
+--- !u!1001 &1370934706336352548
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -10,15 +10,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 20c1ad277960545cfbaa8b0379d41318, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.00000011920929
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 20c1ad277960545cfbaa8b0379d41318, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.75
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 20c1ad277960545cfbaa8b0379d41318, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 1.9999998
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 20c1ad277960545cfbaa8b0379d41318, type: 3}
       propertyPath: m_LocalRotation.w
@@ -48,10 +48,6 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: -7511558181221131132, guid: 20c1ad277960545cfbaa8b0379d41318, type: 3}
-      propertyPath: 'm_Materials.Array.data[0]'
-      value: 
-      objectReference: {fileID: 2100000, guid: 241c01e2fb0734017a8428a0d6dce23e, type: 2}
     - target: {fileID: 919132149155446097, guid: 20c1ad277960545cfbaa8b0379d41318, type: 3}
       propertyPath: m_Name
       value: stair_end
