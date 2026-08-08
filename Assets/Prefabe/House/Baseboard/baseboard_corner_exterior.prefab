@@ -54,7 +54,7 @@ PrefabInstance:
       objectReference: {fileID: 2100000, guid: aba5e8f3a434a4fc88e1260cb0cc6d7c, type: 2}
     - target: {fileID: 919132149155446097, guid: 4360b1e6c55064dc7a40538f601903f0, type: 3}
       propertyPath: m_Name
-      value: baseboard_corner_interior
+      value: baseboard_corner_exterior
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

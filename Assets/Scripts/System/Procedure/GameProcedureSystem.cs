@@ -34,6 +34,7 @@ public class GameProcedureSystem : AbstractSystem, IGameProcedureSystem
         AddState(new StartState());
         AddState(new PrepareState());
         AddState(new MineCaveState());
+        AddState(new HouseState());
 
         // 创建 MonoBehaviour 驱动器
         var go = new GameObject("[GameProcedureUpdater]");

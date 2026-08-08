@@ -44,8 +44,7 @@ public class PrepareController : MonoBehaviour, IController
 
     private void OnLetSGoBtnClicked()
     {
-        this.GetSystem<IPlayerSystem>().InitPlayer(0);
-        this.SendCommand<ChangeProcedureStateCmd<MineCaveState>>();
+        this.SendCommand<ChangeProcedureStateCmd<HouseState>>();
     }
 
     private void OnStudyBtnClicked()
