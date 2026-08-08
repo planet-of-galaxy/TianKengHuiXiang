@@ -13,7 +13,7 @@ public class PlayerController : MonoBehaviour, IController
 
     public IArchitecture GetArchitecture() => TianArchitecture.Interface;
 
-    void Start()
+	void Awake()
     {
         characterController = GetComponent<CharacterController>();
         cameraTransform = transform.Find("CinemachineCamera");
