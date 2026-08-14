@@ -7,4 +7,5 @@ public interface IPlayerSystem : ISystem
     void CreatePlayer(Transform trans);
     void DestroyPlayer();
     void Teleport(Transform trans);
+    Transform GetPlayerTransform();
 }

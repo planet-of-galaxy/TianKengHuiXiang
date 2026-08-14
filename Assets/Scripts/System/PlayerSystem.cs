@@ -77,4 +77,10 @@ public class PlayerSystem : AbstractSystem, IPlayerSystem
         _currentPlayer.transform.position = trans.position;
         _currentPlayer.transform.rotation = trans.rotation;
     }
+
+    public Transform GetPlayerTransform()
+    {
+        return _currentPlayer != null ? _currentPlayer.transform : null;
+    }
+
 }
