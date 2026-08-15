@@ -18,25 +18,33 @@
 //   无需 C# 脚本，静态使用即可。
 //
 // 距离与大小
-//   视觉大小 = 元素世界尺寸 ×（视线深度 / _RefDistance）
+//   视觉大小 = 元素世界尺寸 ×（视线深度 / _RefDistance）^ _DistCompensation
 //   —— 距离主相机越近几何上越小、越远几何上越大，从而屏幕上的视觉大小恒定；
 //   在距主相机 _RefDistance 时，屏幕大小恰好等于元素真实世界大小。
+//   _DistCompensation 调整补偿强度：0=无补偿（纯透视近大远小）、1=完全补偿（屏幕大小恒定）、>1=过度补偿。
 //
 // 参数
-//   _BaseMap     贴图
-//   _BaseColor   颜色（含透明度）
-//   _RefDistance 参考距离：元素在距主相机该距离时，屏幕大小 = 真实世界大小
-//   _ZTest       深度测试：4=会被遮挡，8=始终绘制在最上层
+//   _MainTex           Image 的 Sprite 贴图 / RawImage 的贴图，UGUI 运行时自动绑定到该属性
+//   _BaseMap           材质贴图（可选）：作为 _MainTex 的叠加 / 后备贴图
+//   _BaseColor         颜色（含透明度）
+//   _RefDistance       参考距离：元素在距主相机该距离时，屏幕大小 = 真实世界大小
+//   _DistCompensation  距离补偿强度：0=无补偿、1=完全补偿、>1=过度补偿
+//   _ZTest             深度测试：4=会被遮挡，8=始终绘制在最上层
 // ============================================================
 Shader "Custom/UI/Billboard"
 {
     Properties
     {
-        [MainTexture] _BaseMap ("Texture", 2D) = "white" {}
-        [MainColor]   _BaseColor ("Color", Color) = (1, 1, 1, 1)
+        // Image 的 Sprite 贴图 / RawImage 的贴图，由 UGUI 渲染时自动绑定到 _MainTex
+        [PerRendererData] _MainTex ("Sprite Texture", 2D) = "white" {}
+        [MainTexture]     _BaseMap ("Texture", 2D) = "white" {}
+        [MainColor]       _BaseColor ("Color", Color) = (1, 1, 1, 1)
 
         // 参考距离：在距离主相机该距离时，元素屏幕大小 = 元素真实世界大小
         _RefDistance ("Reference Distance (world units)", Range(0.01, 500.0)) = 10.0
+
+        // 距离补偿强度：0 = 无补偿（纯透视近大远小）、1 = 完全补偿（屏幕大小恒定）、>1 = 过度补偿
+        _DistCompensation ("Distance Compensation", Range(0.0, 4.0)) = 1.0
 
         // 深度测试；4 = LEqual（会被遮挡），8 = Always（始终绘制在最上层）
         [Enum(UnityEngine.Rendering.CompareFunction)] _ZTest ("Z Test", Float) = 4
@@ -82,13 +90,18 @@ Shader "Custom/UI/Billboard"
                 half4  color      : COLOR;
             };
 
+            TEXTURE2D(_MainTex);
+            SAMPLER(sampler_MainTex);
+
             TEXTURE2D(_BaseMap);
             SAMPLER(sampler_BaseMap);
 
             CBUFFER_START(UnityPerMaterial)
+                float4 _MainTex_ST;
                 float4 _BaseMap_ST;
                 half4  _BaseColor;
                 float  _RefDistance;
+                float  _DistCompensation;
             CBUFFER_END
 
             Varyings vert(Attributes input)
@@ -110,8 +123,9 @@ Shader "Custom/UI/Billboard"
 
                 // 锚点到相机的视线方向深度（相机看向 -Z，取 -z 得到正深度）
                 float depth = max(-TransformWorldToView(centerWS).z, 1e-4);
-                // 距离补偿：越近越小、越远越大，抵消透视近大远小
-                float distScale = depth / _RefDistance;
+                // 距离补偿：越近越小、越远越大，抵消透视近大远小；
+                // 指数 _DistCompensation 调整补偿强度（1=完全补偿、0=纯透视、>1=过度补偿）
+                float distScale = pow(depth / _RefDistance, _DistCompensation);
 
                 // 相机在世界空间的正交基
                 float3 camRight = UNITY_MATRIX_V[0].xyz; // 相机右
@@ -121,14 +135,21 @@ Shader "Custom/UI/Billboard"
                 float3 worldPos = centerWS + (camRight * u + camUp * v) * distScale;
 
                 output.positionCS = TransformWorldToHClip(worldPos);
-                output.uv = input.uv * _BaseMap_ST.xy + _BaseMap_ST.zw;
+                output.uv = input.uv;
                 output.color = input.color * _BaseColor;
                 return output;
             }
 
             half4 frag(Varyings input) : SV_Target
             {
-                half4 col = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv) * input.color;
+                float2 uvMain = input.uv * _MainTex_ST.xy + _MainTex_ST.zw;
+                float2 uvBase = input.uv * _BaseMap_ST.xy + _BaseMap_ST.zw;
+
+                // _MainTex 由 UGUI 绑定：Image 有 Sprite / RawImage 有贴图时即该贴图；
+                // 无贴图时 UGUI 绑定 1x1 白贴图，再乘 _BaseMap 不影响显示
+                half4 col = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uvMain)
+                          * SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, uvBase)
+                          * input.color;
                 return col;
             }
             ENDHLSL
