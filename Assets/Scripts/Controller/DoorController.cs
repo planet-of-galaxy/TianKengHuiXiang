@@ -6,20 +6,4 @@ public class DoorController : InteractableBaseA
     {
         Debug.Log("[DoorController] Interact triggered");
     }
-
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("Player"))
-        {
-            StartListening();
-        }
-    }
-
-    private void OnTriggerExit(Collider other)
-    {
-        if (other.CompareTag("Player"))
-        {
-            StopListening();
-        }
-    }
 }
