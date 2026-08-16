@@ -4,6 +4,7 @@ using UnityEngine;
 public abstract class InteractableBaseA : MonoBehaviour, IInteractableA, IController
 {
     [SerializeField] private TriggerController triggerController;
+    [SerializeField] private BillboardController billboardController;
 
     public abstract void InteractA();
 
@@ -19,8 +20,14 @@ public abstract class InteractableBaseA : MonoBehaviour, IInteractableA, IContro
         triggerController.OnTriggerEnterEvent.AddListener(OnTriggerEntered);
         triggerController.OnTriggerExitEvent.AddListener(OnTriggerExited);
 
+        if (billboardController != null)
+        {
+            billboardController.OnBillboardFocusOn.AddListener(OnBillboardFocusedOn);
+            billboardController.OnBillboardFocusOff.AddListener(OnBillboardFocusedOff);
+        }
+
         // 判断当前是否有带目标 tag 的物体在触发区内，决定初始启用状态
-        enabled = triggerController.IsTargetInside();
+        billboardController.gameObject.SetActive(triggerController.IsTargetInside());
     }
 
     private void OnDestroy()
@@ -32,17 +39,37 @@ public abstract class InteractableBaseA : MonoBehaviour, IInteractableA, IContro
 
         triggerController.OnTriggerEnterEvent.RemoveListener(OnTriggerEntered);
         triggerController.OnTriggerExitEvent.RemoveListener(OnTriggerExited);
+
+        if (billboardController != null)
+        {
+            billboardController.OnBillboardFocusOn.RemoveListener(OnBillboardFocusedOn);
+            billboardController.OnBillboardFocusOff.RemoveListener(OnBillboardFocusedOff);
+        }
     }
 
     private void OnTriggerEntered(GameObject other)
     {
-        enabled = true;
-        StartListening();
+        if (billboardController != null)
+        {
+            billboardController.gameObject.SetActive(true);
+        }
     }
 
     private void OnTriggerExited(GameObject other)
     {
-        enabled = triggerController.IsTargetInside();
+        if (billboardController != null)
+        {
+            billboardController.gameObject.SetActive(false);
+        }
+    }
+
+    private void OnBillboardFocusedOn()
+    {
+        StartListening();
+    }
+
+    private void OnBillboardFocusedOff()
+    {
         StopListening();
     }
 

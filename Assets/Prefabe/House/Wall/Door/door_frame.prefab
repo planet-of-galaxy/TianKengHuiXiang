@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 1952490428036181409}
   - component: {fileID: 2380763136555819741}
   - component: {fileID: 2745528144864771402}
+  - component: {fileID: 3672402906735784996}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -57,7 +58,7 @@ Canvas:
   m_OverridePixelPerfect: 0
   m_SortingBucketNormalizedSize: 0
   m_VertexColorAlwaysGammaSpace: 0
-  m_AdditionalShaderChannelsFlag: 0
+  m_AdditionalShaderChannelsFlag: 25
   m_UpdateRectTransformForStandalone: 0
   m_SortingLayerID: 0
   m_SortingOrder: 0
@@ -102,6 +103,28 @@ MonoBehaviour:
   m_BlockingMask:
     serializedVersion: 2
     m_Bits: 4294967295
+--- !u!114 &3672402906735784996
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3280816066731799259}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c5f82c5257e1214896d67ce2869b723, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _key: {fileID: 7770527357943720994}
+  _focusSprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
+  _showKeyMaxDot: 0.98
+  _maxFocusDistance: 5
+  OnBillboardFocusOn:
+    m_PersistentCalls:
+      m_Calls: []
+  OnBillboardFocusOff:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1 &6026286669631044783
 GameObject:
   m_ObjectHideFlags: 0
@@ -114,7 +137,7 @@ GameObject:
   - component: {fileID: 3033795230410676120}
   - component: {fileID: 7770527357943720994}
   m_Layer: 5
-  m_Name: Interact
+  m_Name: Billboard
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -137,7 +160,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 30, y: 30}
+  m_SizeDelta: {x: 40, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3033795230410676120
 CanvasRenderer:
@@ -229,8 +252,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 2.0093727, z: 1.6135178}
-  m_Center: {x: 0, y: 1.0003567, z: 0.013324738}
+  m_Size: {x: 5.8730354, y: 2.0093727, z: 6.922821}
+  m_Center: {x: 0.06471062, y: 1.0003567, z: -0.91895294}
 --- !u!114 &4645949405858493422
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -595,6 +618,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   triggerController: {fileID: 4645949405858493422}
+  billboardController: {fileID: 3672402906735784996}
 --- !u!4 &9049343693912328773 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 2c9092ba4d3b34b81885199ac71a24ad, type: 3}
