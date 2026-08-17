@@ -10,15 +10,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: -8679921383154817045, guid: 286de816b929f4e4791bc6290c9658b1, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 59.648846
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 286de816b929f4e4791bc6290c9658b1, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: -57.663944
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 286de816b929f4e4791bc6290c9658b1, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 81.07842
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 286de816b929f4e4791bc6290c9658b1, type: 3}
       propertyPath: m_LocalRotation.w
@@ -172,6 +172,22 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 2817879129141427486}
     m_Modifications:
+    - target: {fileID: 6113562459049917369, guid: a48f1552b599244d5a381d6d1cda1de2, type: 3}
+      propertyPath: m_Size.z
+      value: 0.048915837
+      objectReference: {fileID: 0}
+    - target: {fileID: 6113562459049917369, guid: a48f1552b599244d5a381d6d1cda1de2, type: 3}
+      propertyPath: m_Center.x
+      value: 0.33349723
+      objectReference: {fileID: 0}
+    - target: {fileID: 6113562459049917369, guid: a48f1552b599244d5a381d6d1cda1de2, type: 3}
+      propertyPath: m_Center.z
+      value: 0.0005764896
+      objectReference: {fileID: 0}
+    - target: {fileID: 6971497860120529084, guid: a48f1552b599244d5a381d6d1cda1de2, type: 3}
+      propertyPath: _doorLeaf
+      value: 
+      objectReference: {fileID: 1132613353913795566}
     - target: {fileID: 8565400675744256255, guid: a48f1552b599244d5a381d6d1cda1de2, type: 3}
       propertyPath: m_Name
       value: door_frame
@@ -224,5 +240,10 @@ PrefabInstance:
 --- !u!4 &930490991088433751 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 9049343693912328773, guid: a48f1552b599244d5a381d6d1cda1de2, type: 3}
+  m_PrefabInstance: {fileID: 8177550131895611410}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &1132613353913795566 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9136580284969612284, guid: a48f1552b599244d5a381d6d1cda1de2, type: 3}
   m_PrefabInstance: {fileID: 8177550131895611410}
   m_PrefabAsset: {fileID: 0}
