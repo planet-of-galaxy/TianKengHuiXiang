@@ -9,15 +9,9 @@ public class PrepareState : GameProcedureStateBase
     public override void OnEnter()
     {
         Debug.Log("[GameProcedure] 进入 PrepareState");
+ 
+        SceneManager.sceneLoaded += OnPrepareLoaded;
         SceneManager.LoadScene("PrepareScene");
-
-        var prefab = this.GetUtility<IResourceStorage>().Load<GameObject>("Prefabe/CinemaChineCamera/PrepareCinemaChineCamera");
-        _cameraRoot = Object.Instantiate(prefab);
-        Object.DontDestroyOnLoad(_cameraRoot);
-
-        this.GetSystem<ICinemaChineCameraSystem>().SetCinemaChineCamera("LetSGo");
-
-        UIKit.OpenPanel<PreparePanel>(prefabName: "resources://UI/Panel/preparepanel");
     }
 
     public override void OnExit()
@@ -27,5 +21,27 @@ public class PrepareState : GameProcedureStateBase
 
         if (_cameraRoot != null)
             Object.Destroy(_cameraRoot);
+    }
+
+    private void OnPrepareLoaded(Scene scene, LoadSceneMode mode)
+    {
+        this.GetSystem<IPlayerSystem>().InitPlayer(0);
+
+        if (scene.name == "PrepareScene")
+        {
+            Debug.Log("[GameProcedure] Prepare场景加载完成");
+
+            var bornPoint = GameObject.Find("BornPoint");
+            if (bornPoint != null)
+            {
+                this.GetSystem<IPlayerSystem>().CreatePlayer(bornPoint.transform);
+                // 切换到Player虚拟相机
+                this.SendCommand(new TransitionCameraCmd("Player", 2f));
+            }
+            else
+            {
+                Debug.LogError("[GameProcedure] BornPoint not found in House scene");
+            }
+        }
     }
 }
