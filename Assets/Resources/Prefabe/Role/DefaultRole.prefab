@@ -59,7 +59,7 @@ MonoBehaviour:
   Lens:
     FieldOfView: 60.000004
     OrthographicSize: 5
-    NearClipPlane: 0.3
+    NearClipPlane: 0.1
     FarClipPlane: 100
     Dutch: 0
     ModeOverride: 0
@@ -103,6 +103,7 @@ GameObject:
   - component: {fileID: 6672999812446699403}
   - component: {fileID: 3496026979049236611}
   - component: {fileID: 6319670920077410456}
+  - component: {fileID: 5733199413043357122}
   m_Layer: 0
   m_Name: DefaultRole
   m_TagString: Player
@@ -241,3 +242,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   gravity: -15
   mouseSensitivity: 2
+--- !u!114 &5733199413043357122
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7629578533471628078}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 128a52ac4b5de3248add7c7a4c5160aa, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

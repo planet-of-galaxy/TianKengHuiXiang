@@ -117,8 +117,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _key: {fileID: 7770527357943720994}
   _focusSprite: {fileID: 10913, guid: 0000000000000000f000000000000000, type: 0}
-  _showKeyMaxDot: 0.98
-  _maxFocusDistance: 5
+  _showKeyMaxDot: 0.95
+  _maxFocusDistance: 3
   OnBillboardFocusOn:
     m_PersistentCalls:
       m_Calls: []
@@ -252,8 +252,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 5.8730354, y: 2.0093727, z: 6.922821}
-  m_Center: {x: 0.06471062, y: 1.0003567, z: -0.91895294}
+  m_Size: {x: 4, y: 2, z: 8}
+  m_Center: {x: 0, y: 1, z: 0}
 --- !u!114 &4645949405858493422
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -619,7 +619,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   triggerController: {fileID: 4645949405858493422}
   billboardController: {fileID: 3672402906735784996}
-  _doorLeaf: {fileID: 0}
+  _doorLeaf: {fileID: 9136580284969612284}
   _rotationDuration: 0.5
 --- !u!4 &9049343693912328773 stripped
 Transform:
