@@ -22,7 +22,7 @@ public class PlayerController : MonoBehaviour, IController
 
         void RefreshMoveSpeed()
         {
-            if (runtimeModel.roleRuntimeInfo.TryGetValue(runtimeModel.curRole.Value, out var info))
+            if (runtimeModel.TryGetRoleRuntime(runtimeModel.curRole.Value, out var info))
             {
                 moveSpeed = info.MoveSpeed.Value;
             }

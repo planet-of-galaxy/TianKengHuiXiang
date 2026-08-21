@@ -8,7 +8,6 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
     private IRoleConfigProvider roleConfigProvider;
     private IJsonStorage storage;
     private int nextRoleRuntimeId = 1;
-    private GameObject currentRoleInstance;
 
     protected override void OnInit()
     {
@@ -27,9 +26,10 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
     private void Init()
     {
         var save = storage.Load<RoleRuntimeSaveData>("RoleRuntime");
-        runtimeModel.roleRuntimeInfo.Clear();
+        runtimeModel.ClearRoleRuntimes();
 
-        if (save?.roleRuntimeDatas == null || save.roleRuntimeDatas.Count == 0)
+        var hasSave = save?.roleRuntimeDatas != null && save.roleRuntimeDatas.Count > 0;
+        if (!hasSave)
         {
             CreateDefaultRole();
         }
@@ -48,16 +48,22 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
         }
 
         var curRole = save?.curRole ?? -1;
-        if (curRole < 0 || !runtimeModel.roleRuntimeInfo.ContainsKey(curRole))
+        if (curRole < 0 || !runtimeModel.TryGetRoleRuntime(curRole, out _))
         {
-            foreach (var kvp in runtimeModel.roleRuntimeInfo)
+            foreach (var info in runtimeModel.GetAllRoleRuntimes())
             {
-                curRole = kvp.Key;
+                curRole = info.id;
                 break;
             }
         }
 
         runtimeModel.curRole.Value = curRole;
+
+        // 无存档时刚创建了默认角色，立即落盘，保证首帧后存档一致
+        if (!hasSave)
+        {
+            SaveRoleRuntime();
+        }
     }
 
     private int AllocateRuntimeId()
@@ -136,7 +142,7 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
 
     public void SetCurrentRole(int roleRuntimeId)
     {
-        if (!runtimeModel.roleRuntimeInfo.ContainsKey(roleRuntimeId))
+        if (!runtimeModel.TryGetRoleRuntime(roleRuntimeId, out _))
         {
             Debug.LogWarning($"[RoleRuntimeSystem] RoleRuntimeInfo not found for id: {roleRuntimeId}");
             return;
@@ -144,54 +150,6 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
 
         runtimeModel.curRole.Value = roleRuntimeId;
         SaveRoleRuntime();
-    }
-
-    /// <summary>
-    /// 实例化当前选中的角色并托管其生命周期：
-    /// 若已有实例先销毁，新实例销毁时通过 RoleRuntimeLifecycle 通知本系统并置空引用。
-    /// </summary>
-    public GameObject SpawnCurrentRole(Vector3 position, Quaternion rotation)
-    {
-        var runtimeId = runtimeModel.curRole.Value;
-        if (!runtimeModel.roleRuntimeInfo.TryGetValue(runtimeId, out var info))
-        {
-            Debug.LogError($"[RoleRuntimeSystem] RoleRuntimeInfo not found for id: {runtimeId}");
-            return null;
-        }
-
-        var prefab = Resources.Load<GameObject>($"Prefabe/Role/{info.name}");
-        if (prefab == null)
-        {
-            Debug.LogError($"[RoleRuntimeSystem] Prefab not found: Prefabe/Role/{info.name}");
-            return null;
-        }
-
-        if (currentRoleInstance != null)
-        {
-            Object.Destroy(currentRoleInstance);
-            currentRoleInstance = null;
-        }
-
-        currentRoleInstance = Object.Instantiate(prefab, position, rotation);
-        var lifecycle = currentRoleInstance.GetComponent<RoleRuntimeLifecycle>();
-        if (lifecycle == null)
-        {
-            lifecycle = currentRoleInstance.AddComponent<RoleRuntimeLifecycle>();
-        }
-        lifecycle.Init(OnRoleInstanceDestroyed);
-
-        return currentRoleInstance;
-    }
-
-    /// <summary>
-    /// 角色实例销毁时回调：置空引用。
-    /// </summary>
-    private void OnRoleInstanceDestroyed(GameObject instance)
-    {
-        if (ReferenceEquals(instance, currentRoleInstance))
-        {
-            currentRoleInstance = null;
-        }
     }
 
     /// <summary>
@@ -204,9 +162,9 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
             roleRuntimeDatas = new List<RoleRuntimeData>(),
             curRole = runtimeModel.curRole.Value,
         };
-        foreach (var kvp in runtimeModel.roleRuntimeInfo)
+        foreach (var info in runtimeModel.GetAllRoleRuntimes())
         {
-            save.roleRuntimeDatas.Add(ToRoleRuntimeData(kvp.Value));
+            save.roleRuntimeDatas.Add(ToRoleRuntimeData(info));
         }
         storage.Save(save, "RoleRuntime");
     }

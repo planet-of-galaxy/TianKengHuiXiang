@@ -15,6 +15,9 @@ public class TianArchitecture : Architecture<TianArchitecture>
         // 注册Model
         this.RegisterModel(new RoleRuntimeModel());
 
+        // 注册依赖 Model 的 Utility
+        this.RegisterUtility<IRoleViewFactory>(new RoleViewFactory(this.GetModel<RoleRuntimeModel>(), this.GetUtility<IResourceStorage>()));
+
         // 注册System
         this.RegisterSystem<IGameProcedureSystem>(new GameProcedureSystem());
         this.RegisterSystem<ICinemaChineCameraSystem>(new CinemaChineCameraSystem());
