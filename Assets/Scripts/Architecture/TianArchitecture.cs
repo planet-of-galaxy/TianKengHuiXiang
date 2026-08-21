@@ -13,13 +13,13 @@ public class TianArchitecture : Architecture<TianArchitecture>
         this.RegisterUtility<IRoleConfigProvider>(new RoleConfigProvider(this.GetUtility<IJsonStorage>()));
 
         // 注册Model
-        this.RegisterModel(new PlayerDataModel());
+        this.RegisterModel(new RoleRuntimeModel());
 
         // 注册System
         this.RegisterSystem<IGameProcedureSystem>(new GameProcedureSystem());
         this.RegisterSystem<ICinemaChineCameraSystem>(new CinemaChineCameraSystem());
-        this.RegisterSystem<IPlayerSystem>(new PlayerSystem());
         this.RegisterSystem<IWeaponConfigSystem>(new WeaponConfigSystem());
+        this.RegisterSystem<IRoleRuntimeSystem>(new RoleRuntimeSystem());
 
         Debug.Log("Tian Keng architecture initialized.");
     }

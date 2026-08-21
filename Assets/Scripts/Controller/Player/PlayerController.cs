@@ -18,9 +18,18 @@ public class PlayerController : MonoBehaviour, IController
         characterController = GetComponent<CharacterController>();
         cameraTransform = transform.Find("CinemachineCamera");
 
-        var model = this.GetModel<PlayerDataModel>();
-        moveSpeed = model.CurInfo.Value.moveSpeed;
-        model.CurInfo.Register(info => moveSpeed = info.moveSpeed).UnRegisterWhenGameObjectDestroyed(gameObject);
+        var runtimeModel = this.GetModel<RoleRuntimeModel>();
+
+        void RefreshMoveSpeed()
+        {
+            if (runtimeModel.roleRuntimeInfo.TryGetValue(runtimeModel.curRole.Value, out var info))
+            {
+                moveSpeed = info.MoveSpeed.Value;
+            }
+        }
+
+        RefreshMoveSpeed();
+        runtimeModel.curRole.Register(_ => RefreshMoveSpeed()).UnRegisterWhenGameObjectDestroyed(gameObject);
 
         Cursor.lockState = CursorLockMode.Locked;
     }
