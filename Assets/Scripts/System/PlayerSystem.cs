@@ -5,17 +5,17 @@ public class PlayerSystem : AbstractSystem, IPlayerSystem
 {
     private GameObject _currentPlayer;
     private PlayerDataModel _playerModel;
-    private IRoleSystem _roleSystem;
+    private IRoleConfigProvider _roleConfigProvider;
 
     protected override void OnInit()
     {
         _playerModel = this.GetModel<PlayerDataModel>();
-        _roleSystem = this.GetSystem<IRoleSystem>();
+        _roleConfigProvider = this.GetUtility<RoleConfigProvider>();
     }
 
     public void InitPlayer(int roleId)
     {
-        var roleConfig = _roleSystem.GetRoleConfig(roleId);
+        var roleConfig = _roleConfigProvider.GetRoleConfig(roleId);
         if (roleConfig == null)
         {
             Debug.LogError($"[PlayerSystem] RoleConfig not found for roleId: {roleId}");
@@ -36,7 +36,7 @@ public class PlayerSystem : AbstractSystem, IPlayerSystem
         }
 
         var roleId = _playerModel.RoleId.Value;
-        var roleConfig = _roleSystem.GetRoleConfig(roleId);
+        var roleConfig = _roleConfigProvider.GetRoleConfig(roleId);
         if (roleConfig == null)
         {
             Debug.LogError($"[PlayerSystem] RoleConfig not found for roleId: {roleId}");

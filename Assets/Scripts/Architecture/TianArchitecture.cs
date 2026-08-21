@@ -10,6 +10,7 @@ public class TianArchitecture : Architecture<TianArchitecture>
         // 注册Utility
         this.RegisterUtility<IJsonStorage>(new JsonStorage());
         this.RegisterUtility<IResourceStorage>(new ResourceStorage());
+        this.RegisterUtility<IRoleConfigProvider>(new RoleConfigProvider(this.GetUtility<IJsonStorage>()));
 
         // 注册Model
         this.RegisterModel(new PlayerDataModel());
@@ -17,7 +18,6 @@ public class TianArchitecture : Architecture<TianArchitecture>
         // 注册System
         this.RegisterSystem<IGameProcedureSystem>(new GameProcedureSystem());
         this.RegisterSystem<ICinemaChineCameraSystem>(new CinemaChineCameraSystem());
-        this.RegisterSystem<IRoleSystem>(new RoleSystem());
         this.RegisterSystem<IPlayerSystem>(new PlayerSystem());
         this.RegisterSystem<IWeaponConfigSystem>(new WeaponConfigSystem());
 

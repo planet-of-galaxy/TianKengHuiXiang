@@ -1,6 +1,6 @@
 using QFramework;
 
-public interface IRoleSystem : ISystem
+public interface IRoleConfigProvider : IUtility
 {
     RoleConfig GetRoleConfig(int roleId);
     bool HasRole(int roleId);

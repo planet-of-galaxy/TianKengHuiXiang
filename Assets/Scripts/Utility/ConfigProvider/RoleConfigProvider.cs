@@ -2,28 +2,26 @@ using System.Collections.Generic;
 using QFramework;
 using UnityEngine;
 
-public class RoleSystem : AbstractSystem, IRoleSystem
+public class RoleConfigProvider : IRoleConfigProvider
 {
     private readonly Dictionary<int, RoleConfig> _roleConfigs = new();
+    private IJsonStorage _storage;
 
-    protected override void OnInit()
+    public RoleConfigProvider(IJsonStorage storage)
     {
+        this._storage = storage;
+
         LoadRoleConfigs();
     }
 
-    protected override void OnDeinit()
-    {
-        _roleConfigs.Clear();
-    }
-
+    #region IRoleConfigProvider
     private void LoadRoleConfigs()
     {
-        var jsonStorage = this.GetUtility<IJsonStorage>();
-        var data = jsonStorage.Load<RoleConfigData>("RoleConfig");
+        var data = _storage.Load<RoleConfigData>("RoleConfig");
 
         if (data?.roles == null || data.roles.Length == 0)
         {
-            Debug.LogWarning("[RoleSystem] No role configs loaded from RoleConfig.json");
+            Debug.LogWarning("[IRoleConfigProvider] No role configs loaded from RoleConfig.json");
             return;
         }
 
@@ -33,13 +31,13 @@ public class RoleSystem : AbstractSystem, IRoleSystem
 
             if (_roleConfigs.ContainsKey(config.roleId))
             {
-                Debug.LogWarning($"[RoleSystem] Duplicate roleId {config.roleId}, overwriting");
+                Debug.LogWarning($"[IRoleConfigProvider] Duplicate roleId {config.roleId}, overwriting");
             }
 
             _roleConfigs[config.roleId] = config;
         }
 
-        Debug.Log($"[RoleSystem] Loaded {_roleConfigs.Count} role configs");
+        Debug.Log($"[IRoleConfigProvider] Loaded {_roleConfigs.Count} role configs");
     }
 
     public RoleConfig GetRoleConfig(int roleId)
@@ -56,4 +54,5 @@ public class RoleSystem : AbstractSystem, IRoleSystem
     {
         return _roleConfigs.Count;
     }
+    #endregion
 }
