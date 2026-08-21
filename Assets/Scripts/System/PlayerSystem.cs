@@ -10,7 +10,7 @@ public class PlayerSystem : AbstractSystem, IPlayerSystem
     protected override void OnInit()
     {
         _playerModel = this.GetModel<PlayerDataModel>();
-        _roleConfigProvider = this.GetUtility<RoleConfigProvider>();
+        _roleConfigProvider = this.GetUtility<IRoleConfigProvider>();
     }
 
     public void InitPlayer(int roleId)
