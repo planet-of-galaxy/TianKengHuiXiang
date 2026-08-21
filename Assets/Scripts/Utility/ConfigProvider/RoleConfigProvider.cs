@@ -5,9 +5,9 @@ using UnityEngine;
 public class RoleConfigProvider : IRoleConfigProvider
 {
     private readonly Dictionary<int, RoleConfig> _roleConfigs = new();
-    private IJsonStorage _storage;
+    private IPersistStorage _storage;
 
-    public RoleConfigProvider(IJsonStorage storage)
+    public RoleConfigProvider(IPersistStorage storage)
     {
         this._storage = storage;
 

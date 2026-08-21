@@ -6,34 +6,9 @@ using UnityEngine;
 /// Json 数据持久化工具接口
 /// 通过 QFramework 的 Utility 机制暴露给 System / Model / Controller / Command 使用
 /// </summary>
-public interface IJsonStorage : IUtility
+public interface IJsonStorage : IPersistStorage
 {
-    /// <summary>
-    /// 将对象序列化为 Json 并存储到可读写目录（persistentDataPath）
-    /// </summary>
-    void Save<T>(T data, string fileName, JsonType type = JsonType.LitJson);
 
-    /// <summary>
-    /// 从磁盘读取 Json 并反序列化为对象
-    /// 优先读取 streamingAssetsPath（默认数据），回退到 persistentDataPath（玩家存档）
-    /// 若均不存在，返回一个默认的 new T()
-    /// </summary>
-    T Load<T>(string fileName, JsonType type = JsonType.LitJson) where T : new();
-
-    /// <summary>
-    /// 判断指定名称的存档是否存在（默认目录或可读写目录任一存在即可）
-    /// </summary>
-    bool HasData(string fileName);
-
-    /// <summary>
-    /// 删除可读写目录中指定名称的存档
-    /// </summary>
-    void DeleteData(string fileName);
-
-    /// <summary>
-    /// 清空可读写目录中的所有 Json 存档（慎用）
-    /// </summary>
-    void DeleteAll();
 }
 
 /// <summary>
@@ -43,7 +18,7 @@ public class JsonStorage : IJsonStorage
 {
     private const string Extension = ".json";
 
-    public void Save<T>(T data, string fileName, JsonType type = JsonType.LitJson)
+    public void Save<T>(T data, string fileName)
     {
         if (data == null)
         {
@@ -51,12 +26,12 @@ public class JsonStorage : IJsonStorage
             return;
         }
 
-        JsonMgr.Instance.SaveData(data, fileName, type);
+        JsonMgr.Instance.SaveData(data, fileName, JsonType.LitJson);
     }
 
-    public T Load<T>(string fileName, JsonType type = JsonType.LitJson) where T : new()
+    public T Load<T>(string fileName) where T : new()
     {
-        return JsonMgr.Instance.LoadData<T>(fileName, type);
+        return JsonMgr.Instance.LoadData<T>(fileName, JsonType.LitJson);
     }
 
     public bool HasData(string fileName)
