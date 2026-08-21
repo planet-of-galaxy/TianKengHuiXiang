@@ -9,7 +9,9 @@ public class PrepareState : GameProcedureStateBase
     public override void OnEnter()
     {
         Debug.Log("[GameProcedure] 进入 PrepareState");
- 
+
+        UIKit.OpenPanel<RuntimePanel>(prefabName: "resources://UI/Panel/runtimepanel");
+
         SceneManager.sceneLoaded += OnPrepareLoaded;
         SceneManager.LoadScene("PrepareScene");
     }
@@ -18,6 +20,7 @@ public class PrepareState : GameProcedureStateBase
     {
         Debug.Log("[GameProcedure] 退出 PrepareState");
         UIKit.ClosePanel<PreparePanel>();
+        UIKit.ClosePanel<RuntimePanel>();
 
         if (_cameraRoot != null)
             Object.Destroy(_cameraRoot);
