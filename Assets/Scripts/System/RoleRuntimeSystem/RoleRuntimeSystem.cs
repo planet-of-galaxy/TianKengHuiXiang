@@ -7,6 +7,7 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
     private RoleRuntimeModel runtimeModel;
     private IRoleConfigProvider roleConfigProvider;
     private IJsonStorage storage;
+    private RoleViewFactory viewFactory;
     private int nextRoleRuntimeId = 1;
 
     protected override void OnInit()
@@ -14,6 +15,7 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
         runtimeModel = this.GetModel<RoleRuntimeModel>();
         roleConfigProvider = this.GetUtility<IRoleConfigProvider>();
         storage = this.GetUtility<IJsonStorage>();
+        viewFactory = new RoleViewFactory(runtimeModel, this.GetUtility<IResourceStorage>());
 
         Init();
     }
@@ -150,6 +152,16 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
 
         runtimeModel.curRole.Value = roleRuntimeId;
         SaveRoleRuntime();
+    }
+
+    public GameObject CurrentRoleInstance => viewFactory.CurrentRoleInstance;
+
+    /// <summary>
+    /// 实例化当前选中的角色，返回实例；失败返回 null。
+    /// </summary>
+    public GameObject SpawnCurrentRole(Vector3 position, Quaternion rotation)
+    {
+        return viewFactory.SpawnCurrentRole(position, rotation);
     }
 
     /// <summary>

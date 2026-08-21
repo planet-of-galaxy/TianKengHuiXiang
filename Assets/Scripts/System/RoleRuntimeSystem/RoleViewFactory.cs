@@ -1,27 +1,11 @@
-using QFramework;
 using UnityEngine;
-
-/// <summary>
-/// 角色视图工厂接口：负责实例化当前角色并托管其生命周期。
-/// </summary>
-public interface IRoleViewFactory : IUtility
-{
-    /// <summary>
-    /// 当前角色实例；未生成或已销毁时为 null。
-    /// </summary>
-    GameObject CurrentRoleInstance { get; }
-
-    /// <summary>
-    /// 实例化当前选中的角色，返回实例；失败返回 null。
-    /// </summary>
-    GameObject SpawnCurrentRole(Vector3 position, Quaternion rotation);
-}
 
 /// <summary>
 /// 角色视图工厂：读取 RoleRuntimeModel 中当前角色，经 IResourceStorage 加载预制体并实例化。
 /// 持有当前实例引用，实例销毁时通过 RoleRuntimeLifecycle 置空。
+/// 作为 RoleRuntimeSystem 的字段被持有，不对外暴露；对外接口由 RoleRuntimeSystem 提供。
 /// </summary>
-public class RoleViewFactory : IRoleViewFactory
+public class RoleViewFactory
 {
     private readonly RoleRuntimeModel runtimeModel;
     private readonly IResourceStorage resourceStorage;
