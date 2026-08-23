@@ -1,5 +1,25 @@
 using System.Collections.Generic;
 using QFramework;
+using UnityEngine;
+
+public interface IPackageSystem : ISystem
+{
+    /// <summary>
+    /// 读取存档，初始化 PackageModel；无存档时使用默认空背包。
+    /// </summary>
+    void InitPackageModel();
+
+    /// <summary>
+    /// 在场景中创建一个空物体并挂载 PackageController，使其监听全局快捷键。
+    /// 已存在有效实例时忽略（幂等）。
+    /// </summary>
+    void AddPackageListener();
+
+    /// <summary>
+    /// 销毁 AddPackageListener 创建的空物体与 PackageController。
+    /// </summary>
+    void RemovePackageListener();
+}
 
 public class PackageSystem : AbstractSystem, IPackageSystem
 {
@@ -18,6 +38,12 @@ public class PackageSystem : AbstractSystem, IPackageSystem
     /// 背包运行时数据模型，由 TianArchitecture 注册。
     /// </summary>
     private PackageModel packageModel;
+
+    /// <summary>
+    /// AddPackageListener 创建的空物体，用于挂载 PackageController。
+    /// 切换场景时该物体可能被 Unity 销毁，此时与 null 相等，AddPackageListener 会重新创建。
+    /// </summary>
+    private GameObject packageListenerGO;
 
     /// <summary>
     /// JSON 持久化工具，用于读取 "Package" 存档。
@@ -69,6 +95,35 @@ public class PackageSystem : AbstractSystem, IPackageSystem
             packageModel.capacity.Value = defaultCapacity;
             packageModel.heldIndex.Value = -1;
         }
+    }
+
+    /// <summary>
+    /// 在场景中创建空物体并挂载 PackageController，使其监听全局快捷键。
+    /// 已有有效实例（未被销毁）时忽略，保证幂等。
+    /// </summary>
+    public void AddPackageListener()
+    {
+        if (packageListenerGO != null)
+        {
+            return;
+        }
+
+        packageListenerGO = new GameObject("PackageController");
+        packageListenerGO.AddComponent<PackageController>();
+    }
+
+    /// <summary>
+    /// 销毁 AddPackageListener 创建的空物体与 PackageController。
+    /// </summary>
+    public void RemovePackageListener()
+    {
+        if (packageListenerGO == null)
+        {
+            return;
+        }
+
+        Object.Destroy(packageListenerGO);
+        packageListenerGO = null;
     }
 
     /// <summary>

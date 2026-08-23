@@ -4,8 +4,6 @@ using UnityEngine.SceneManagement;
 
 public class PrepareState : GameProcedureStateBase
 {
-    private GameObject _cameraRoot;
-
     public override void OnEnter()
     {
         Debug.Log("[GameProcedure] 进入 PrepareState");
@@ -22,8 +20,7 @@ public class PrepareState : GameProcedureStateBase
         UIKit.ClosePanel<PreparePanel>();
         UIKit.ClosePanel<RuntimePanel>();
 
-        if (_cameraRoot != null)
-            Object.Destroy(_cameraRoot);
+        this.GetSystem<IPackageSystem>().RemovePackageListener();
     }
 
     private void OnPrepareLoaded(Scene scene, LoadSceneMode mode)
@@ -32,6 +29,7 @@ public class PrepareState : GameProcedureStateBase
         if (scene.name == "PrepareScene")
         {
             Debug.Log("[GameProcedure] Prepare场景加载完成");
+            this.GetSystem<IPackageSystem>().AddPackageListener();
         }
     }
 }
