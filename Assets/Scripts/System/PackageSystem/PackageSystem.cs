@@ -4,6 +4,17 @@ using QFramework;
 public class PackageSystem : AbstractSystem, IPackageSystem
 {
     /// <summary>
+    /// 默认背包容量：无存档时初始化的可用栏位数。
+    /// </summary>
+    public const int defaultCapacity = 20;
+
+    /// <summary>
+    /// 背包容量上限：可通过升级解锁的最大栏位数。
+    /// capacity 与 maxCapacity 之间的栏位在 UI 中以灰色锁定显示。
+    /// </summary>
+    public const int maxCapacity = 40;
+
+    /// <summary>
     /// 背包运行时数据模型，由 TianArchitecture 注册。
     /// </summary>
     private PackageModel packageModel;
@@ -26,7 +37,7 @@ public class PackageSystem : AbstractSystem, IPackageSystem
 
     /// <summary>
     /// 读取存档，将数据直接写入 PackageModel。
-    /// 若无存档则保留模型默认值（capacity/heldIndex 为 -1），背包为空。
+    /// 若无存档则使用 defaultCapacity 作为初始容量，heldIndex 保持 -1，背包为空。
     /// 系统初始化时由 OnInit 调用；需要重新载入存档时也可手动调用。
     /// </summary>
     public void InitPackageModel()
@@ -46,9 +57,18 @@ public class PackageSystem : AbstractSystem, IPackageSystem
             }
         }
 
-        // capacity/heldIndex 是运行时可变的，随存档恢复；无存档时保持 -1
-        packageModel.capacity.Value = save?.capacity ?? -1;
-        packageModel.heldIndex.Value = save?.heldIndex ?? -1;
+        // capacity 是运行时可变的：有存档则随存档恢复（但 capacity < 1 视为非法，回退默认容量）；
+        // 无存档时使用默认容量 defaultCapacity；heldIndex 无存档时保持 -1（表示未手持任何物品）
+        if (save != null)
+        {
+            packageModel.capacity.Value = save.capacity < 1 ? defaultCapacity : save.capacity;
+            packageModel.heldIndex.Value = save.heldIndex;
+        }
+        else
+        {
+            packageModel.capacity.Value = defaultCapacity;
+            packageModel.heldIndex.Value = -1;
+        }
     }
 
     /// <summary>
