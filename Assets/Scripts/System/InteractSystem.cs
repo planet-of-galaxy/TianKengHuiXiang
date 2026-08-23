@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class InteractSystem : MonoSingleton<InteractSystem>
 {
-    [SerializeField] private KeyCode interactKey = KeyCode.E;
-
     private readonly List<IInteractableA> _interactables = new();
 
     public void AddTarget(IInteractableA interactable)
@@ -30,11 +28,6 @@ public class InteractSystem : MonoSingleton<InteractSystem>
             return;
         }
 
-        if (!Input.GetKeyDown(interactKey))
-        {
-            return;
-        }
-
         IInteractableA target = _interactables[0];
         if (_interactables.Count > 1)
         {
@@ -45,6 +38,12 @@ public class InteractSystem : MonoSingleton<InteractSystem>
                     target = _interactables[i];
                 }
             }
+        }
+
+        // 交互快捷键统一由 HotKeyUtility.InteractA 提供（默认 E），交互物可重写覆盖
+        if (!Input.GetKeyDown(target.InteractKey))
+        {
+            return;
         }
 
         target.InteractA();

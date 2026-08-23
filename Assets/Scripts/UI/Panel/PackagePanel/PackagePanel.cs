@@ -4,15 +4,13 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 简易背包 UI 视图：挂载在场景 Canvas/PackagePanel 空物体上。
-/// [ExecuteAlways] 使编辑态也能预览 UI。
+/// 背包面板（UIKit 管理）：由 PackageController 通过 UIKit.OpenPanel 加载。
 /// 始终绘制 PackageSystem.maxCapacity 个栏位：
-///   index &lt; capacity                         → 白色（可用空间）
-///   capacity ≤ index &lt; maxCapacity        → 灰色（已达上限但尚未解锁）
-/// 运行态订阅 PackageModel.capacity，容量变化时自动刷新栏位颜色。
+///   index &lt; capacity                     → 白色（可用空间）
+///   capacity ≤ index &lt; maxCapacity      → 灰色（已达上限但尚未解锁）
+/// OnInit 订阅 PackageModel.capacity，容量变化时自动刷新栏位颜色。
 /// </summary>
-[ExecuteAlways]
-public class PackagePanel : MonoBehaviour, IController
+public class PackagePanel : UIPanel, IController
 {
     [Header("布局")]
     [SerializeField] private int columns = 8;
@@ -31,7 +29,7 @@ public class PackagePanel : MonoBehaviour, IController
     /// <summary>总栏位数：永远显示到 maxCapacity。</summary>
     private int TotalSlots => Mathf.Max(1, PackageSystem.maxCapacity);
 
-    /// <summary>当前可用容量：运行态取模型值，编辑态/未取到模型时用默认容量。</summary>
+    /// <summary>当前可用容量：运行态取模型值，未取到模型时用默认容量。</summary>
     private int Capacity
     {
         get
@@ -42,21 +40,17 @@ public class PackagePanel : MonoBehaviour, IController
         }
     }
 
-    private void OnEnable()
+    protected override void OnInit(IUIData uiData = null)
     {
-        if (Application.isPlaying)
-        {
-            packageModel = this.GetModel<PackageModel>();
+        packageModel = this.GetModel<PackageModel>();
 
-            capacityUnRegister?.UnRegister();
-            capacityUnRegister = packageModel.capacity.Register(OnCapacityChanged)
-                .UnRegisterWhenGameObjectDestroyed(gameObject);
-        }
+        capacityUnRegister?.UnRegister();
+        capacityUnRegister = packageModel.capacity.Register(OnCapacityChanged);
 
         RebuildSlots();
     }
 
-    private void OnDisable()
+    protected override void OnClose()
     {
         capacityUnRegister?.UnRegister();
         capacityUnRegister = null;

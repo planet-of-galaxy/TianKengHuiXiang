@@ -6,6 +6,9 @@ public abstract class InteractableBaseA : MonoBehaviour, IInteractableA, IContro
     [SerializeField] private TriggerController triggerController;
     [SerializeField] private BillboardController billboardController;
 
+    /// <summary>交互A快捷键：默认读取全局 HotKeyUtility.InteractA，子类可按需重写。</summary>
+    public virtual KeyCode InteractKey => HotKeyUtility.InteractA;
+
     public abstract void InteractA();
 
     public virtual float GetWeightA() => 0f;

@@ -52,9 +52,18 @@ public class PlayerController : MonoBehaviour, IController
         }
         verticalVelocity += gravity * Time.deltaTime;
 
-        // 水平移动
+        // 水平移动（A/D，沿用轴输入）
         float h = Input.GetAxis("Horizontal");
-        float v = Input.GetAxis("Vertical");
+        // 前后移动（W/S，按键由全局快捷键配置提供）
+        float v = 0f;
+        if (Input.GetKey(HotKeyUtility.Forward))
+        {
+            v += 1f;
+        }
+        if (Input.GetKey(HotKeyUtility.Backward))
+        {
+            v -= 1f;
+        }
         Vector3 horizontalMove = (transform.right * h + transform.forward * v) * moveSpeed;
         // 垂直移动（重力，不受 moveSpeed 影响）
         horizontalMove.y = verticalVelocity;
