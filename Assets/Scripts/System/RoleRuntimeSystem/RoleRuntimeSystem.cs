@@ -58,10 +58,10 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
                 if (data == null) continue;
 
                 // 兼容旧存档：id 无效时补发一个实例 id
-                if (data.id <= 0) data.id = AllocateRuntimeId();
+                if (data.runtimeIndex <= 0) data.runtimeIndex = AllocateRuntimeId();
 
                 runtimeModel.AddRoleRuntime(ToRoleRuntimeInfo(data));
-                nextRoleRuntimeId = Mathf.Max(nextRoleRuntimeId, data.id + 1);
+                nextRoleRuntimeId = Mathf.Max(nextRoleRuntimeId, data.runtimeIndex + 1);
             }
         }
 
@@ -70,7 +70,7 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
         {
             foreach (var info in runtimeModel.GetAllRoleRuntimes())
             {
-                curRole = info.id;
+                curRole = info.runtimeIndex;
                 break;
             }
         }
@@ -93,7 +93,7 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
     {
         var info = new RoleRuntimeInfo
         {
-            id = AllocateRuntimeId(),
+            runtimeIndex = AllocateRuntimeId(),
             configId = 0,
         };
         var roleConfig = roleConfigProvider.GetRoleConfig(0);
@@ -116,7 +116,7 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
     {
         var info = new RoleRuntimeInfo
         {
-            id = data.id,
+            runtimeIndex = data.runtimeIndex,
             configId = data.configId,
         };
         info.CurHealth.Value = data.curHealth;
@@ -143,7 +143,7 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
 
         var info = new RoleRuntimeInfo
         {
-            id = AllocateRuntimeId(),
+            runtimeIndex = AllocateRuntimeId(),
             configId = roleId,
         };
         info.name = roleConfig.name;
@@ -155,7 +155,7 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
 
         SaveRoleRuntime();
 
-        return info.id;
+        return info.runtimeIndex;
     }
 
     public void SetCurrentRole(int roleRuntimeId)
@@ -204,7 +204,7 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
     {
         return new RoleRuntimeData
         {
-            id = info.id,
+            runtimeIndex = info.runtimeIndex,
             configId = info.configId,
             curHealth = info.CurHealth.Value,
             maxHealth = info.MaxHealth.Value,

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 [System.Serializable]
 public class RoleRuntimeData
 {
-    public int id;        // 运行时实例 id，唯一（同一角色配置可有多份实例）
+    public int runtimeIndex;        // 运行时实例 id，唯一（同一角色配置可有多份实例）
     public int configId;  // 对应的角色配置 id
     public float curHealth;
     public float maxHealth;

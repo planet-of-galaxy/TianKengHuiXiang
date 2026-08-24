@@ -8,7 +8,7 @@ using QFramework;
 public class RolePackageInfo
 {
     /// <summary>
-    /// 角色运行时实例 id，唯一，与 RoleRuntimeInfo.id 对应。
+    /// 角色运行时实例 id，唯一，与 RoleRuntimeInfo.runtimeIndex 对应。
     /// </summary>
     public int roleRuntimeId;
 

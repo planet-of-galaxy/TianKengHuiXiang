@@ -98,11 +98,11 @@ public class PackageSystem : AbstractSystem, IPackageSystem
             }
         }
 
-        // 为每个角色运行时实例补齐背包，保证 id 与背包一一对应；
+        // 为每个角色运行时实例补齐背包,保证 id 与背包一一对应；
         // 新补齐的背包容量非法（< 1）时回退默认容量
         foreach (var info in roleRuntimeModel.GetAllRoleRuntimes())
         {
-            var package = packageModel.GetOrCreatePackage(info.id);
+            var package = packageModel.GetOrCreatePackage(info.runtimeIndex);
             if (package.capacity.Value < 1)
             {
                 package.capacity.Value = defaultCapacity;

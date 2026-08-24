@@ -34,7 +34,7 @@ public class RoleRuntimeModel : AbstractModel
     public void AddRoleRuntime(RoleRuntimeInfo info)
     {
         if (info == null) return;
-        roleRuntimeInfo[info.id] = info;
+        roleRuntimeInfo[info.runtimeIndex] = info;
     }
 
     /// <summary>
