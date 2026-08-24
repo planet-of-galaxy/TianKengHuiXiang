@@ -8,7 +8,7 @@ using UnityEngine.UI;
 /// 始终绘制 PackageSystem.maxCapacity 个栏位：
 ///   index &lt; capacity                     → 白色（可用空间）
 ///   capacity ≤ index &lt; maxCapacity      → 灰色（已达上限但尚未解锁）
-/// OnInit 订阅 PackageModel.capacity，容量变化时自动刷新栏位颜色。
+/// OnInit 订阅 RoleRuntimeModel.curRole 与当前角色背包的 capacity，角色切换或容量变化时自动刷新栏位颜色。
 /// </summary>
 public class PackagePanel : UIPanel, IController
 {
@@ -24,18 +24,21 @@ public class PackagePanel : UIPanel, IController
 
     private readonly List<Image> slots = new List<Image>();
     private PackageModel packageModel;
+    private RoleRuntimeModel roleRuntimeModel;
+    private IUnRegister curRoleUnRegister;
     private IUnRegister capacityUnRegister;
 
     /// <summary>总栏位数：永远显示到 maxCapacity。</summary>
     private int TotalSlots => Mathf.Max(1, PackageSystem.maxCapacity);
 
-    /// <summary>当前可用容量：运行态取模型值，未取到模型时用默认容量。</summary>
+    /// <summary>当前可用容量：运行态取当前选中角色背包的容量，未取到时用默认容量。</summary>
     private int Capacity
     {
         get
         {
-            if (Application.isPlaying && packageModel != null)
-                return packageModel.capacity.Value;
+            if (Application.isPlaying && packageModel != null && roleRuntimeModel != null
+                && packageModel.TryGetPackage(roleRuntimeModel.curRole.Value, out var package))
+                return package.capacity.Value;
             return PackageSystem.defaultCapacity;
         }
     }
@@ -43,17 +46,40 @@ public class PackagePanel : UIPanel, IController
     protected override void OnInit(IUIData uiData = null)
     {
         packageModel = this.GetModel<PackageModel>();
+        roleRuntimeModel = this.GetModel<RoleRuntimeModel>();
 
-        capacityUnRegister?.UnRegister();
-        capacityUnRegister = packageModel.capacity.Register(OnCapacityChanged);
+        // 角色切换时重新订阅新角色背包的容量并刷新栏位
+        curRoleUnRegister?.UnRegister();
+        curRoleUnRegister = roleRuntimeModel.curRole.Register(OnCurRoleChanged);
+        RegisterCapacity(roleRuntimeModel.curRole.Value);
 
         RebuildSlots();
     }
 
     protected override void OnClose()
     {
+        curRoleUnRegister?.UnRegister();
+        curRoleUnRegister = null;
         capacityUnRegister?.UnRegister();
         capacityUnRegister = null;
+    }
+
+    private void OnCurRoleChanged(int roleRuntimeId)
+    {
+        RegisterCapacity(roleRuntimeId);
+        ApplySlotColors();
+    }
+
+    /// <summary>改为订阅指定角色背包的容量变化；该角色无背包时仅取消旧订阅。</summary>
+    private void RegisterCapacity(int roleRuntimeId)
+    {
+        capacityUnRegister?.UnRegister();
+        capacityUnRegister = null;
+
+        if (packageModel.TryGetPackage(roleRuntimeId, out var package))
+        {
+            capacityUnRegister = package.capacity.Register(OnCapacityChanged);
+        }
     }
 
     private void OnCapacityChanged(int capacity)
