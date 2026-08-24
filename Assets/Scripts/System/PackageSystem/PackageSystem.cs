@@ -78,8 +78,7 @@ public class PackageSystem : AbstractSystem, IPackageSystem
     /// <summary>
     /// 读取存档，将数据直接写入 PackageModel：
     /// 1. 按存档中的 rolePackages 重建各角色背包（物品、容量、手持槽位）；
-    /// 2. 旧版存档（全局 packageItems/capacity/heldIndex）整体迁移给当前选中角色并立即落盘；
-    /// 3. 为 RoleRuntimeModel 中每个角色实例补齐背包，保证运行时 id 与背包一一对应；
+    /// 2. 为 RoleRuntimeModel 中每个角色实例补齐背包，保证运行时 id 与背包一一对应；
     ///    新补齐的背包使用 defaultCapacity，heldIndex 保持 -1（表示未手持任何物品）。
     /// 系统初始化时由 OnInit 调用；需要重新载入存档时也可手动调用。
     /// </summary>
@@ -90,33 +89,12 @@ public class PackageSystem : AbstractSystem, IPackageSystem
         // 背包字典按存档重新构建（由 PackageSystem 初始化时使用）
         packageModel.ClearPackages();
 
-        var hasRolePackages = save?.rolePackages != null && save.rolePackages.Count > 0;
-        if (hasRolePackages)
+        if (save?.rolePackages != null)
         {
             foreach (var data in save.rolePackages)
             {
                 if (data == null) continue;
                 packageModel.AddPackage(ToRolePackageInfo(data));
-            }
-        }
-
-        // 兼容旧存档：全局背包数据整体迁移给当前选中角色
-        var migratedLegacy = false;
-        var hasLegacy = save != null
-                        && ((save.packageItems != null && save.packageItems.Count > 0) || save.capacity >= 1);
-        if (!hasRolePackages && hasLegacy)
-        {
-            var curRole = roleRuntimeModel.curRole.Value;
-            if (curRole >= 0)
-            {
-                packageModel.AddPackage(ToRolePackageInfo(new RolePackageData
-                {
-                    roleRuntimeId = curRole,
-                    packageItems = save.packageItems,
-                    capacity = save.capacity,
-                    heldIndex = save.heldIndex,
-                }));
-                migratedLegacy = true;
             }
         }
 
@@ -129,12 +107,6 @@ public class PackageSystem : AbstractSystem, IPackageSystem
             {
                 package.capacity.Value = defaultCapacity;
             }
-        }
-
-        // 旧存档迁移完成后立即落盘，将存档规范为按角色分组的新格式
-        if (migratedLegacy)
-        {
-            SavePackage();
         }
     }
 

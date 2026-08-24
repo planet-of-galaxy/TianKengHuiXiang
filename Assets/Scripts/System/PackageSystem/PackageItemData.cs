@@ -26,12 +26,4 @@ public class PackageSaveData
     /// 各角色的背包数据。持久化用 List 而非字典：LitJson 对 int key 的字典序列化支持不佳。
     /// </summary>
     public List<RolePackageData> rolePackages;
-
-    /// <summary>
-    /// 旧版存档字段（未按角色区分），仅用于兼容迁移：
-    /// 读档时若 rolePackages 为空而旧字段有值，则整体迁移给当前选中角色。
-    /// </summary>
-    public List<PackageItemData> packageItems;
-    public int capacity;
-    public int heldIndex;
 }
