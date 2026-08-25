@@ -30,7 +30,8 @@ public class RoleSelectController : MonoBehaviour, IController
 
     private void OnItemClicked(int runtimeIndex)
     {
-        this.GetSystem<IRoleRuntimeSystem>().SetCurrentRole(runtimeIndex);
+        // TODO: 选择对应角色
+        Debug.Log($"[RoleSelect] Clicked runtimeIndex={runtimeIndex}");
     }
 
     public IArchitecture GetArchitecture() => TianArchitecture.Interface;
