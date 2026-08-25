@@ -1,3 +1,4 @@
+using QFramework;
 using UnityEngine;
 
 /// <summary>
@@ -68,6 +69,45 @@ public class RoleViewFactory
     /// <summary>
     /// 角色实例销毁时回调：置空引用。
     /// </summary>
+    /// <summary>
+    /// 根据指定角色运行时 id 实例化对应角色，并移除其上所有 IController 组件。
+    /// 适用于非玩家控制场景（如 NPC、展示用角色）。
+    /// 返回的实例不被 currentRoleInstance 跟踪，生命周期由调用方管理。
+    /// </summary>
+    public GameObject SpawnRoleWithoutController(int runtimeId, Vector3 position, Quaternion rotation)
+    {
+        if (!runtimeModel.TryGetRoleRuntime(runtimeId, out var info))
+        {
+            Debug.LogError($"[RoleViewFactory] RoleRuntimeInfo not found for id: {runtimeId}");
+            return null;
+        }
+
+        if (string.IsNullOrEmpty(info.name))
+        {
+            Debug.LogError($"[RoleViewFactory] RoleRuntimeInfo {runtimeId} has empty name");
+            return null;
+        }
+
+        var prefab = resourceStorage.Load<GameObject>($"Prefabe/Role/{info.name}");
+        if (prefab == null)
+        {
+            return null;
+        }
+
+        var instance = Object.Instantiate(prefab, position, rotation);
+
+        // 移除所有实现了 IController 的 MonoBehaviour 组件
+        foreach (var component in instance.GetComponentsInChildren<MonoBehaviour>())
+        {
+            if (component is IController)
+            {
+                Object.Destroy(component);
+            }
+        }
+
+        return instance;
+    }
+
     private void OnRoleInstanceDestroyed(GameObject instance)
     {
         if (ReferenceEquals(instance, currentRoleInstance))

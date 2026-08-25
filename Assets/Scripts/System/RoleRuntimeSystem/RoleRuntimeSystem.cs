@@ -16,6 +16,11 @@ public interface IRoleRuntimeSystem : ISystem
     /// 实例化当前选中的角色，返回实例；失败返回 null。
     /// </summary>
     GameObject SpawnCurrentRole(Vector3 position, Quaternion rotation);
+
+    /// <summary>
+    /// 根据指定角色运行时 id 实例化对应角色，并移除其上所有 IController 组件，返回实例；失败返回 null。
+    /// </summary>
+    GameObject SpawnRoleWithoutController(int runtimeId, Vector3 position, Quaternion rotation);
 }
 
 public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
@@ -178,6 +183,14 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
     public GameObject SpawnCurrentRole(Vector3 position, Quaternion rotation)
     {
         return viewFactory.SpawnCurrentRole(position, rotation);
+    }
+
+    /// <summary>
+    /// 根据指定角色运行时 id 实例化对应角色，并移除其上所有 IController 组件，返回实例；失败返回 null。
+    /// </summary>
+    public GameObject SpawnRoleWithoutController(int runtimeId, Vector3 position, Quaternion rotation)
+    {
+        return viewFactory.SpawnRoleWithoutController(runtimeId, position, rotation);
     }
 
     /// <summary>
