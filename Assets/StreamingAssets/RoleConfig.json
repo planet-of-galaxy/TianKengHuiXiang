@@ -2,9 +2,15 @@
   "roles": [
     {
       "roleId": 0,
-      "name": "DefaultRole",
+      "name": "富二代",
       "moveSpeed": 5.0,
       "health": 100.0
+    },
+    {
+      "roleId": 1,
+      "name": "厨师",
+      "moveSpeed": 4.5,
+      "health": 150
     }
   ]
 }
