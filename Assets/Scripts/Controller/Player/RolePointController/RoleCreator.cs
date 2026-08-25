@@ -9,8 +9,6 @@ public class RoleCreator : MonoBehaviour, IController
 {
     private GameObject spawnedRole;
 
-    public bool IsIdle => spawnedRole == null;
-
     public void CreateRole(int runtimeIndex)
     {
         if (spawnedRole != null)
