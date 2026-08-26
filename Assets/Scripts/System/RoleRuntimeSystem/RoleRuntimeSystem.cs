@@ -18,6 +18,12 @@ public interface IRoleRuntimeSystem : ISystem
     GameObject SpawnCurrentRole(Vector3 position, Quaternion rotation);
 
     /// <summary>
+    /// 将场景中已存在的角色设为当前角色：校验其 RoleContext 后挂载 PlayerController，不实例化新对象。
+    /// 上一个当前角色只被移除 PlayerController，实例保留在场景中。失败返回 null。
+    /// </summary>
+    GameObject SpawnCurrentRole(GameObject roleInstance);
+
+    /// <summary>
     /// 根据指定角色运行时 id 实例化对应角色，并移除其上所有 IController 组件，返回实例；失败返回 null。
     /// </summary>
     GameObject SpawnRoleWithoutController(int runtimeId, Vector3 position, Quaternion rotation);
@@ -183,6 +189,15 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
     public GameObject SpawnCurrentRole(Vector3 position, Quaternion rotation)
     {
         return viewFactory.SpawnCurrentRole(position, rotation);
+    }
+
+    /// <summary>
+    /// 将场景中已存在的角色设为当前角色：校验其 RoleContext 后挂载 PlayerController，不实例化新对象。
+    /// 上一个当前角色只被移除 PlayerController，实例保留在场景中。失败返回 null。
+    /// </summary>
+    public GameObject SpawnCurrentRole(GameObject roleInstance)
+    {
+        return viewFactory.SpawnCurrentRole(roleInstance);
     }
 
     /// <summary>
