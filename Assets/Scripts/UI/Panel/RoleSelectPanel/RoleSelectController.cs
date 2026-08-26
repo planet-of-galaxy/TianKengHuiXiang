@@ -24,14 +24,12 @@ public class RoleSelectController : MonoBehaviour, IController
 
     private void OnItemHover(int runtimeIndex)
     {
-        // TODO: 预览对应角色（如切换虚拟相机、高亮等）
-        Debug.Log($"[RoleSelect] Hover runtimeIndex={runtimeIndex}");
+        this.SendCommand(new TransToRoleObserveCmd(runtimeIndex));
     }
 
     private void OnItemClicked(int runtimeIndex)
     {
-        // TODO: 选择对应角色
-        Debug.Log($"[RoleSelect] Clicked runtimeIndex={runtimeIndex}");
+        this.SendCommand(new SetCurrentRoleCmd(runtimeIndex));
     }
 
     public IArchitecture GetArchitecture() => TianArchitecture.Interface;

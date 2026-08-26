@@ -16,7 +16,12 @@ public class PlayerController : MonoBehaviour, IController
 	void Awake()
     {
         characterController = GetComponent<CharacterController>();
-        cameraTransform = transform.Find("CinemachineCamera");
+
+        var roleContext = GetComponent<RoleContext>();
+        if (roleContext != null && roleContext.firstViewCinema != null)
+        {
+            cameraTransform = roleContext.firstViewCinema.transform;
+        }
 
         var runtimeModel = this.GetModel<RoleRuntimeModel>();
 

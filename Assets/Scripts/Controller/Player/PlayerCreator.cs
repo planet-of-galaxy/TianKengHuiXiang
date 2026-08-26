@@ -19,9 +19,6 @@ public class PlayerCreator : MonoBehaviour, IController
             Destroy(gameObject);
             return;
         }
-
-        // 切换到Player虚拟相机
-        this.SendCommand(new TransitionCameraCmd("Player", 2f));
         Destroy(gameObject);
     }
 }

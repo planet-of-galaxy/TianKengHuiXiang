@@ -8,7 +8,7 @@ public class PrepareState : GameProcedureStateBase
     {
         Debug.Log("[GameProcedure] 进入 PrepareState");
 
-        UIKit.OpenPanel<RuntimePanel>(prefabName: "resources://UI/Panel/runtimepanel");
+        UIKit.OpenPanel<RoleSelectPanel>(prefabName: "resources://UI/Panel/roleselectpanel");
 
         SceneManager.sceneLoaded += OnPrepareLoaded;
         SceneManager.LoadScene("PrepareScene");
@@ -17,8 +17,7 @@ public class PrepareState : GameProcedureStateBase
     public override void OnExit()
     {
         Debug.Log("[GameProcedure] 退出 PrepareState");
-        UIKit.ClosePanel<PreparePanel>();
-        UIKit.ClosePanel<RuntimePanel>();
+        UIKit.ClosePanel<RoleSelectPanel>();
 
         this.GetSystem<IPackageSystem>().RemovePackageListener();
     }

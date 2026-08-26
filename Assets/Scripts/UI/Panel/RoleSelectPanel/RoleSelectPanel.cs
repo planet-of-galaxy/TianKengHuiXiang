@@ -6,7 +6,7 @@ public class RoleSelectPanel : UIPanel, IController
 {
     [SerializeField] private Transform _itemContainer;
 
-    private const string ItemPrefabPath = "UI/Panel/RoleSelectPanel/RoleSelectItem";
+    private const string ItemPrefabPath = "UI/Item/RoleSelectItem";
 
     public event Action<int> OnRoleSelectItemHover;
     public event Action<int> OnRoleSelectItemClicked;

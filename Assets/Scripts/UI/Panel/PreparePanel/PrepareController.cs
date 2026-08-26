@@ -61,21 +61,21 @@ public class PrepareController : MonoBehaviour, IController
 
     private void OnLetSGoBtnHoverEnter()
     {
-        this.SendCommand(new TransitionCameraCmd("LetSGo", _transCamSpeed));
+
     }
 
     private void OnLetSGoBtnHoverExit() { }
 
     private void OnStudyBtnHoverEnter()
     {
-        this.SendCommand(new TransitionCameraCmd("Study", _transCamSpeed));
+
     }
 
     private void OnStudyBtnHoverExit() { }
 
     private void OnWorkBtnHoverEnter()
     {
-        this.SendCommand(new TransitionCameraCmd("Work", _transCamSpeed));
+
     }
 
     private void OnWorkBtnHoverExit() { }

@@ -1,21 +1,18 @@
-using System.Collections.Generic;
 using QFramework;
 using Unity.Cinemachine;
 using UnityEngine;
 
 public interface ICinemaChineCameraSystem : ISystem
 {
-    void RegisterCinemaChineCamera(string key, CinemachineCamera camera);
-    void UnregisterCinemaChineCamera(string key);
-    void SetCinemaChineCamera(string key);
-    void TransitionTo(string key, float speed = 1f);
+    void SetCinemaChineCamera(CinemachineCamera camera);
+    void TransitionTo(CinemachineCamera camera, float speed = 1f);
+    CinemachineCamera GetCurrentCinema();
 }
 
 public class CinemaChineCameraSystem : AbstractSystem, ICinemaChineCameraSystem
 {
-    private readonly Dictionary<string, CinemachineCamera> _cameras = new();
-
     private CinemachineBrain _brain;
+    private CinemachineCamera _currentCamera;
 
     private const int HighPriority = 100;
     private const int LowPriority = 0;
@@ -24,48 +21,17 @@ public class CinemaChineCameraSystem : AbstractSystem, ICinemaChineCameraSystem
 
     protected override void OnDeinit()
     {
-        _cameras.Clear();
+        _currentCamera = null;
         _brain = null;
     }
 
-    public void RegisterCinemaChineCamera(string key, CinemachineCamera camera)
+    public void SetCinemaChineCamera(CinemachineCamera camera)
     {
-        if (string.IsNullOrEmpty(key))
-        {
-            Debug.LogError($"{nameof(CinemaChineCameraSystem)}: 注册相机失败，key为空");
-            return;
-        }
-
         if (camera == null)
         {
-            Debug.LogError($"{nameof(CinemaChineCameraSystem)}: 注册相机失败，camera为null (key: {key})");
+            Debug.LogError($"{nameof(CinemaChineCameraSystem)}: 设置相机失败，camera为null");
             return;
         }
-
-        _cameras[key] = camera;
-        camera.Priority = new PrioritySettings { Enabled = true };
-        camera.Priority.Value = LowPriority;
-    }
-
-    public void UnregisterCinemaChineCamera(string key)
-    {
-        if (string.IsNullOrEmpty(key))
-        {
-            Debug.LogError($"{nameof(CinemaChineCameraSystem)}: 注销相机失败，key为空");
-            return;
-        }
-
-        if (!_cameras.ContainsKey(key))
-        {
-            Debug.LogWarning($"{nameof(CinemaChineCameraSystem)}: 注销相机失败，不存在key: {key}");
-        }
-
-        _cameras.Remove(key);
-    }
-
-    public void SetCinemaChineCamera(string key)
-    {
-        if (!TryGetCamera(key, out var targetCamera)) return;
 
         EnsureBrain();
 
@@ -78,19 +44,23 @@ public class CinemaChineCameraSystem : AbstractSystem, ICinemaChineCameraSystem
                 Time = 0f
             };
 
-            ActivateCamera(targetCamera);
+            ActivateCamera(camera);
 
             _brain.DefaultBlend = originalBlend;
         }
         else
         {
-            ActivateCamera(targetCamera);
+            ActivateCamera(camera);
         }
     }
 
-    public void TransitionTo(string key, float speed = 1f)
+    public void TransitionTo(CinemachineCamera camera, float speed = 1f)
     {
-        if (!TryGetCamera(key, out var targetCamera)) return;
+        if (camera == null)
+        {
+            Debug.LogError($"{nameof(CinemaChineCameraSystem)}: 过渡相机失败，camera为null");
+            return;
+        }
 
         EnsureBrain();
 
@@ -104,45 +74,27 @@ public class CinemaChineCameraSystem : AbstractSystem, ICinemaChineCameraSystem
             };
         }
 
-        ActivateCamera(targetCamera);
+        ActivateCamera(camera);
+    }
+
+    public CinemachineCamera GetCurrentCinema()
+    {
+        return _currentCamera;
     }
 
     private void ActivateCamera(CinemachineCamera targetCamera)
     {
-        foreach (var kvp in _cameras)
+        if (_currentCamera != null)
         {
-            kvp.Value.Priority = new PrioritySettings { Enabled = true };
-            kvp.Value.Priority.Value = LowPriority;
+            _currentCamera.Priority = new PrioritySettings { Enabled = true };
+            _currentCamera.Priority.Value = LowPriority;
         }
 
         targetCamera.Priority = new PrioritySettings { Enabled = true };
         targetCamera.Priority.Value = HighPriority;
         targetCamera.Prioritize();
-    }
 
-    private bool TryGetCamera(string key, out CinemachineCamera camera)
-    {
-        camera = null;
-        if (string.IsNullOrEmpty(key))
-        {
-            Debug.LogError($"{nameof(CinemaChineCameraSystem)}: key为空");
-            return false;
-        }
-
-        if (!_cameras.TryGetValue(key, out camera))
-        {
-            Debug.LogError($"{nameof(CinemaChineCameraSystem)}: 不存在key: {key}");
-            return false;
-        }
-
-        if (camera == null)
-        {
-            Debug.LogError($"{nameof(CinemaChineCameraSystem)}: 相机已被销毁 (key: {key})");
-            _cameras.Remove(key);
-            return false;
-        }
-
-        return true;
+        _currentCamera = targetCamera;
     }
 
     private void EnsureBrain()
