@@ -24,12 +24,12 @@ public class RoleSelectController : MonoBehaviour, IController
 
     private void OnItemHover(int runtimeIndex)
     {
-        this.SendCommand(new TransToRoleObserveCmd(runtimeIndex));
+        GetArchitecture().SendEvent(new RoleObserveEvent { RuntimeIndex = runtimeIndex });
     }
 
     private void OnItemClicked(int runtimeIndex)
     {
-        this.SendCommand(new SetCurrentRoleCmd(runtimeIndex));
+        GetArchitecture().SendEvent(new CurrentRoleSetEvent { RuntimeIndex = runtimeIndex });
     }
 
     public IArchitecture GetArchitecture() => TianArchitecture.Interface;
