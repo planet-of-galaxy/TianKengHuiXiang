@@ -78,12 +78,12 @@ public abstract class InteractableBaseA : MonoBehaviour, IInteractableA, IContro
 
     public void StartListening()
     {
-        this.SendCommand(new ListeningControlCmd(this, true));
+        InteractSystem.Instance.AddTarget(this);
     }
 
     public void StopListening()
     {
-        this.SendCommand(new ListeningControlCmd(this, false));
+        InteractSystem.Instance.RemoveTarget(this);
     }
 
     public IArchitecture GetArchitecture() => TianArchitecture.Interface;
