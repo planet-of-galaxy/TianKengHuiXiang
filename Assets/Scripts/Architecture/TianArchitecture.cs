@@ -18,6 +18,7 @@ public class TianArchitecture : Architecture<TianArchitecture>
         this.RegisterModel(new PackageModel());
 
         // 注册System
+        this.RegisterSystem<ICameraSystem>(new CameraSystem());
         this.RegisterSystem<IGameProcedureSystem>(new GameProcedureSystem());
         this.RegisterSystem<ICinemaChineCameraSystem>(new CinemaChineCameraSystem());
         this.RegisterSystem<IRoleRuntimeSystem>(new RoleRuntimeSystem());
