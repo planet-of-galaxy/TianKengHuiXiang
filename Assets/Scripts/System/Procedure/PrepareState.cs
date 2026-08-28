@@ -2,33 +2,40 @@ using QFramework;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class PrepareState : GameProcedureStateBase
+public class PrepareState : GameProcedureCompositeStateBase
 {
-    public override void OnEnter()
+    private IUnRegister _roleSelectUnRegister;
+
+    protected override void OnSubStateEnter()
     {
         Debug.Log("[GameProcedure] 进入 PrepareState");
 
-        UIKit.OpenPanel<RoleSelectPanel>(prefabName: "resources://UI/Panel/roleselectpanel");
-
         SceneManager.sceneLoaded += OnPrepareLoaded;
         SceneManager.LoadScene("PrepareScene");
+
+        // 选中角色后进入控制子状态
+        _roleSelectUnRegister = this.RegisterEvent<CurrentRoleSetEvent>(_ => ChangeSubState<RoleControlState>());
+
+        AddSubState(new RoleSelectState());
+        AddSubState(new RoleControlState());
+        StartSubState<RoleSelectState>();
     }
 
-    public override void OnExit()
+    protected override void OnSubStateExit()
     {
-        Debug.Log("[GameProcedure] 退出 PrepareState");
-        UIKit.ClosePanel<RoleSelectPanel>();
+        _roleSelectUnRegister?.UnRegister();
+        _roleSelectUnRegister = null;
 
-        this.GetSystem<IPackageSystem>().RemovePackageListener();
+        SceneManager.sceneLoaded -= OnPrepareLoaded;
+
+        Debug.Log("[GameProcedure] 退出 PrepareState");
     }
 
     private void OnPrepareLoaded(Scene scene, LoadSceneMode mode)
     {
-
         if (scene.name == "PrepareScene")
         {
             Debug.Log("[GameProcedure] Prepare场景加载完成");
-            this.GetSystem<IPackageSystem>().AddPackageListener();
         }
     }
 }

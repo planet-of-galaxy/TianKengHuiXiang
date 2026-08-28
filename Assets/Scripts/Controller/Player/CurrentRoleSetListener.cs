@@ -30,8 +30,6 @@ public class CurrentRoleSetListener : MonoBehaviour, IController
 
         this.GetSystem<IRoleRuntimeSystem>().SpawnCurrentRole(gameObject);
         this.GetSystem<ICinemaChineCameraSystem>().TransitionTo(_roleContext.firstViewCinema);
-
-        Debug.Log("hahahahah");
     }
 
     public IArchitecture GetArchitecture() => TianArchitecture.Interface;

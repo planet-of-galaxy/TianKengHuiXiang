@@ -1,6 +1,6 @@
 using QFramework;
 
-public class ChangeProcedureStateCmd<TState> : AbstractCommand where TState : GameProcedureStateBase
+public class ChangeProcedureStateCmd<TState> : AbstractCommand where TState : StateBase<GameProcedureSystem>
 {
     protected override void OnExecute()
     {

@@ -86,11 +86,31 @@ public class StateMachine<TOwner> where TOwner : class
     }
 
     /// <summary>
-    /// 当前是否处于指定状态
+    /// 最深层当前激活的状态（沿子状态机链向下查找）
+    /// </summary>
+    public StateBase<TOwner> CurrentDeepState
+    {
+        get
+        {
+            var state = CurrentState;
+            while (state?.ActiveSubStateMachine?.CurrentState != null)
+                state = state.ActiveSubStateMachine.CurrentState;
+            return state;
+        }
+    }
+
+    /// <summary>
+    /// 当前是否处于指定状态（会沿激活的子状态机链逐层查询）
     /// </summary>
     public bool IsInState<TState>() where TState : StateBase<TOwner>
     {
-        return CurrentState is TState;
+        var state = CurrentState;
+        while (state != null)
+        {
+            if (state is TState) return true;
+            state = state.ActiveSubStateMachine?.CurrentState;
+        }
+        return false;
     }
 
     private StateBase<TOwner> GetState<TState>() where TState : StateBase<TOwner>

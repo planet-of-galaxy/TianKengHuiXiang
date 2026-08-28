@@ -11,11 +11,24 @@ public abstract class GameProcedureStateBase : StateBase<GameProcedureSystem>, I
 
 }
 
+/// <summary>
+/// 流程复合状态基类：需要携带子状态机的流程状态（如 PrepareState）继承此类；
+/// 其子状态（如 RoleSelectState / RoleControlState）继承 GameProcedureStateBase
+/// </summary>
+public abstract class GameProcedureCompositeStateBase : CompositeStateBase<GameProcedureSystem>, IController
+{
+	public IArchitecture GetArchitecture()
+	{
+		return ((IBelongToArchitecture)Owner).GetArchitecture();
+	}
+
+}
+
 public interface IGameProcedureSystem : ISystem
 {
-    void ChangeState<TState>() where TState : GameProcedureStateBase;
+    void ChangeState<TState>() where TState : StateBase<GameProcedureSystem>;
     void RevertState();
-    bool IsInState<TState>() where TState : GameProcedureStateBase;
+    bool IsInState<TState>() where TState : StateBase<GameProcedureSystem>;
     Type CurrentStateType { get; }
 }
 
@@ -53,18 +66,18 @@ public class GameProcedureSystem : AbstractSystem, IGameProcedureSystem
         }
     }
 
-    public void AddState<TState>(TState state) where TState : GameProcedureStateBase
+    public void AddState<TState>(TState state) where TState : StateBase<GameProcedureSystem>
     {
         _fsm.AddState(state);
     }
 
-    public void StartProcedure<TState>() where TState : GameProcedureStateBase
+    public void StartProcedure<TState>() where TState : StateBase<GameProcedureSystem>
     {
         _fsm.Start<TState>();
         Debug.Log($"[GameProcedure] 启动流程: {typeof(TState).Name}");
     }
 
-    public void ChangeState<TState>() where TState : GameProcedureStateBase
+    public void ChangeState<TState>() where TState : StateBase<GameProcedureSystem>
     {
         Debug.Log($"[GameProcedure] 切换流程: {_fsm.CurrentState?.GetType().Name} → {typeof(TState).Name}");
         _fsm.ChangeState<TState>();
@@ -76,7 +89,7 @@ public class GameProcedureSystem : AbstractSystem, IGameProcedureSystem
         _fsm.RevertState();
     }
 
-    public bool IsInState<TState>() where TState : GameProcedureStateBase
+    public bool IsInState<TState>() where TState : StateBase<GameProcedureSystem>
     {
         return _fsm.IsInState<TState>();
     }
