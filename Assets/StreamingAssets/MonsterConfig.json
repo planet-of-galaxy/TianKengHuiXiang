@@ -1,0 +1,10 @@
+{
+  "monsters": [
+    {
+      "monsterId": 0,
+      "name": "史莱姆",
+      "moveSpeed": 2.0,
+      "health": 100.0
+    }
+  ]
+}
