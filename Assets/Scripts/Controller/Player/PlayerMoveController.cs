@@ -1,7 +1,7 @@
 using UnityEngine;
 using QFramework;
 
-public class PlayerController : MonoBehaviour, IController
+public class PlayerMoveController : MonoBehaviour, IController
 {
     private CharacterController characterController;
     private Transform cameraTransform;
