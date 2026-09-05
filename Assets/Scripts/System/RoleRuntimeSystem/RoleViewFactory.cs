@@ -98,9 +98,9 @@ public class RoleViewFactory
         }
         lifecycle.Init(OnRoleInstanceDestroyed);
 
-        if (currentRoleInstance.GetComponent<PlayerController>() == null)
+        if (currentRoleInstance.GetComponent<PlayerMoveController>() == null)
         {
-            currentRoleInstance.AddComponent<PlayerController>();
+            currentRoleInstance.AddComponent<PlayerMoveController>();
         }
 
         return currentRoleInstance;
@@ -115,7 +115,7 @@ public class RoleViewFactory
         if (currentRoleInstance == null) return;
         if (ReferenceEquals(currentRoleInstance, nextInstance)) return;
 
-        var playerController = currentRoleInstance.GetComponent<PlayerController>();
+        var playerController = currentRoleInstance.GetComponent<PlayerMoveController>();
         if (playerController != null)
         {
             // Destroy 到帧末才生效，先禁用避免同帧内两个 PlayerController 同时响应输入
