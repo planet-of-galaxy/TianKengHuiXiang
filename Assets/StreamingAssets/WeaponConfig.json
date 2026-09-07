@@ -2,7 +2,7 @@
   "weapons": [
     {
       "weaponId": 0,
-      "name": "defaultWeapon",
+      "name": "高尔夫球杆",
       "attackSpeed": 1.0,
       "attackPower": 10.0
     }
