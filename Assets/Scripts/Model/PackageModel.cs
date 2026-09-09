@@ -43,7 +43,7 @@ public class PackageModel : AbstractModel
     public void AddPackage(RolePackageInfo info)
     {
         if (info == null) return;
-        info.packageItems ??= new List<PackageItemInfo>();
+        info.packageItems ??= new List<PropItemInfo>();
         rolePackages[info.roleRuntimeId] = info;
     }
 

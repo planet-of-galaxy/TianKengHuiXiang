@@ -78,6 +78,8 @@ public class PackageSystem : AbstractSystem, IPackageSystem
     /// <summary>
     /// 读取存档，将数据直接写入 PackageModel：
     /// 1. 按存档中的 rolePackages 重建各角色背包（物品、容量、手持槽位）；
+    ///    其中每个物品按 PropItemData.ItemType 实例化为对应的 PropItemInfo 子类
+    ///    （如 ItemType.Weapon -> WeaponItemInfo）；
     /// 2. 为 RoleRuntimeModel 中每个角色实例补齐背包，保证运行时 id 与背包一一对应；
     ///    新补齐的背包使用 defaultCapacity，heldIndex 保持 -1（表示未手持任何物品）。
     /// 系统初始化时由 OnInit 调用；需要重新载入存档时也可手动调用。
@@ -173,7 +175,13 @@ public class PackageSystem : AbstractSystem, IPackageSystem
             foreach (var item in data.packageItems)
             {
                 if (item == null) continue;
-                info.packageItems.Add(ToPackageItemInfo(item));
+
+                // 依据持久化的 ItemType 实例化对应的 PropItemInfo 子类，未知类型直接跳过
+                var prop = ToPropItemInfo(item);
+                if (prop != null)
+                {
+                    info.packageItems.Add(prop);
+                }
             }
         }
 
@@ -190,7 +198,7 @@ public class PackageSystem : AbstractSystem, IPackageSystem
         var data = new RolePackageData
         {
             roleRuntimeId = info.roleRuntimeId,
-            packageItems = new List<PackageItemData>(),
+            packageItems = new List<PropItemData>(),
             capacity = info.capacity.Value,
             heldIndex = info.heldIndex.Value,
         };
@@ -200,7 +208,7 @@ public class PackageSystem : AbstractSystem, IPackageSystem
             foreach (var item in info.packageItems)
             {
                 if (item == null) continue;
-                data.packageItems.Add(ToPackageItemData(item));
+                data.packageItems.Add(ToPropItemData(item));
             }
         }
 
@@ -208,30 +216,50 @@ public class PackageSystem : AbstractSystem, IPackageSystem
     }
 
     /// <summary>
-    /// 将持久化数据转换为运行时信息。
+    /// 将持久化道具数据转换为运行时道具信息。
+    /// 依据 PropItemData.ItemType 实例化对应的 PropItemInfo 子类：
+    /// 每种道具类型对应一个子类，例如 Weapon -> WeaponItemInfo。
+    /// 遇到未登记的类型返回 null，由调用方跳过该道具。
     /// </summary>
-    private PackageItemInfo ToPackageItemInfo(PackageItemData data)
+    private PropItemInfo ToPropItemInfo(PropItemData data)
     {
-        return new PackageItemInfo
+        switch (data.type)
         {
-            index = data.index,
-            configId = data.configId,
-            type = data.type,
-            num = new BindableProperty<int>(data.num),
-        };
+            case ItemType.Weapon:
+                return new WeaponItemInfo
+                {
+                    index = data.index,
+                    configId = data.configId,
+                    num = new BindableProperty<int>(data.num),
+                    durability = new BindableProperty<float>(data.durability),
+                };
+            default:
+                Debug.LogWarning($"[PackageSystem] 未知的道具类型 {data.type}，已跳过 configId={data.configId}");
+                return null;
+        }
     }
 
     /// <summary>
-    /// 将运行时信息转换为持久化数据。
+    /// 将运行时道具信息转换为持久化数据。
+    /// 道具类型由运行时子类决定：WeaponItemInfo -> ItemType.Weapon，并落盘其耐久。
     /// </summary>
-    private PackageItemData ToPackageItemData(PackageItemInfo info)
+    private PropItemData ToPropItemData(PropItemInfo info)
     {
-        return new PackageItemData
+        var data = new PropItemData
         {
             index = info.index,
             configId = info.configId,
-            type = info.type,
             num = info.num?.Value ?? 0,
         };
+
+        switch (info)
+        {
+            case WeaponItemInfo weapon:
+                data.type = ItemType.Weapon;
+                data.durability = weapon.durability?.Value ?? 0f;
+                break;
+        }
+
+        return data;
     }
 }

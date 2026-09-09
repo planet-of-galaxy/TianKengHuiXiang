@@ -15,7 +15,7 @@ public class RolePackageInfo
     /// <summary>
     /// 该角色背包中的物品运行时信息列表。
     /// </summary>
-    public List<PackageItemInfo> packageItems = new();
+    public List<PropItemInfo> packageItems = new();
 
     /// <summary>
     /// 该角色的背包容量上限，-1 表示无限/未设置，用于 UI 响应容量变化。

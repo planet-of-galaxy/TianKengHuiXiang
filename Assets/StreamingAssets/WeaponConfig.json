@@ -4,7 +4,8 @@
       "weaponId": 0,
       "name": "高尔夫球杆",
       "attackSpeed": 1.0,
-      "attackPower": 10.0
+      "attackPower": 10.0,
+      "durability": 100.0
     }
   ]
 }

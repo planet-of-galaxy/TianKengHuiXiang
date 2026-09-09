@@ -1,13 +1,5 @@
 using System.Collections.Generic;
 
-public class PackageItemData
-{
-    public int index;
-    public int configId;
-    public ItemType type;
-    public int num;
-}
-
 /// <summary>
 /// 单个角色的背包持久化数据，roleRuntimeId 对应 RoleRuntimeModel 中的角色运行时实例 id。
 /// 与运行时的 RolePackageInfo 一一对应。
@@ -15,7 +7,7 @@ public class PackageItemData
 public class RolePackageData
 {
     public int roleRuntimeId;
-    public List<PackageItemData> packageItems;
+    public List<PropItemData> packageItems;
     public int capacity;
     public int heldIndex;
 }

@@ -5,4 +5,5 @@ public class WeaponConfig
     public string name;
     public float attackSpeed;
     public float attackPower;
+    public float durability;
 }
