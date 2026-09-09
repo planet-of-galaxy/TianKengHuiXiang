@@ -177,7 +177,7 @@ public class PackageSystem : AbstractSystem, IPackageSystem
                 if (item == null) continue;
 
                 // 依据持久化的 ItemType 实例化对应的 PropItemInfo 子类，未知类型直接跳过
-                var prop = ToPropItemInfo(item);
+                var prop = PropItemMapper.ToPropItemInfo(item);
                 if (prop != null)
                 {
                     info.packageItems.Add(prop);
@@ -208,56 +208,8 @@ public class PackageSystem : AbstractSystem, IPackageSystem
             foreach (var item in info.packageItems)
             {
                 if (item == null) continue;
-                data.packageItems.Add(ToPropItemData(item));
+                data.packageItems.Add(PropItemMapper.ToPropItemData(item));
             }
-        }
-
-        return data;
-    }
-
-    /// <summary>
-    /// 将持久化道具数据转换为运行时道具信息。
-    /// 依据 PropItemData.ItemType 实例化对应的 PropItemInfo 子类：
-    /// 每种道具类型对应一个子类，例如 Weapon -> WeaponItemInfo。
-    /// 遇到未登记的类型返回 null，由调用方跳过该道具。
-    /// </summary>
-    private PropItemInfo ToPropItemInfo(PropItemData data)
-    {
-        switch (data.type)
-        {
-            case ItemType.Weapon:
-                return new WeaponItemInfo
-                {
-                    index = data.index,
-                    configId = data.configId,
-                    num = new BindableProperty<int>(data.num),
-                    durability = new BindableProperty<float>(data.durability),
-                };
-            default:
-                Debug.LogWarning($"[PackageSystem] 未知的道具类型 {data.type}，已跳过 configId={data.configId}");
-                return null;
-        }
-    }
-
-    /// <summary>
-    /// 将运行时道具信息转换为持久化数据。
-    /// 道具类型由运行时子类决定：WeaponItemInfo -> ItemType.Weapon，并落盘其耐久。
-    /// </summary>
-    private PropItemData ToPropItemData(PropItemInfo info)
-    {
-        var data = new PropItemData
-        {
-            index = info.index,
-            configId = info.configId,
-            num = info.num?.Value ?? 0,
-        };
-
-        switch (info)
-        {
-            case WeaponItemInfo weapon:
-                data.type = ItemType.Weapon;
-                data.durability = weapon.durability?.Value ?? 0f;
-                break;
         }
 
         return data;

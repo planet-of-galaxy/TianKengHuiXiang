@@ -17,6 +17,7 @@ public class TianArchitecture : Architecture<TianArchitecture>
         // 注册Model
         this.RegisterModel(new RoleRuntimeModel());
         this.RegisterModel(new PackageModel());
+        this.RegisterModel(new WareHouseModel());
         this.RegisterModel(new MonsterRuntimeModel());
 
         // 注册System
@@ -25,6 +26,7 @@ public class TianArchitecture : Architecture<TianArchitecture>
         this.RegisterSystem<ICinemaChineCameraSystem>(new CinemaChineCameraSystem());
         this.RegisterSystem<IRoleRuntimeSystem>(new RoleRuntimeSystem());
         this.RegisterSystem<IPackageSystem>(new PackageSystem());
+        this.RegisterSystem<IWareHouseSystem>(new WareHouseSystem());
         this.RegisterSystem<IMonsterRuntimeSystem>(new MonsterRuntimeSystem());
 
         Debug.Log("Tian Keng architecture initialized.");
