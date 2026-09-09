@@ -3,7 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// 角色创建器：挂载到出生点（BornPoint）上。
-/// Awake 时委托 RoleRuntimeSystem 实例化当前角色并托管其生命周期，完成后销毁自身。
+/// Awake 时委托 RoleRuntimeSystem 实例化当前角色并托管其生命周期，创建完成后启用第一人称虚拟相机，然后销毁自身。
 /// </summary>
 public class PlayerCreator : MonoBehaviour, IController
 {
@@ -19,6 +19,23 @@ public class PlayerCreator : MonoBehaviour, IController
             Destroy(gameObject);
             return;
         }
+
+        EnableFirstViewCinema(instance);
         Destroy(gameObject);
+    }
+
+    /// <summary>
+    /// 启用角色实例身上的第一人称虚拟相机（FirstViewCinema），让新实例立即获得玩家视野。
+    /// 与 CurrentRoleSetListener 在选中角色后的处理保持一致。
+    /// </summary>
+    private void EnableFirstViewCinema(GameObject roleInstance)
+    {
+        var roleContext = roleInstance.GetComponent<RoleContext>();
+        if (roleContext == null || roleContext.firstViewCinema == null)
+        {
+            return;
+        }
+
+        this.GetSystem<ICinemaChineCameraSystem>().SetCinemaChineCamera(roleContext.firstViewCinema);
     }
 }
