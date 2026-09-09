@@ -38,6 +38,7 @@ public class WareHousePanel : UIPanel, IController
     private RectTransform wareListContent;
     private RectTransform packListContent;
     private Text rightTitleText;
+    private CursorUtility.CursorSnapshot cursorSnapshot;
 
     private readonly Dictionary<int, Image> roleButtonImages = new Dictionary<int, Image>();
 
@@ -81,9 +82,18 @@ public class WareHousePanel : UIPanel, IController
 
     protected override void OnShow()
     {
+        // 打开时显示鼠标并解除锁定，退出时还原为进入前的状态
+        cursorSnapshot = CursorUtility.Capture();
+        CursorUtility.ShowAndUnlock();
+
         // 每次打开都回到“默认跟随当前角色”，点击人物按钮可本地切换
         manualPicked = false;
         RefreshAll();
+    }
+
+    protected override void OnHide()
+    {
+        cursorSnapshot.Restore();
     }
 
     protected override void OnClose()

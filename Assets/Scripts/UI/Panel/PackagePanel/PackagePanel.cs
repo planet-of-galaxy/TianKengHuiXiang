@@ -27,6 +27,7 @@ public class PackagePanel : UIPanel, IController
     private RoleRuntimeModel roleRuntimeModel;
     private IUnRegister curRoleUnRegister;
     private IUnRegister capacityUnRegister;
+    private CursorUtility.CursorSnapshot cursorSnapshot;
 
     /// <summary>总栏位数：永远显示到 maxCapacity。</summary>
     private int TotalSlots => Mathf.Max(1, PackageSystem.maxCapacity);
@@ -54,6 +55,18 @@ public class PackagePanel : UIPanel, IController
         RegisterCapacity(roleRuntimeModel.curRole.Value);
 
         RebuildSlots();
+    }
+
+    protected override void OnShow()
+    {
+        // 打开时显示鼠标并解除锁定，退出时还原为进入前的状态
+        cursorSnapshot = CursorUtility.Capture();
+        CursorUtility.ShowAndUnlock();
+    }
+
+    protected override void OnHide()
+    {
+        cursorSnapshot.Restore();
     }
 
     protected override void OnClose()
