@@ -15,6 +15,12 @@ public interface IPackageSystem : ISystem
     void SavePackage();
 
     /// <summary>
+    /// 依据 ItemType + configId 生成一件道具并加入指定角色的背包（仅内存，不落盘，需手动调用 SavePackage）。
+    /// 背包已满、角色不存在或 configId 无法解析时返回 false。
+    /// </summary>
+    bool AddItemToRolePackage(int roleRuntimeId, ItemType itemType, int configId);
+
+    /// <summary>
     /// 在场景中创建一个空物体并挂载 PackageController，使其监听全局快捷键。
     /// 已存在有效实例时忽略（幂等）。
     /// </summary>
@@ -128,6 +134,84 @@ public class PackageSystem : AbstractSystem, IPackageSystem
         }
 
         storage.Save(save, "Package");
+    }
+
+    /// <summary>
+    /// 依据 ItemType + configId 生成一件道具并加入指定角色的背包（仅内存，不落盘）。
+    /// 流程：校验角色存在 -> 依据类型从对应 ConfigProvider 校验并构造持久化数据
+    ///        -> PropItemMapper 实例化运行时子类 -> 校验背包未满 -> 分配包内实例 id 后加入。
+    /// 新增道具类型时在此按 ItemType 扩展构造逻辑，并同步 PropItemMapper 登记。
+    /// </summary>
+    public bool AddItemToRolePackage(int roleRuntimeId, ItemType itemType, int configId)
+    {
+        if (!roleRuntimeModel.TryGetRoleRuntime(roleRuntimeId, out _))
+        {
+            Debug.LogWarning($"[PackageSystem] 角色运行时不存在 roleRuntimeId={roleRuntimeId}，已忽略");
+            return false;
+        }
+
+        var data = CreateItemData(itemType, configId);
+        if (data == null) return false;
+
+        var item = PropItemMapper.ToPropItemInfo(data);
+        if (item == null) return false;
+
+        var package = packageModel.GetOrCreatePackage(roleRuntimeId);
+        if (package.capacity.Value >= 0 && package.packageItems.Count >= package.capacity.Value)
+        {
+            Debug.LogWarning($"[PackageSystem] 角色 {roleRuntimeId} 背包已满（{package.capacity.Value}），无法加入道具");
+            return false;
+        }
+
+        item.index = AllocatePackageIndex(package.packageItems);
+        package.packageItems.Add(item);
+
+        Debug.Log($"[PackageSystem] 已将 {itemType}(configId={configId}) 加入角色 {roleRuntimeId} 的背包（未保存）");
+        return true;
+    }
+
+    /// <summary>
+    /// 依据 ItemType 构造对应道具的持久化数据；未知类型或 configId 无法解析时打印警告并返回 null。
+    /// 武器耐久取 WeaponConfig 的满耐久。
+    /// </summary>
+    private PropItemData CreateItemData(ItemType itemType, int configId)
+    {
+        switch (itemType)
+        {
+            case ItemType.Weapon:
+                var weaponConfig = this.GetUtility<IWeaponConfigProvider>().GetWeaponConfig(configId);
+                if (weaponConfig == null)
+                {
+                    Debug.LogWarning($"[PackageSystem] 未知的武器 configId={configId}，已忽略");
+                    return null;
+                }
+                return new PropItemData
+                {
+                    configId = configId,
+                    type = ItemType.Weapon,
+                    num = 1,
+                    durability = weaponConfig.durability,
+                };
+            default:
+                Debug.LogWarning($"[PackageSystem] 暂不支持的道具类型 {itemType}");
+                return null;
+        }
+    }
+
+    /// <summary>
+    /// 分配背包内新的实例 id：当前最大 index 的后继（空背包从 0 开始），保证包内唯一。
+    /// </summary>
+    private static int AllocatePackageIndex(List<PropItemInfo> packageItems)
+    {
+        int maxIndex = -1;
+        foreach (var item in packageItems)
+        {
+            if (item != null && item.index > maxIndex)
+            {
+                maxIndex = item.index;
+            }
+        }
+        return maxIndex + 1;
     }
 
     /// <summary>

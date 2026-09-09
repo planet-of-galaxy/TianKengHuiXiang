@@ -6,12 +6,14 @@ public class TestState : GameProcedureStateBase
     public override void OnEnter()
     {
         Debug.Log("[GameProcedure] 进入 TestState");
-        UIKit.OpenPanel<RoleSelectPanel>(prefabName: "resources://UI/Panel/roleselectpanel");
+        // UIKit.OpenPanel<RoleSelectPanel>(prefabName: "resources://UI/Panel/roleselectpanel");
+        this.GetSystem<IPackageSystem>().AddPackageListener();
     }
 
     public override void OnExit()
     {
         Debug.Log("[GameProcedure] 退出 TestState");
-        UIKit.ClosePanel<RoleSelectPanel>();
+        // UIKit.ClosePanel<RoleSelectPanel>();
+        this.GetSystem<IPackageSystem>().RemovePackageListener();
     }
 }
