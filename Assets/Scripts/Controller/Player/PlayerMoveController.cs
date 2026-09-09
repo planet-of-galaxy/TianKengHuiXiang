@@ -8,6 +8,7 @@ public class PlayerMoveController : MonoBehaviour, IController
     private float verticalRotation;
     private float moveSpeed;
     private float verticalVelocity;
+    private IGamePauseSystem pauseSystem;
     [SerializeField] private float gravity = -15f;
     [SerializeField] private float mouseSensitivity = 2f;
 
@@ -16,6 +17,7 @@ public class PlayerMoveController : MonoBehaviour, IController
 	void Awake()
     {
         characterController = GetComponent<CharacterController>();
+        pauseSystem = this.GetSystem<IGamePauseSystem>();
 
         var roleContext = GetComponent<RoleContext>();
         if (roleContext != null && roleContext.firstViewCinema != null)
@@ -41,6 +43,13 @@ public class PlayerMoveController : MonoBehaviour, IController
 
     void Update()
     {
+        // 游戏暂停（打开背包/仓库等界面）时屏蔽第一人称视角旋转与移动输入，
+        // 避免鼠标移到 UI 外时带动镜头转动
+        if (pauseSystem != null && pauseSystem.IsPaused)
+        {
+            return;
+        }
+
         // 第一人称视角控制
         float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;

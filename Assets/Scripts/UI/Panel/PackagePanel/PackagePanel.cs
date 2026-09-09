@@ -27,7 +27,6 @@ public class PackagePanel : UIPanel, IController
     private RoleRuntimeModel roleRuntimeModel;
     private IUnRegister curRoleUnRegister;
     private IUnRegister capacityUnRegister;
-    private CursorUtility.CursorSnapshot cursorSnapshot;
 
     /// <summary>总栏位数：永远显示到 maxCapacity。</summary>
     private int TotalSlots => Mathf.Max(1, PackageSystem.maxCapacity);
@@ -59,14 +58,14 @@ public class PackagePanel : UIPanel, IController
 
     protected override void OnShow()
     {
-        // 打开时显示鼠标并解除锁定，退出时还原为进入前的状态
-        cursorSnapshot = CursorUtility.Capture();
-        CursorUtility.ShowAndUnlock();
+        // 打开背包即进入游戏暂停（时间停止、显示并解锁鼠标），由 GamePauseSystem 统一处理
+        this.GetSystem<IGamePauseSystem>().Pause();
     }
 
     protected override void OnHide()
     {
-        cursorSnapshot.Restore();
+        // 关闭背包时退出暂停，还原暂停前的时间缩放与光标状态
+        this.GetSystem<IGamePauseSystem>().Resume();
     }
 
     protected override void OnClose()

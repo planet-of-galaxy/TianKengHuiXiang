@@ -27,6 +27,7 @@ public class TianArchitecture : Architecture<TianArchitecture>
         this.RegisterSystem<IRoleRuntimeSystem>(new RoleRuntimeSystem());
         this.RegisterSystem<IPackageSystem>(new PackageSystem());
         this.RegisterSystem<IWareHouseSystem>(new WareHouseSystem());
+        this.RegisterSystem<IGamePauseSystem>(new GamePauseSystem());
         this.RegisterSystem<IMonsterRuntimeSystem>(new MonsterRuntimeSystem());
 
         Debug.Log("Tian Keng architecture initialized.");
