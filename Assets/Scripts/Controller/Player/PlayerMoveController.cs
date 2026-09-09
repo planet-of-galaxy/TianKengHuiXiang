@@ -36,7 +36,7 @@ public class PlayerMoveController : MonoBehaviour, IController
         RefreshMoveSpeed();
         runtimeModel.curRole.Register(_ => RefreshMoveSpeed()).UnRegisterWhenGameObjectDestroyed(gameObject);
 
-        Cursor.lockState = CursorLockMode.Locked;
+        CursorUtility.Lock();
     }
 
     void Update()
