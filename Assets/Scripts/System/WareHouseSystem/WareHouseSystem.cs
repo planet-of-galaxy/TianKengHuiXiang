@@ -21,6 +21,16 @@ public interface IWareHouseSystem : ISystem
     /// 将仓库中所有道具落盘为 PropItemSaveData（存档 key "WareHouse"）。
     /// </summary>
     void SaveWareHouse();
+
+    /// <summary>
+    /// 在场景中创建一个空物体并挂载 WareHouseController，使其监听全局快捷键。
+    /// </summary>
+    void AddWareHouseListener();
+
+    /// <summary>
+    /// 销毁 AddWareHouseListener 创建的空物体与 WareHouseController。
+    /// </summary>
+    void RemoveWareHouseListener();
 }
 
 public class WareHouseSystem : AbstractSystem, IWareHouseSystem
@@ -44,6 +54,12 @@ public class WareHouseSystem : AbstractSystem, IWareHouseSystem
     /// JSON 持久化工具，用于读写 "WareHouse" 存档。
     /// </summary>
     private IJsonStorage storage;
+
+    /// <summary>
+    /// AddWareHouseListener 创建的空物体，用于挂载 WareHouseController。
+    /// 切换场景时该物体可能被 Unity 销毁，此时与 null 相等，AddWareHouseListener 会重新创建。
+    /// </summary>
+    private GameObject wareHouseListenerGO;
 
     /// <summary>
     /// 系统初始化：获取模型与工具，并载入存档写入模型。
@@ -125,5 +141,34 @@ public class WareHouseSystem : AbstractSystem, IWareHouseSystem
         }
 
         storage.Save(save, SaveFileName);
+    }
+
+    /// <summary>
+    /// 在场景中创建空物体并挂载 WareHouseController，使其监听全局快捷键。
+    /// 已有有效实例（未被销毁）时忽略，保证幂等。
+    /// </summary>
+    public void AddWareHouseListener()
+    {
+        if (wareHouseListenerGO != null)
+        {
+            return;
+        }
+
+        wareHouseListenerGO = new GameObject("WareHouseController");
+        wareHouseListenerGO.AddComponent<WareHouseController>();
+    }
+
+    /// <summary>
+    /// 销毁 AddWareHouseListener 创建的空物体与 WareHouseController。
+    /// </summary>
+    public void RemoveWareHouseListener()
+    {
+        if (wareHouseListenerGO == null)
+        {
+            return;
+        }
+
+        Object.Destroy(wareHouseListenerGO);
+        wareHouseListenerGO = null;
     }
 }

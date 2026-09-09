@@ -10,12 +10,12 @@ public class RoleControlState : GameProcedureStateBase
     public override void OnEnter()
     {
         Debug.Log("[GameProcedure] 进入 RoleControlState");
-        this.GetSystem<IPackageSystem>().AddPackageListener();
+        this.GetSystem<IWareHouseSystem>().AddWareHouseListener();
     }
 
     public override void OnExit()
     {
         Debug.Log("[GameProcedure] 退出 RoleControlState");
-        this.GetSystem<IPackageSystem>().RemovePackageListener();
+        this.GetSystem<IWareHouseSystem>().RemoveWareHouseListener();
     }
 }
