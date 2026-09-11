@@ -64,6 +64,11 @@ public class PackageSystem : AbstractSystem, IPackageSystem
     private RoleRuntimeModel roleRuntimeModel;
 
     /// <summary>
+    /// 武器配置提供者，用于拾取武器时初始化耐久，以及修复武器时限制满耐久。
+    /// </summary>
+    private IWeaponConfigProvider weaponConfigProvider;
+
+    /// <summary>
     /// AddPackageListener 创建的空物体，用于挂载 PackageListener。
     /// 切换场景时该物体可能被 Unity 销毁，此时与 null 相等，AddPackageListener 会重新创建。
     /// </summary>
@@ -83,6 +88,7 @@ public class PackageSystem : AbstractSystem, IPackageSystem
     {
         packageModel = this.GetModel<PackageModel>();
         roleRuntimeModel = this.GetModel<RoleRuntimeModel>();
+        weaponConfigProvider = this.GetUtility<IWeaponConfigProvider>();
         storage = this.GetUtility<IJsonStorage>();
 
         InitPackageModel();
@@ -192,7 +198,7 @@ public class PackageSystem : AbstractSystem, IPackageSystem
             return false;
         }
 
-        var weaponConfig = this.GetUtility<IWeaponConfigProvider>().GetWeaponConfig(weapon.configId);
+        var weaponConfig = weaponConfigProvider.GetWeaponConfig(weapon.configId);
         if (weaponConfig == null)
         {
             Debug.LogWarning($"[PackageSystem] 未知的武器 configId={weapon.configId}，无法增加耐久");
@@ -254,7 +260,7 @@ public class PackageSystem : AbstractSystem, IPackageSystem
         switch (itemType)
         {
             case ItemType.Weapon:
-                var weaponConfig = this.GetUtility<IWeaponConfigProvider>().GetWeaponConfig(configId);
+                var weaponConfig = weaponConfigProvider.GetWeaponConfig(configId);
                 if (weaponConfig == null)
                 {
                     Debug.LogWarning($"[PackageSystem] 未知的武器 configId={configId}，已忽略");

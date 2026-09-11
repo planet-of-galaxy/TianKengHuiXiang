@@ -21,6 +21,7 @@ public class PackageController : MonoBehaviour, IController
 
     private IUnRegister curRoleUnRegister;
     private IUnRegister capacityUnRegister;
+    private readonly List<IUnRegister> durabilityUnRegisters = new List<IUnRegister>();
 
     /// <summary>
     /// 当前已订阅物品变化的背包。背包存活于 PackageModel 中、比面板活得久，
@@ -168,6 +169,7 @@ public class PackageController : MonoBehaviour, IController
         subscribedPackage = package;
         capacityUnRegister = package.capacity.Register(OnCapacityChanged);
         subscribedPackage.OnPackageUpdate += OnPackageItemsChanged;
+        RegisterWeaponDurabilities(package);
     }
 
     /// <summary>退掉当前背包的容量与物品订阅；未订阅时是空操作。</summary>
@@ -175,6 +177,7 @@ public class PackageController : MonoBehaviour, IController
     {
         capacityUnRegister?.UnRegister();
         capacityUnRegister = null;
+        UnRegisterWeaponDurabilities();
 
         if (subscribedPackage != null)
         {
@@ -190,6 +193,44 @@ public class PackageController : MonoBehaviour, IController
 
     /// <summary>背包内物品增减时刷新。标题不含物品信息，只重画栏位与容量文本。</summary>
     private void OnPackageItemsChanged()
+    {
+        if (subscribedPackage != null)
+        {
+            RegisterWeaponDurabilities(subscribedPackage);
+        }
+
+        RefreshCells();
+    }
+
+    /// <summary>
+    /// 订阅当前背包中每把武器的耐久变化。背包物品变化后会整体重建订阅，
+    /// 保证新拾取的武器立即接入，同时避免已经移除的武器继续触发刷新。
+    /// </summary>
+    private void RegisterWeaponDurabilities(RolePackageInfo package)
+    {
+        UnRegisterWeaponDurabilities();
+
+        foreach (var item in package.Items)
+        {
+            if (item is WeaponItemInfo weapon && weapon.durability != null)
+            {
+                durabilityUnRegisters.Add(weapon.durability.Register(OnWeaponDurabilityChanged));
+            }
+        }
+    }
+
+    /// <summary>取消当前背包内所有武器的耐久订阅。</summary>
+    private void UnRegisterWeaponDurabilities()
+    {
+        foreach (var unRegister in durabilityUnRegisters)
+        {
+            unRegister?.UnRegister();
+        }
+
+        durabilityUnRegisters.Clear();
+    }
+
+    private void OnWeaponDurabilityChanged(float durability)
     {
         RefreshCells();
     }
