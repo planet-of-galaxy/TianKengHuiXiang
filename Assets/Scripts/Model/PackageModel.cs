@@ -23,8 +23,8 @@ public class PackageModel : AbstractModel
     }
 
     /// <summary>
-    /// 获取指定角色运行时实例的背包信息；不存在时创建一个空背包并返回
-    /// （capacity/heldIndex 保持默认 -1，由调用方按需初始化）。
+    /// 获取指定角色运行时实例的背包信息；不存在时创建一个空背包并返回，
+    /// 新背包的容量立即补为 <see cref="RolePackageInfo.DefaultCapacity"/>（heldIndex 保持 -1，表示未手持）。
     /// </summary>
     public RolePackageInfo GetOrCreatePackage(int roleRuntimeId)
     {
@@ -32,6 +32,7 @@ public class PackageModel : AbstractModel
         {
             package = new RolePackageInfo { roleRuntimeId = roleRuntimeId };
             rolePackages[roleRuntimeId] = package;
+            EnsureCapacityInitialized(package);
         }
 
         return package;
@@ -43,8 +44,23 @@ public class PackageModel : AbstractModel
     public void AddPackage(RolePackageInfo info)
     {
         if (info == null) return;
-        info.packageItems ??= new List<PropItemInfo>();
+
         rolePackages[info.roleRuntimeId] = info;
+        EnsureCapacityInitialized(info);
+    }
+
+    /// <summary>
+    /// 保证背包容量已初始化：capacity 为 -1（RolePackageInfo 的默认值）说明该背包从未被赋过容量，
+    /// 此时补默认容量。在这里统一兜底，是为了让「流到 UI 的背包容量一定 &gt;= 1」成立——
+    /// PackageSystem 里的容量校验（capacity &gt;= 0 才判满）会把 -1 当成「无限」放行，
+    /// 而 UI 会把 -1 当成「0 个栏位」全锁死，两边对同一个值的理解相反，所以不能让 -1 流出去。
+    /// </summary>
+    private static void EnsureCapacityInitialized(RolePackageInfo info)
+    {
+        if (info.capacity.Value < 1)
+        {
+            info.capacity.Value = RolePackageInfo.DefaultCapacity;
+        }
     }
 
     /// <summary>

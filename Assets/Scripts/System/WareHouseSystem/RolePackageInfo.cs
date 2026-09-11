@@ -8,6 +8,13 @@ using QFramework;
 public class RolePackageInfo
 {
     /// <summary>
+    /// 新建背包的默认容量：无存档（或存档容量非法）时该角色背包的可用栏位数。
+    /// 定义在背包自己身上，而不是 PackageSystem 上：PackageModel 创建背包时要用它，
+    /// Model 引用 System 是分层倒挂，而「背包的默认容量」本就是背包域的常量。
+    /// </summary>
+    public const int DefaultCapacity = 6;
+
+    /// <summary>
     /// 角色运行时实例 id，唯一，与 RoleRuntimeInfo.runtimeIndex 对应。
     /// </summary>
     public int roleRuntimeId;
@@ -18,7 +25,9 @@ public class RolePackageInfo
     public List<PropItemInfo> packageItems = new();
 
     /// <summary>
-    /// 该角色的背包容量上限，-1 表示无限/未设置，用于 UI 响应容量变化。
+    /// 该角色的背包容量，取值 &gt;= 1；-1 表示尚未初始化，属异常状态（正常流程由
+    /// PackageModel.GetOrCreatePackage 在创建背包时补齐默认容量），UI 读到应报错。
+    /// 用于 UI 响应容量变化。
     /// </summary>
     public BindableProperty<int> capacity { get; } = new BindableProperty<int>(-1);
 

@@ -22,18 +22,28 @@ public class PackageController : MonoBehaviour, IController
     private IUnRegister curRoleUnRegister;
     private IUnRegister capacityUnRegister;
 
-    /// <summary>当前可用容量：取当前角色背包的容量，未取到时用默认容量。</summary>
+    /// <summary>
+    /// 当前可用容量：取当前角色背包的容量；该角色还没有背包时按默认容量显示。
+    /// 容量小于 1 说明背包未被初始化（PackageModel 在创建背包时会补默认容量，走到这里说明那条路被绕过了）。
+    /// 这里必须报错并回退默认容量——容量 -1 会被 UI 当成「0 个栏位」，把整屏栏位全锁死。
+    /// </summary>
     private int Capacity
     {
         get
         {
-            if (packageModel != null
-                && packageModel.TryGetPackage(roleRuntimeModel.curRole.Value, out var package))
+            if (packageModel == null
+                || !packageModel.TryGetPackage(roleRuntimeModel.curRole.Value, out var package))
             {
-                return package.capacity.Value;
+                return RolePackageInfo.DefaultCapacity;
             }
 
-            return PackageSystem.defaultCapacity;
+            if (package.capacity.Value < 1)
+            {
+                Debug.LogError($"[PackageController] 角色 {roleRuntimeModel.curRole.Value} 的背包容量未初始化（{package.capacity.Value}），已按默认容量 {RolePackageInfo.DefaultCapacity} 显示");
+                return RolePackageInfo.DefaultCapacity;
+            }
+
+            return package.capacity.Value;
         }
     }
 

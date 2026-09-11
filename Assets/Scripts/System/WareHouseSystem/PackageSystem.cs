@@ -35,11 +35,6 @@ public interface IPackageSystem : ISystem
 public class PackageSystem : AbstractSystem, IPackageSystem
 {
     /// <summary>
-    /// 默认背包容量：无存档（或存档容量非法）时每个角色背包的可用栏位数。
-    /// </summary>
-    public const int defaultCapacity = 6;
-
-    /// <summary>
     /// 背包容量上限：可通过升级解锁的最大栏位数。
     /// capacity 与 maxCapacity 之间的栏位在 UI 中以灰色锁定显示。
     /// </summary>
@@ -87,7 +82,7 @@ public class PackageSystem : AbstractSystem, IPackageSystem
     ///    其中每个物品按 PropItemData.ItemType 实例化为对应的 PropItemInfo 子类
     ///    （如 ItemType.Weapon -> WeaponItemInfo）；
     /// 2. 为 RoleRuntimeModel 中每个角色实例补齐背包，保证运行时 id 与背包一一对应；
-    ///    新补齐的背包使用 defaultCapacity，heldIndex 保持 -1（表示未手持任何物品）。
+    ///    新补齐的背包使用 RolePackageInfo.DefaultCapacity，heldIndex 保持 -1（表示未手持任何物品）。
     /// 系统初始化时由 OnInit 调用；需要重新载入存档时也可手动调用。
     /// </summary>
     public void InitPackageModel()
@@ -107,14 +102,10 @@ public class PackageSystem : AbstractSystem, IPackageSystem
         }
 
         // 为每个角色运行时实例补齐背包,保证 id 与背包一一对应；
-        // 新补齐的背包容量非法（< 1）时回退默认容量
+        // 新补齐的背包容量由 PackageModel.GetOrCreatePackage 补为 RolePackageInfo.DefaultCapacity
         foreach (var info in roleRuntimeModel.GetAllRoleRuntimes())
         {
-            var package = packageModel.GetOrCreatePackage(info.runtimeIndex);
-            if (package.capacity.Value < 1)
-            {
-                package.capacity.Value = defaultCapacity;
-            }
+            packageModel.GetOrCreatePackage(info.runtimeIndex);
         }
     }
 
@@ -269,7 +260,7 @@ public class PackageSystem : AbstractSystem, IPackageSystem
             }
         }
 
-        info.capacity.Value = data.capacity < 1 ? defaultCapacity : data.capacity;
+        info.capacity.Value = data.capacity < 1 ? RolePackageInfo.DefaultCapacity : data.capacity;
         info.heldIndex.Value = data.heldIndex;
         return info;
     }
