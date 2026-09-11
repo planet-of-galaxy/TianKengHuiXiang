@@ -130,7 +130,8 @@ public class PackageSystem : AbstractSystem, IPackageSystem
     /// <summary>
     /// 依据 ItemType + configId 生成一件道具并加入指定角色的背包（仅内存，不落盘）。
     /// 流程：校验角色存在 -> 依据类型从对应 ConfigProvider 校验并构造持久化数据
-    ///        -> PropItemMapper 实例化运行时子类 -> 校验背包未满 -> 分配包内实例 id 后加入。
+    ///        -> PropItemMapper 实例化运行时子类 -> 校验背包容量已初始化且未满
+    ///        -> 加入背包（槽位号由背包自己分配）。
     /// 新增道具类型时在此按 ItemType 扩展构造逻辑，并同步 PropItemMapper 登记。
     /// </summary>
     public bool AddItemToRolePackage(int roleRuntimeId, ItemType itemType, int configId)
@@ -148,7 +149,17 @@ public class PackageSystem : AbstractSystem, IPackageSystem
         if (item == null) return false;
 
         var package = packageModel.GetOrCreatePackage(roleRuntimeId);
-        if (package.capacity.Value >= 0 && package.Items.Count >= package.capacity.Value)
+
+        // capacity < 1 说明该背包未初始化：PackageModel 创建背包时会补默认容量，走到这里说明
+        // 有别的路径绕过了它（capacity 是公开的 BindableProperty，可以被直接赋值）。
+        // 不能沿用旧语义把 -1 当成「无限」放行，那会静默塞进超出容量的道具。
+        if (package.capacity.Value < 1)
+        {
+            Debug.LogError($"[PackageSystem] 角色 {roleRuntimeId} 的背包容量未初始化（{package.capacity.Value}），已拒绝加入道具");
+            return false;
+        }
+
+        if (package.Items.Count >= package.capacity.Value)
         {
             Debug.LogWarning($"[PackageSystem] 角色 {roleRuntimeId} 背包已满（{package.capacity.Value}），无法加入道具");
             return false;
