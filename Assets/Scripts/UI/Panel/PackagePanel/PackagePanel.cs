@@ -1,185 +1,59 @@
-using System.Collections.Generic;
 using QFramework;
+using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 /// <summary>
-/// 背包面板（UIKit 管理）：由 PackageListener 通过 UIKit.OpenPanel 加载。
-/// 始终绘制 PackageSystem.maxCapacity 个栏位：
-///   index &lt; capacity                     → 白色（可用空间）
-///   capacity ≤ index &lt; maxCapacity      → 灰色（已达上限但尚未解锁）
-/// OnInit 订阅 RoleRuntimeModel.curRole 与当前角色背包的 capacity，角色切换或容量变化时自动刷新栏位颜色。
+/// 背包面板（UIKit 管理）：只持有 UI 引用，不含任何逻辑。
+/// UI 逻辑集中在同物体上的 <see cref="PackageController"/>，本类在生命周期回调里转发：
+/// OnInit → Controller.Init，OnShow / OnHide / OnClose 同理。
+/// KeyContent、FileContent 目前还没有对应逻辑，只作为引用提供给 Controller（留空待接入）。
 /// </summary>
-public class PackagePanel : UIPanel, IController
+public class PackagePanel : UIPanel
 {
-    [Header("布局")]
-    [SerializeField] private int columns = 8;
-    [SerializeField] private float slotSize = 64f;
-    [SerializeField] private float spacing = 8f;
-    [SerializeField] private float padding = 24f;
+    [Header("子节点")]
+    [Tooltip("背包页控制器（挂在 PropPanel 上），自己负责栏位生成、渲染与容量文本。")]
+    public PropPanelController PropPanelController;
 
-    [Header("颜色")]
-    [SerializeField] private Color availableColor = Color.white;
-    [SerializeField] private Color lockedColor = new Color(0.55f, 0.55f, 0.55f, 1f);
+    [Tooltip("键位页（PanelGroup/KeyPanel/Scroll View/Viewport/Content）的列表容器，暂未接入逻辑。")]
+    public Transform KeyContent;
 
-    private readonly List<Image> slots = new List<Image>();
-    private PackageModel packageModel;
-    private RoleRuntimeModel roleRuntimeModel;
-    private IUnRegister curRoleUnRegister;
-    private IUnRegister capacityUnRegister;
+    [Tooltip("文件页（PanelGroup/FilePanel/Scroll View/Viewport/Content）的列表容器，暂未接入逻辑。")]
+    public Transform FileContent;
 
-    /// <summary>总栏位数：永远显示到 maxCapacity。</summary>
-    private int TotalSlots => Mathf.Max(1, PackageSystem.maxCapacity);
+    [Tooltip("标题文本（TextMeshProUGUI），显示为「背包 - 当前角色名称」。")]
+    public TextMeshProUGUI Title;
 
-    /// <summary>当前可用容量：运行态取当前选中角色背包的容量，未取到时用默认容量。</summary>
-    private int Capacity
-    {
-        get
-        {
-            if (Application.isPlaying && packageModel != null && roleRuntimeModel != null
-                && packageModel.TryGetPackage(roleRuntimeModel.curRole.Value, out var package))
-                return package.capacity.Value;
-            return PackageSystem.defaultCapacity;
-        }
-    }
+    /// <summary>
+    /// 同物体上的 UI 逻辑控制器，OnInit 时取一次。
+    /// 这里不加 [RequireComponent]：PackageController 已经声明了依赖 PackagePanel，
+    /// 两边互相 RequireComponent 会让 Unity 在缺组件时无限互相添加。
+    /// </summary>
+    private PackageController controller;
 
     protected override void OnInit(IUIData uiData = null)
     {
-        packageModel = this.GetModel<PackageModel>();
-        roleRuntimeModel = this.GetModel<RoleRuntimeModel>();
+        controller = GetComponent<PackageController>();
+        if (controller == null)
+        {
+            Debug.LogError("[PackagePanel] 同物体上缺少 PackageController，面板不会刷新");
+            return;
+        }
 
-        // 角色切换时重新订阅新角色背包的容量并刷新栏位
-        curRoleUnRegister?.UnRegister();
-        curRoleUnRegister = roleRuntimeModel.curRole.Register(OnCurRoleChanged);
-        RegisterCapacity(roleRuntimeModel.curRole.Value);
-
-        RebuildSlots();
+        controller.Init(this);
     }
 
     protected override void OnShow()
     {
-        // 打开背包即进入游戏暂停（时间停止、显示并解锁鼠标），由 GamePauseSystem 统一处理
-        this.GetSystem<IGamePauseSystem>().Pause();
+        controller?.OnShow();
     }
 
     protected override void OnHide()
     {
-        // 关闭背包时退出暂停，还原暂停前的时间缩放与光标状态
-        this.GetSystem<IGamePauseSystem>().Resume();
+        controller?.OnHide();
     }
 
     protected override void OnClose()
     {
-        curRoleUnRegister?.UnRegister();
-        curRoleUnRegister = null;
-        capacityUnRegister?.UnRegister();
-        capacityUnRegister = null;
-    }
-
-    private void OnCurRoleChanged(int roleRuntimeId)
-    {
-        RegisterCapacity(roleRuntimeId);
-        ApplySlotColors();
-    }
-
-    /// <summary>改为订阅指定角色背包的容量变化；该角色无背包时仅取消旧订阅。</summary>
-    private void RegisterCapacity(int roleRuntimeId)
-    {
-        capacityUnRegister?.UnRegister();
-        capacityUnRegister = null;
-
-        if (packageModel.TryGetPackage(roleRuntimeId, out var package))
-        {
-            capacityUnRegister = package.capacity.Register(OnCapacityChanged);
-        }
-    }
-
-    private void OnCapacityChanged(int capacity)
-    {
-        ApplySlotColors();
-    }
-
-    /// <summary>构建（或重建）背景与全部栏位，然后按容量上色。</summary>
-    private void RebuildSlots()
-    {
-        slots.Clear();
-
-        // 清理旧的构建产物，保证重复调用幂等
-        for (int i = transform.childCount - 1; i >= 0; i--)
-        {
-            var child = transform.GetChild(i);
-            if (child.name == "Grid" || child.name.StartsWith("Slot"))
-            {
-                DestroyImmediate(child.gameObject);
-            }
-        }
-
-        // 背景：自身加半透明底
-        var bg = GetComponent<Image>();
-        if (bg == null)
-        {
-            bg = gameObject.AddComponent<Image>();
-            bg.raycastTarget = false;
-        }
-        bg.color = new Color(0f, 0f, 0f, 0.55f);
-
-        // 计算网格尺寸并调整面板大小
-        int total = TotalSlots;
-        int rows = Mathf.CeilToInt(total / (float)columns);
-        float gridW = columns * slotSize + (columns - 1) * spacing;
-        float gridH = rows * slotSize + (rows - 1) * spacing;
-
-        var rect = transform as RectTransform;
-        if (rect != null)
-        {
-            rect.sizeDelta = new Vector2(gridW + padding * 2, gridH + padding * 2);
-        }
-
-        // 网格容器：拉伸到面板内缩 padding，GridLayoutGroup 排布栏位
-        var gridGO = new GameObject("Grid", typeof(RectTransform), typeof(GridLayoutGroup));
-        gridGO.transform.SetParent(transform, false);
-
-        var gridRect = gridGO.transform as RectTransform;
-        gridRect.anchorMin = Vector2.zero;
-        gridRect.anchorMax = Vector2.one;
-        gridRect.offsetMin = new Vector2(padding, padding);
-        gridRect.offsetMax = new Vector2(-padding, -padding);
-
-        var grid = gridGO.GetComponent<GridLayoutGroup>();
-        grid.cellSize = new Vector2(slotSize, slotSize);
-        grid.spacing = new Vector2(spacing, spacing);
-        grid.childAlignment = TextAnchor.MiddleCenter;
-        grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
-        grid.constraintCount = columns;
-
-        // 栏位
-        for (int i = 0; i < total; i++)
-        {
-            var slotGO = new GameObject("Slot_" + i, typeof(RectTransform), typeof(Image));
-            slotGO.transform.SetParent(gridGO.transform, false);
-
-            var img = slotGO.GetComponent<Image>();
-            img.raycastTarget = false;
-            slots.Add(img);
-        }
-
-        ApplySlotColors();
-    }
-
-    /// <summary>按当前容量刷新栏位颜色：可用=白，未解锁=灰。</summary>
-    private void ApplySlotColors()
-    {
-        int capacity = Capacity;
-        int total = TotalSlots;
-
-        for (int i = 0; i < slots.Count && i < total; i++)
-        {
-            slots[i].color = i < capacity ? availableColor : lockedColor;
-        }
-    }
-
-    public IArchitecture GetArchitecture()
-    {
-        return TianArchitecture.Interface;
+        controller?.OnClose();
     }
 }
