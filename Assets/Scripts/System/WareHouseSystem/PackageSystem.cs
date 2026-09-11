@@ -148,14 +148,14 @@ public class PackageSystem : AbstractSystem, IPackageSystem
         if (item == null) return false;
 
         var package = packageModel.GetOrCreatePackage(roleRuntimeId);
-        if (package.capacity.Value >= 0 && package.packageItems.Count >= package.capacity.Value)
+        if (package.capacity.Value >= 0 && package.Items.Count >= package.capacity.Value)
         {
             Debug.LogWarning($"[PackageSystem] 角色 {roleRuntimeId} 背包已满（{package.capacity.Value}），无法加入道具");
             return false;
         }
 
-        item.index = AllocatePackageIndex(package.packageItems);
-        package.packageItems.Add(item);
+        // 槽位号由背包自己分配（当前最大槽位号 + 1），加入后触发 OnPackageUpdate 通知 UI
+        package.AddItem(item);
 
         Debug.Log($"[PackageSystem] 已将 {itemType}(configId={configId}) 加入角色 {roleRuntimeId} 的背包（未保存）");
         return true;
@@ -187,22 +187,6 @@ public class PackageSystem : AbstractSystem, IPackageSystem
                 Debug.LogWarning($"[PackageSystem] 暂不支持的道具类型 {itemType}");
                 return null;
         }
-    }
-
-    /// <summary>
-    /// 分配背包内新的实例 id：当前最大 index 的后继（空背包从 0 开始），保证包内唯一。
-    /// </summary>
-    private static int AllocatePackageIndex(List<PropItemInfo> packageItems)
-    {
-        int maxIndex = -1;
-        foreach (var item in packageItems)
-        {
-            if (item != null && item.index > maxIndex)
-            {
-                maxIndex = item.index;
-            }
-        }
-        return maxIndex + 1;
     }
 
     /// <summary>
@@ -255,7 +239,8 @@ public class PackageSystem : AbstractSystem, IPackageSystem
                 var prop = PropItemMapper.ToPropItemInfo(item);
                 if (prop != null)
                 {
-                    info.packageItems.Add(prop);
+                    // 槽位号沿用存档里的，不能重新分配，否则道具位置会与存档时不一致
+                    info.AddRestoredItem(prop);
                 }
             }
         }
@@ -278,12 +263,15 @@ public class PackageSystem : AbstractSystem, IPackageSystem
             heldIndex = info.heldIndex.Value,
         };
 
-        if (info.packageItems != null)
+        foreach (var item in info.Items)
         {
-            foreach (var item in info.packageItems)
+            if (item == null) continue;
+
+            // 未登记的道具类型会返回 null（ToPropItemData 内已打印错误），跳过而不是把 null 写进存档
+            var itemData = PropItemMapper.ToPropItemData(item);
+            if (itemData != null)
             {
-                if (item == null) continue;
-                data.packageItems.Add(PropItemMapper.ToPropItemData(item));
+                data.packageItems.Add(itemData);
             }
         }
 

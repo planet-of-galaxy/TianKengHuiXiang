@@ -7,7 +7,7 @@ using UnityEngine;
 /// 职责：
 ///   1. 标题：显示「背包 - 当前角色名称」；
 ///   2. 槽位语义：按当前角色背包容量，决定每个槽位是道具、空栏位还是锁定；
-///   3. 订阅：当前角色（RoleRuntimeModel.curRole）与其背包容量，变化时自动刷新。
+///   3. 订阅：当前角色（RoleRuntimeModel.curRole）、其背包容量、以及背包内物品增减，变化时自动刷新。
 /// 栏位本身由 PropPanelController 生成与渲染，本类只在刷新时把道具列表与容量交给它；
 /// KeyContent / FileContent 暂未接入逻辑。
 /// </summary>
@@ -21,6 +21,12 @@ public class PackageController : MonoBehaviour, IController
 
     private IUnRegister curRoleUnRegister;
     private IUnRegister capacityUnRegister;
+
+    /// <summary>
+    /// 当前已订阅物品变化的背包。背包存活于 PackageModel 中、比面板活得久，
+    /// 必须记住它才能在关闭 / 换角色时退订 C# 事件。
+    /// </summary>
+    private RolePackageInfo subscribedPackage;
 
     /// <summary>
     /// 当前可用容量：取当前角色背包的容量；该角色还没有背包时按默认容量显示。
@@ -66,9 +72,9 @@ public class PackageController : MonoBehaviour, IController
             propPanel.Init();
         }
 
-        // 角色切换时重新订阅新角色背包的容量并刷新栏位
+        // 角色切换时重新订阅新角色背包的容量与物品变化并刷新栏位
         curRoleUnRegister = roleRuntimeModel.curRole.Register(OnCurRoleChanged);
-        RegisterCapacity(roleRuntimeModel.curRole.Value);
+        RegisterPackage(roleRuntimeModel.curRole.Value);
     }
 
     /// <summary>面板打开：进入游戏暂停（时间停止、显示并解锁鼠标），并刷新一次显示。</summary>
@@ -89,8 +95,7 @@ public class PackageController : MonoBehaviour, IController
     {
         curRoleUnRegister?.UnRegister();
         curRoleUnRegister = null;
-        capacityUnRegister?.UnRegister();
-        capacityUnRegister = null;
+        UnRegisterPackage();
     }
 
     // ==================== 刷新 ====================
@@ -118,7 +123,7 @@ public class PackageController : MonoBehaviour, IController
     /// <summary>
     /// 刷新全部栏位：把当前角色的背包道具列表与容量交给容器，由它决定每个栏位画成
     /// 道具 / 空 / 锁定（见 PropPanelController.Refresh）。
-    /// 背包道具按列表顺序填入槽位，与 PackageSystem 的入包顺序一致。
+    /// 道具按各自的槽位号（PropItemInfo.index）落位，不是按列表顺序。
     /// </summary>
     private void RefreshCells()
     {
@@ -131,10 +136,10 @@ public class PackageController : MonoBehaviour, IController
     }
 
     /// <summary>当前角色背包的道具列表；无背包时返回 null。</summary>
-    private List<PropItemInfo> GetPackageItems()
+    private IReadOnlyList<PropItemInfo> GetPackageItems()
     {
         return packageModel.TryGetPackage(roleRuntimeModel.curRole.Value, out var package)
-            ? package.packageItems
+            ? package.Items
             : null;
     }
 
@@ -142,23 +147,49 @@ public class PackageController : MonoBehaviour, IController
 
     private void OnCurRoleChanged(int roleRuntimeId)
     {
-        RegisterCapacity(roleRuntimeId);
+        RegisterPackage(roleRuntimeId);
         RefreshAll();
     }
 
-    /// <summary>改为订阅指定角色背包的容量变化；该角色无背包时仅取消旧订阅。</summary>
-    private void RegisterCapacity(int roleRuntimeId)
+    /// <summary>
+    /// 改为订阅指定角色背包的容量与物品变化；该角色无背包时仅取消旧订阅。
+    /// 物品变化是 C# 事件（RolePackageInfo.OnPackageUpdate），退订必须交回同一个委托目标，
+    /// 所以这里用 subscribedPackage 记住订阅的是哪个背包。
+    /// </summary>
+    private void RegisterPackage(int roleRuntimeId)
+    {
+        UnRegisterPackage();
+
+        if (!packageModel.TryGetPackage(roleRuntimeId, out var package))
+        {
+            return;
+        }
+
+        subscribedPackage = package;
+        capacityUnRegister = package.capacity.Register(OnCapacityChanged);
+        subscribedPackage.OnPackageUpdate += OnPackageItemsChanged;
+    }
+
+    /// <summary>退掉当前背包的容量与物品订阅；未订阅时是空操作。</summary>
+    private void UnRegisterPackage()
     {
         capacityUnRegister?.UnRegister();
         capacityUnRegister = null;
 
-        if (packageModel.TryGetPackage(roleRuntimeId, out var package))
+        if (subscribedPackage != null)
         {
-            capacityUnRegister = package.capacity.Register(OnCapacityChanged);
+            subscribedPackage.OnPackageUpdate -= OnPackageItemsChanged;
+            subscribedPackage = null;
         }
     }
 
     private void OnCapacityChanged(int capacity)
+    {
+        RefreshCells();
+    }
+
+    /// <summary>背包内物品增减时刷新。标题不含物品信息，只重画栏位与容量文本。</summary>
+    private void OnPackageItemsChanged()
     {
         RefreshCells();
     }

@@ -323,7 +323,7 @@ public class WareHousePanel : UIPanel, IController
             return;
         }
 
-        var items = package.packageItems ?? new List<PropItemInfo>();
+        var items = package.Items;
         var shown = false;
         foreach (var item in items)
         {

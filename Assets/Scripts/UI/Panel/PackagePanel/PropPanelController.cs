@@ -8,7 +8,7 @@ using UnityEngine;
 /// 职责：
 ///   1. 生成栏位——把栏位容器（View/Content）下的第一个 Item 当作模板并隐藏，按 PackageSystem.maxCapacity 实例化固定数量的栏位；
 ///   2. 渲染单个栏位的三种状态——道具 / 锁定（未解锁，显示 Item 下的 LockedIcon 遮罩）/ 空；
-///   3. 道具到显示的映射——名称、图标（按 WeaponConfig.icon 从 Resources 加载并缓存）、数量、耐久；
+///   3. 道具到显示的映射——按 PropItemInfo.Type 分发，目前支持武器（名称、图标按 WeaponConfig.icon 从 Resources 加载并缓存、数量、耐久）；
 ///   4. 容量文本——背包内道具数量 / 当前角色背包容量。
 /// 对外只有 Init + Refresh：调用方给出「背包道具列表 + 当前容量」，本类负责把每个栏位画成对应状态。
 /// 「每个栏位恰好处于三种状态之一」由本类自己在 Refresh 里保证，不拆成逐槽接口交给调用方拼装。
@@ -55,31 +55,58 @@ public class PropPanelController : MonoBehaviour, IController
 
     /// <summary>
     /// 按背包数据重绘全部栏位。items 为背包道具列表（可为 null），capacity 为当前角色背包容量：
-    ///   i &lt; capacity 且该槽有道具 → 道具栏位；
-    ///   i &lt; capacity 但该槽为空   → 空栏位；
-    ///   i &gt;= capacity             → 锁定栏位。
-    /// 每次都重建全部栏位，不保留上一次的任何显示，所以不提供逐槽设置接口。
+    ///   槽位号 &lt; capacity 且该槽位有道具 → 道具栏位；
+    ///   槽位号 &lt; capacity 但该槽位为空   → 空栏位；
+    ///   槽位号 &gt;= capacity               → 锁定栏位。
+    /// 道具按 PropItemInfo.index（槽位号）定位，不用列表下标——两者只有在槽位号连续且无空洞时才恰好相同，
+    /// 一旦支持移除道具就会分叉，所以以槽位号为准。
+    /// 先整体重置再逐件放入：槽位号之间的空洞、以及两次刷新之间道具换了槽位，都只能靠「先重置」才不会残留旧显示，
+    /// 所以不提供逐槽设置接口。
     /// </summary>
-    public void Refresh(IList<PropItemInfo> items, int capacity)
+    public void Refresh(IReadOnlyList<PropItemInfo> items, int capacity)
     {
         RefreshCapacityText(items, capacity);
 
+        // 第一遍：把所有栏位重置成「空栏位」或「锁定」，不保留上一次的任何显示
         for (int i = 0; i < cells.Count; i++)
         {
             if (i >= capacity)
             {
                 SetLocked(i);
-                continue;
             }
-
-            var item = items != null && i < items.Count ? items[i] : null;
-            if (item == null)
+            else
             {
                 cells[i]?.Clear();
+            }
+        }
+
+        if (items == null)
+        {
+            return;
+        }
+
+        // 第二遍：按槽位号把每件道具画进对应栏位
+        foreach (var item in items)
+        {
+            if (item == null)
+            {
                 continue;
             }
 
-            SetItem(i, item);
+            if (item.index < 0 || item.index >= cells.Count)
+            {
+                Debug.LogError($"[PropPanelController] 道具槽位号越界（index={item.index}，共 {cells.Count} 个栏位），已跳过 configId={item.configId}");
+                continue;
+            }
+
+            if (item.index >= capacity)
+            {
+                // 入包时已校验未满，正常不会出现；容量被下调时才会走到这里，栏位保持第一遍的锁定外观
+                Debug.LogWarning($"[PropPanelController] 道具槽位号 {item.index} 超出当前容量 {capacity}，未显示 configId={item.configId}");
+                continue;
+            }
+
+            SetItem(item.index, item);
         }
     }
 
@@ -88,7 +115,7 @@ public class PropPanelController : MonoBehaviour, IController
     /// 道具数量取 items 的元素个数——PackageSystem 只在未满时允许入包（AddItemToRolePackage），
     /// 所以正常运行状态下它不会超过 capacity，与画面上的道具栏位数一致。
     /// </summary>
-    private void RefreshCapacityText(IList<PropItemInfo> items, int capacity)
+    private void RefreshCapacityText(IReadOnlyList<PropItemInfo> items, int capacity)
     {
         if (capacityText == null)
         {
@@ -99,33 +126,54 @@ public class PropPanelController : MonoBehaviour, IController
     }
 
     /// <summary>
-    /// 把指定栏位渲染成道具：名称、图标、数量、耐久。
-    /// 下标越界（没有该栏位）时忽略。
+    /// 把指定栏位渲染成道具，按 <see cref="PropItemInfo.Type"/> 分发到对应类型的渲染逻辑。
+    /// 没有该栏位时忽略；未知类型报错并把栏位清成空——不能猜着渲染，配置表按类型分开，
+    /// 取错 Provider 会拿到别的类型里同号的 configId。
     /// </summary>
     private void SetItem(int index, PropItemInfo item)
     {
-        if (item == null)
-        {
-            return;
-        }
-
         var cell = GetCell(index);
         if (cell == null)
         {
+            Debug.LogError($"[PropPanelController] 没有下标为 {index} 的栏位，无法渲染 configId={item.configId}");
             return;
         }
 
-        var config = weaponConfigProvider.GetWeaponConfig(item.configId);
+        switch (item.Type)
+        {
+            case ItemType.Weapon:
+                // Type 由子类声明，理论上 ItemType.Weapon 一定对应 WeaponItemInfo
+                if (item is WeaponItemInfo weapon)
+                {
+                    SetWeapon(cell, weapon);
+                    break;
+                }
 
-        // Refresh 会复用栏位，道具栏位必须显式摘掉锁定遮罩，否则会残留上一次的锁定外观
+                Debug.LogError($"[PropPanelController] {item.GetType().Name} 声明为 {ItemType.Weapon} 但不是 WeaponItemInfo，无法渲染（configId={item.configId}）");
+                cell.Clear();
+                break;
+
+            default:
+                Debug.LogError($"[PropPanelController] 暂不支持的道具类型 {item.Type}（configId={item.configId}），栏位按空显示");
+                cell.Clear();
+                break;
+        }
+    }
+
+    /// <summary>渲染一件武器：名称、图标、数量、耐久；配置取不到时名称回退为 configId，图标与耐久隐藏。</summary>
+    private void SetWeapon(PropItemController cell, WeaponItemInfo weapon)
+    {
+        var config = weaponConfigProvider.GetWeaponConfig(weapon.configId);
+
+        // 第一遍已经清过一遍，这里再摘一次锁定遮罩，是为了让本方法自身不依赖调用顺序
         cell.HideLock();
-        cell.SetName(config != null ? config.name : $"道具{item.configId}");
+        cell.SetName(config != null ? config.name : $"道具{weapon.configId}");
         cell.SetIcon(LoadIcon(config));
 
         // 数量不大于 1 时 PropItemController 会自动隐藏（武器不可叠加，不显示数量）
-        cell.SetNum(item.num?.Value ?? 1);
+        cell.SetNum(weapon.num?.Value ?? 1);
 
-        if (item is WeaponItemInfo weapon && config != null)
+        if (config != null)
         {
             cell.SetDurability(weapon.durability?.Value ?? 0f, config.durability);
         }
