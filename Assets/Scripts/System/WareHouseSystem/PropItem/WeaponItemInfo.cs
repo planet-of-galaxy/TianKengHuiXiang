@@ -6,5 +6,8 @@ using QFramework;
 /// </summary>
 public class WeaponItemInfo : PropItemInfo
 {
+    /// <summary>武器类型标识，供按类型分发的调用方使用。</summary>
+    public override ItemType Type => ItemType.Weapon;
+
     public BindableProperty<float> durability;
 }
