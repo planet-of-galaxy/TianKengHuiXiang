@@ -55,7 +55,8 @@ public class RoleViewFactory
     }
 
     /// <summary>
-    /// 将场景中已存在的角色设为当前角色：校验其 RoleContext 后挂载 PlayerController，不实例化新对象。
+    /// 将场景中已存在的角色设为当前角色：挂载生命周期与 PlayerController，不实例化新对象。
+    /// RoleContext 与运行时数据的校验由 RoleRuntimeSystem 负责，这里只做视图层接管。
     /// 上一个当前角色只被移除 PlayerController，实例保留在场景中。失败返回 null。
     /// </summary>
     public GameObject SpawnCurrentRole(GameObject roleInstance)
@@ -63,19 +64,6 @@ public class RoleViewFactory
         if (roleInstance == null)
         {
             Debug.LogError("[RoleViewFactory] SpawnCurrentRole 传入的 GameObject 为 null");
-            return null;
-        }
-
-        var roleContext = roleInstance.GetComponent<RoleContext>();
-        if (roleContext == null)
-        {
-            Debug.LogError($"[RoleViewFactory] {roleInstance.name} 上没有 RoleContext，无法作为当前角色");
-            return null;
-        }
-
-        if (!runtimeModel.TryGetRoleRuntime(roleContext.roleRuntimeIndex, out _))
-        {
-            Debug.LogError($"[RoleViewFactory] RoleRuntimeInfo not found for id: {roleContext.roleRuntimeIndex}");
             return null;
         }
 

@@ -192,11 +192,34 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
     }
 
     /// <summary>
-    /// 将场景中已存在的角色设为当前角色：校验其 RoleContext 后挂载 PlayerController，不实例化新对象。
+    /// 将场景中已存在的角色设为当前角色：以其 RoleContext 上的运行时 id 为准切换当前角色并落盘，
+    /// 校验通过后挂载 PlayerController，不实例化新对象。
     /// 上一个当前角色只被移除 PlayerController，实例保留在场景中。失败返回 null。
     /// </summary>
     public GameObject SpawnCurrentRole(GameObject roleInstance)
     {
+        if (roleInstance == null)
+        {
+            Debug.LogError("[RoleRuntimeSystem] SpawnCurrentRole 传入的 GameObject 为 null");
+            return null;
+        }
+
+        var roleContext = roleInstance.GetComponent<RoleContext>();
+        if (roleContext == null)
+        {
+            Debug.LogError($"[RoleRuntimeSystem] {roleInstance.name} 上没有 RoleContext，无法确定目标角色");
+            return null;
+        }
+
+        if (!runtimeModel.TryGetRoleRuntime(roleContext.roleRuntimeIndex, out _))
+        {
+            Debug.LogError($"[RoleRuntimeSystem] RoleRuntimeInfo not found for id: {roleContext.roleRuntimeIndex}");
+            return null;
+        }
+
+        // 先切换并落盘当前角色，再接管实例；SetCurrentRole 内已做存在性校验与存档
+        SetCurrentRole(roleContext.roleRuntimeIndex);
+
         return viewFactory.SpawnCurrentRole(roleInstance);
     }
 
