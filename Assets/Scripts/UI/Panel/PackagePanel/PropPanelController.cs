@@ -167,7 +167,7 @@ public class PropPanelController : MonoBehaviour, IController
 
         // 第一遍已经清过一遍，这里再摘一次锁定遮罩，是为了让本方法自身不依赖调用顺序
         cell.HideLock();
-        cell.SetName(config != null ? config.name : $"道具{weapon.configId}");
+        // cell.SetName(config != null ? config.name : $"道具{weapon.configId}"); 不用显示名称
         cell.SetIcon(LoadIcon(config));
 
         // 数量不大于 1 时 PropItemController 会自动隐藏（武器不可叠加，不显示数量）

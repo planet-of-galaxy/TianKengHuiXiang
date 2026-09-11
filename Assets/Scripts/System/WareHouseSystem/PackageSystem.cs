@@ -21,6 +21,18 @@ public interface IPackageSystem : ISystem
     bool AddItemToRolePackage(int roleRuntimeId, ItemType itemType, int configId);
 
     /// <summary>
+    /// 增加指定角色背包槽位中武器的耐久，结果不会超过武器配置的满耐久。
+    /// 仅修改内存，需调用 SavePackage() 落盘；目标不存在、不是武器或增加量不大于 0 时返回 false。
+    /// </summary>
+    bool IncreaseWeaponDurability(int roleRuntimeId, int itemIndex, float amount);
+
+    /// <summary>
+    /// 减少指定角色背包槽位中武器的耐久，结果不会低于 0。
+    /// 仅修改内存，需调用 SavePackage() 落盘；目标不存在、不是武器或减少量不大于 0 时返回 false。
+    /// </summary>
+    bool DecreaseWeaponDurability(int roleRuntimeId, int itemIndex, float amount);
+
+    /// <summary>
     /// 在场景中创建一个空物体并挂载 PackageListener，使其监听全局快捷键。
     /// 已存在有效实例时忽略（幂等）。
     /// </summary>
@@ -170,6 +182,67 @@ public class PackageSystem : AbstractSystem, IPackageSystem
 
         Debug.Log($"[PackageSystem] 已将 {itemType}(configId={configId}) 加入角色 {roleRuntimeId} 的背包（未保存）");
         return true;
+    }
+
+    /// <inheritdoc />
+    public bool IncreaseWeaponDurability(int roleRuntimeId, int itemIndex, float amount)
+    {
+        if (!TryGetPackageWeapon(roleRuntimeId, itemIndex, out var weapon) || amount <= 0f)
+        {
+            return false;
+        }
+
+        var weaponConfig = this.GetUtility<IWeaponConfigProvider>().GetWeaponConfig(weapon.configId);
+        if (weaponConfig == null)
+        {
+            Debug.LogWarning($"[PackageSystem] 未知的武器 configId={weapon.configId}，无法增加耐久");
+            return false;
+        }
+
+        weapon.durability.Value = Mathf.Min(weapon.durability.Value + amount, weaponConfig.durability);
+        return true;
+    }
+
+    /// <inheritdoc />
+    public bool DecreaseWeaponDurability(int roleRuntimeId, int itemIndex, float amount)
+    {
+        if (!TryGetPackageWeapon(roleRuntimeId, itemIndex, out var weapon) || amount <= 0f)
+        {
+            return false;
+        }
+
+        weapon.durability.Value = Mathf.Max(weapon.durability.Value - amount, 0f);
+        return true;
+    }
+
+    /// <summary>
+    /// 按角色运行时 id 与背包槽位定位武器。
+    /// </summary>
+    private bool TryGetPackageWeapon(int roleRuntimeId, int itemIndex, out WeaponItemInfo weapon)
+    {
+        weapon = null;
+        if (!packageModel.TryGetPackage(roleRuntimeId, out var package))
+        {
+            Debug.LogWarning($"[PackageSystem] 角色背包不存在 roleRuntimeId={roleRuntimeId}");
+            return false;
+        }
+
+        foreach (var item in package.Items)
+        {
+            if (item != null && item.index == itemIndex)
+            {
+                weapon = item as WeaponItemInfo;
+                if (weapon == null)
+                {
+                    Debug.LogWarning($"[PackageSystem] 角色 {roleRuntimeId} 的槽位 {itemIndex} 不是武器");
+                }
+
+                return weapon != null;
+            }
+        }
+
+        Debug.LogWarning($"[PackageSystem] 角色 {roleRuntimeId} 的背包槽位 {itemIndex} 不存在");
+        return false;
     }
 
     /// <summary>
