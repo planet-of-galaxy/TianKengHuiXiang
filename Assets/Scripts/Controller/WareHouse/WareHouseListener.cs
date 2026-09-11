@@ -2,10 +2,10 @@ using QFramework;
 using UnityEngine;
 
 /// <summary>
-/// 仓库控制器：监听全局快捷键 HotKeyUtility.OpenPackage（默认 Q，与背包共用快捷键互斥打开），
+/// 仓库监听器：监听全局快捷键 HotKeyUtility.OpenPackage（默认 Q，与背包共用快捷键互斥打开），
 /// 通过 UIKit 打开/关闭仓库面板 WareHousePanel。
 /// </summary>
-public class WareHouseController : MonoBehaviour, IController
+public class WareHouseListener : MonoBehaviour, IController
 {
     private void Update()
     {

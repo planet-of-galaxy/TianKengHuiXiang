@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 背包面板（UIKit 管理）：由 PackageController 通过 UIKit.OpenPanel 加载。
+/// 背包面板（UIKit 管理）：由 PackageListener 通过 UIKit.OpenPanel 加载。
 /// 始终绘制 PackageSystem.maxCapacity 个栏位：
 ///   index &lt; capacity                     → 白色（可用空间）
 ///   capacity ≤ index &lt; maxCapacity      → 灰色（已达上限但尚未解锁）

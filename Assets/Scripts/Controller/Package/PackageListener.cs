@@ -2,10 +2,10 @@ using QFramework;
 using UnityEngine;
 
 /// <summary>
-/// 背包控制器：监听全局快捷键 HotKeyUtility.OpenPackage（默认 Q），
+/// 背包监听器：监听全局快捷键 HotKeyUtility.OpenPackage（默认 Q），
 /// 通过 UIKit 打开/关闭背包面板 PackagePanel。
 /// </summary>
-public class PackageController : MonoBehaviour, IController
+public class PackageListener : MonoBehaviour, IController
 {
     private void Update()
     {

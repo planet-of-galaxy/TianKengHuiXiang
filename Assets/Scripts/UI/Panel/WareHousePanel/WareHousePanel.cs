@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 /// <summary>
-/// 仓库面板（UIKit 管理）：由 WareHouseController 通过 UIKit.OpenPanel 加载。
+/// 仓库面板（UIKit 管理）：由 WareHouseListener 通过 UIKit.OpenPanel 加载。
 /// 左侧列举 WareHouse 中所有道具，右侧展示选中角色（默认当前角色）的背包道具，
 /// 顶部通过人物按钮切换右侧展示哪个角色的背包。
 /// 说明：当前为纯展示面板（无道具搬运交互），文字列表、暂不渲染图标。

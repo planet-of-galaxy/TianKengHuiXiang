@@ -21,13 +21,13 @@ public interface IPackageSystem : ISystem
     bool AddItemToRolePackage(int roleRuntimeId, ItemType itemType, int configId);
 
     /// <summary>
-    /// 在场景中创建一个空物体并挂载 PackageController，使其监听全局快捷键。
+    /// 在场景中创建一个空物体并挂载 PackageListener，使其监听全局快捷键。
     /// 已存在有效实例时忽略（幂等）。
     /// </summary>
     void AddPackageListener();
 
     /// <summary>
-    /// 销毁 AddPackageListener 创建的空物体与 PackageController。
+    /// 销毁 AddPackageListener 创建的空物体与 PackageListener。
     /// </summary>
     void RemovePackageListener();
 }
@@ -37,13 +37,13 @@ public class PackageSystem : AbstractSystem, IPackageSystem
     /// <summary>
     /// 默认背包容量：无存档（或存档容量非法）时每个角色背包的可用栏位数。
     /// </summary>
-    public const int defaultCapacity = 20;
+    public const int defaultCapacity = 6;
 
     /// <summary>
     /// 背包容量上限：可通过升级解锁的最大栏位数。
     /// capacity 与 maxCapacity 之间的栏位在 UI 中以灰色锁定显示。
     /// </summary>
-    public const int maxCapacity = 40;
+    public const int maxCapacity = 25;
 
     /// <summary>
     /// 背包运行时数据模型，由 TianArchitecture 注册。
@@ -57,7 +57,7 @@ public class PackageSystem : AbstractSystem, IPackageSystem
     private RoleRuntimeModel roleRuntimeModel;
 
     /// <summary>
-    /// AddPackageListener 创建的空物体，用于挂载 PackageController。
+    /// AddPackageListener 创建的空物体，用于挂载 PackageListener。
     /// 切换场景时该物体可能被 Unity 销毁，此时与 null 相等，AddPackageListener 会重新创建。
     /// </summary>
     private GameObject packageListenerGO;
@@ -215,7 +215,7 @@ public class PackageSystem : AbstractSystem, IPackageSystem
     }
 
     /// <summary>
-    /// 在场景中创建空物体并挂载 PackageController，使其监听全局快捷键。
+    /// 在场景中创建空物体并挂载 PackageListener，使其监听全局快捷键。
     /// 已有有效实例（未被销毁）时忽略，保证幂等。
     /// </summary>
     public void AddPackageListener()
@@ -225,12 +225,12 @@ public class PackageSystem : AbstractSystem, IPackageSystem
             return;
         }
 
-        packageListenerGO = new GameObject("PackageController");
-        packageListenerGO.AddComponent<PackageController>();
+        packageListenerGO = new GameObject("PackageListener");
+        packageListenerGO.AddComponent<PackageListener>();
     }
 
     /// <summary>
-    /// 销毁 AddPackageListener 创建的空物体与 PackageController。
+    /// 销毁 AddPackageListener 创建的空物体与 PackageListener。
     /// </summary>
     public void RemovePackageListener()
     {
