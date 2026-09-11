@@ -28,6 +28,7 @@ public class CurrentRoleSetListener : MonoBehaviour, IController
         if (_roleContext == null) return;
         if (e.RuntimeIndex != _roleContext.roleRuntimeIndex) return;
 
+        this.GetSystem<IRoleRuntimeSystem>().SetCurrentRole(_roleContext.roleRuntimeIndex);
         this.GetSystem<IRoleRuntimeSystem>().SpawnCurrentRole(gameObject);
         this.GetSystem<ICinemaChineCameraSystem>().TransitionTo(_roleContext.firstViewCinema);
     }
