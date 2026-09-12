@@ -3,6 +3,8 @@ using UnityEngine;
 
 public interface IRoleInstanceSystem : ISystem
 {
+    event System.Action<int, GameObject> RoleInstanceCreated;
+    event System.Action<int, GameObject> RoleInstanceDestroyed;
     /// <summary>选择运行时角色；尚未生成时释放控制，-1 表示取消选择。</summary>
     void SetCurrentRole(int roleRuntimeId);
     GameObject CurrentRoleInstance { get; }
@@ -23,6 +25,8 @@ public interface IRoleInstanceSystem : ISystem
 /// <summary>统一管理角色实例，以及唯一的 PlayerMoveController。</summary>
 public class RoleInstanceSystem : AbstractSystem, IRoleInstanceSystem
 {
+    public event System.Action<int, GameObject> RoleInstanceCreated;
+    public event System.Action<int, GameObject> RoleInstanceDestroyed;
     private RoleRuntimeModel runtimeModel;
     private RoleInstanceModel instanceModel;
     private RoleViewFactory viewFactory;
@@ -35,6 +39,7 @@ public class RoleInstanceSystem : AbstractSystem, IRoleInstanceSystem
         runtimeModel = this.GetModel<RoleRuntimeModel>();
         instanceModel = this.GetModel<RoleInstanceModel>();
         viewFactory = new RoleViewFactory(runtimeModel, this.GetUtility<IResourceStorage>());
+        viewFactory.RoleInstanceCreated += OnRoleInstanceCreated;
         viewFactory.RoleInstanceDestroyed += OnRoleInstanceDestroyed;
         currentRoleSubscription = instanceModel.curRole.Register(SynchronizeControl);
         SynchronizeControl(instanceModel.curRole.Value);
@@ -43,6 +48,7 @@ public class RoleInstanceSystem : AbstractSystem, IRoleInstanceSystem
     protected override void OnDeinit()
     {
         currentRoleSubscription?.UnRegister();
+        viewFactory.RoleInstanceCreated -= OnRoleInstanceCreated;
         viewFactory.RoleInstanceDestroyed -= OnRoleInstanceDestroyed;
         ReleaseControl();
         instanceModel.curRole.Value = -1;
@@ -140,6 +146,11 @@ public class RoleInstanceSystem : AbstractSystem, IRoleInstanceSystem
         viewFactory.DestroyRoleInstance(roleRuntimeIndex);
     }
 
+    private void OnRoleInstanceCreated(int runtimeIndex, GameObject instance)
+    {
+        RoleInstanceCreated?.Invoke(runtimeIndex, instance);
+    }
+
     private void OnRoleInstanceDestroyed(int runtimeIndex, GameObject instance)
     {
         if (ReferenceEquals(currentRoleInstance, instance))
@@ -150,5 +161,6 @@ public class RoleInstanceSystem : AbstractSystem, IRoleInstanceSystem
             currentRoleInstance = null;
         }
         if (instanceModel.curRole.Value == runtimeIndex) instanceModel.curRole.Value = -1;
+        RoleInstanceDestroyed?.Invoke(runtimeIndex, instance);
     }
 }

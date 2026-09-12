@@ -9,6 +9,9 @@ public class PackageModel : AbstractModel
     /// </summary>
     private readonly Dictionary<int, RolePackageInfo> rolePackages = new();
 
+    /// <summary>背包对象创建、替换或移除后通知订阅方重新绑定。</summary>
+    public event System.Action<int> PackageChanged;
+
     /// <summary>
     /// 拥有背包的角色数量。
     /// </summary>
@@ -33,6 +36,7 @@ public class PackageModel : AbstractModel
             package = new RolePackageInfo { roleRuntimeId = roleRuntimeId };
             rolePackages[roleRuntimeId] = package;
             EnsureCapacityInitialized(package);
+            PackageChanged?.Invoke(roleRuntimeId);
         }
 
         return package;
@@ -47,6 +51,7 @@ public class PackageModel : AbstractModel
 
         rolePackages[info.roleRuntimeId] = info;
         EnsureCapacityInitialized(info);
+        PackageChanged?.Invoke(info.roleRuntimeId);
     }
 
     /// <summary>
@@ -68,7 +73,9 @@ public class PackageModel : AbstractModel
     /// </summary>
     public bool RemovePackage(int roleRuntimeId)
     {
-        return rolePackages.Remove(roleRuntimeId);
+        if (!rolePackages.Remove(roleRuntimeId)) return false;
+        PackageChanged?.Invoke(roleRuntimeId);
+        return true;
     }
 
     /// <summary>
@@ -84,7 +91,9 @@ public class PackageModel : AbstractModel
     /// </summary>
     public void ClearPackages()
     {
+        var runtimeIds = new List<int>(rolePackages.Keys);
         rolePackages.Clear();
+        foreach (var runtimeId in runtimeIds) PackageChanged?.Invoke(runtimeId);
     }
 
     protected override void OnInit()

@@ -10,6 +10,7 @@ public class RoleViewFactory
     private readonly IResourceStorage resourceStorage;
     private readonly Dictionary<int, GameObject> instances = new();
 
+    public event Action<int, GameObject> RoleInstanceCreated;
     public event Action<int, GameObject> RoleInstanceDestroyed;
 
     public RoleViewFactory(RoleRuntimeModel runtimeModel, IResourceStorage resourceStorage)
@@ -43,6 +44,7 @@ public class RoleViewFactory
         var lifecycle = instance.GetComponent<RoleRuntimeLifecycle>();
         if (lifecycle == null) lifecycle = instance.AddComponent<RoleRuntimeLifecycle>();
         lifecycle.Init(destroyed => OnRoleInstanceDestroyed(runtimeId, destroyed));
+        RoleInstanceCreated?.Invoke(runtimeId, instance);
         return instance;
     }
 

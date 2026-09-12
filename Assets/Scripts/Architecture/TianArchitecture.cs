@@ -28,6 +28,7 @@ public class TianArchitecture : Architecture<TianArchitecture>
         this.RegisterSystem<IRoleRuntimeSystem>(new RoleRuntimeSystem());
         this.RegisterSystem<IRoleInstanceSystem>(new RoleInstanceSystem());
         this.RegisterSystem<IPackageSystem>(new PackageSystem());
+        this.RegisterSystem<IWeaponInstanceSystem>(new WeaponInstanceSystem());
         this.RegisterSystem<IWareHouseSystem>(new WareHouseSystem());
         this.RegisterSystem<IGamePauseSystem>(new GamePauseSystem());
         this.RegisterSystem<IMonsterRuntimeSystem>(new MonsterRuntimeSystem());
