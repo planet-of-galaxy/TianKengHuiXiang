@@ -6,6 +6,7 @@ public class TestState : GameProcedureStateBase
     public override void OnEnter()
     {
         Debug.Log("[GameProcedure] 进入 TestState");
+        GUITester.EnsureCreated();
         // UIKit.OpenPanel<RoleSelectPanel>(prefabName: "resources://UI/Panel/roleselectpanel");
         this.GetSystem<IPackageSystem>().AddPackageListener();
     }
