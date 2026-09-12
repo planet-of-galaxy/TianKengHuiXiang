@@ -9,6 +9,7 @@ public class GUITester : MonoBehaviour, IController
     private bool visible;
     private CursorUtility.CursorSnapshot cursorBeforeOpen;
     private string configIdText = "0";
+    private string roleConfigIdText = "0";
     private string slotIndexText = "0";
     private string message = "按 Tab 显示或隐藏。背包槽位从 0 开始。";
 
@@ -68,7 +69,7 @@ public class GUITester : MonoBehaviour, IController
     {
         if (!visible || instance != this) return;
 
-        GUILayout.BeginArea(new Rect(20, 20, 420, 260), GUI.skin.box);
+        GUILayout.BeginArea(new Rect(20, 20, 420, 330), GUI.skin.box);
         GUILayout.Label("GUITester（Tab 隐藏）");
         GUILayout.BeginHorizontal();
         GUILayout.Label("武器配置 ID", GUILayout.Width(130));
@@ -83,8 +84,42 @@ public class GUITester : MonoBehaviour, IController
         GUILayout.EndHorizontal();
 
         if (GUILayout.Button("打印武器")) PrintWeapon();
+
+        GUILayout.BeginHorizontal();
+        GUILayout.Label("角色配置 ID", GUILayout.Width(130));
+        roleConfigIdText = GUILayout.TextField(roleConfigIdText, 10);
+        if (GUILayout.Button("新增角色", GUILayout.Width(90))) AddRole();
+        GUILayout.EndHorizontal();
+
+        if (GUILayout.Button("打印所有角色名称")) PrintRoleNames();
         GUILayout.Label(message);
         GUILayout.EndArea();
+    }
+
+    private void AddRole()
+    {
+        if (!TryReadNumber(roleConfigIdText, "角色配置 ID", out int configId)) return;
+
+        int runtimeId = this.GetSystem<IRoleRuntimeSystem>().CreateRole(configId);
+        Report(runtimeId >= 0 ? $"已新增角色，配置 ID：{configId}，运行时 ID：{runtimeId}。" :
+            $"新增角色失败，请检查角色配置 ID：{configId} 及 Console 日志。", runtimeId < 0);
+    }
+
+    private void PrintRoleNames()
+    {
+        var model = this.GetModel<RoleRuntimeModel>();
+        if (model.Count == 0)
+        {
+            Report("当前没有角色。");
+            return;
+        }
+
+        foreach (var role in model.GetAllRoleRuntimes())
+        {
+            Debug.Log($"[GUITester] 角色名称：{role.name}（运行时 ID：{role.runtimeIndex}，配置 ID：{role.configId}）", this);
+        }
+
+        Report($"已将全部 {model.Count} 个角色的名称打印到 Console。");
     }
 
     private void AddItem()
