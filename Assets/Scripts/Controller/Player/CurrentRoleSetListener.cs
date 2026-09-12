@@ -26,10 +26,10 @@ public class CurrentRoleSetListener : MonoBehaviour, IController
     private void OnCurrentRoleSet(CurrentRoleSetEvent e)
     {
         if (_roleContext == null) return;
-        if (e.RuntimeIndex != _roleContext.roleRuntimeIndex) return;
+        if (e.RuntimeIndex != _roleContext.RoleRuntimeIndex) return;
 
         this.GetSystem<IRoleRuntimeSystem>().SpawnCurrentRole(gameObject);
-        this.GetSystem<ICinemaChineCameraSystem>().TransitionTo(_roleContext.firstViewCinema);
+        this.GetSystem<ICinemaChineCameraSystem>().TransitionTo(_roleContext.FirstViewCinema);
     }
 
     public IArchitecture GetArchitecture() => TianArchitecture.Interface;

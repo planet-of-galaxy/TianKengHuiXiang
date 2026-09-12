@@ -49,7 +49,7 @@ public class RoleCreator : MonoBehaviour, IController
                 {
                     roleContext = instance.AddComponent<RoleContext>();
                 }
-                roleContext.roleRuntimeIndex = roleInfo.runtimeIndex;
+                roleContext.Initialize(roleInfo.runtimeIndex);
 
                 var listener = instance.GetComponent<RoleObserveListener>();
                 if (listener == null)

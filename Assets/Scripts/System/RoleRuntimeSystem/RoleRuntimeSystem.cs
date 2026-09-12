@@ -13,6 +13,11 @@ public interface IRoleRuntimeSystem : ISystem
     GameObject CurrentRoleInstance { get; }
 
     /// <summary>
+    /// 获取当前角色的上下文；角色未生成、已销毁或缺少组件时返回 null。
+    /// </summary>
+    RoleContext GetCurrentRoleContext();
+
+    /// <summary>
     /// 实例化当前选中的角色，返回实例；失败返回 null。
     /// </summary>
     GameObject SpawnCurrentRole(Vector3 position, Quaternion rotation);
@@ -183,6 +188,12 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
 
     public GameObject CurrentRoleInstance => viewFactory.CurrentRoleInstance;
 
+    public RoleContext GetCurrentRoleContext()
+    {
+        var roleInstance = CurrentRoleInstance;
+        return roleInstance != null ? roleInstance.GetComponent<RoleContext>() : null;
+    }
+
     /// <summary>
     /// 实例化当前选中的角色，返回实例；失败返回 null。
     /// </summary>
@@ -211,14 +222,14 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
             return null;
         }
 
-        if (!runtimeModel.TryGetRoleRuntime(roleContext.roleRuntimeIndex, out _))
+        if (!runtimeModel.TryGetRoleRuntime(roleContext.RoleRuntimeIndex, out _))
         {
-            Debug.LogError($"[RoleRuntimeSystem] RoleRuntimeInfo not found for id: {roleContext.roleRuntimeIndex}");
+            Debug.LogError($"[RoleRuntimeSystem] RoleRuntimeInfo not found for id: {roleContext.RoleRuntimeIndex}");
             return null;
         }
 
         // 先切换并落盘当前角色，再接管实例；SetCurrentRole 内已做存在性校验与存档
-        SetCurrentRole(roleContext.roleRuntimeIndex);
+        SetCurrentRole(roleContext.RoleRuntimeIndex);
 
         return viewFactory.SpawnCurrentRole(roleInstance);
     }

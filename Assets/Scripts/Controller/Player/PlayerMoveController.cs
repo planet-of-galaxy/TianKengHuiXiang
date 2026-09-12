@@ -20,9 +20,9 @@ public class PlayerMoveController : MonoBehaviour, IController
         pauseSystem = this.GetSystem<IGamePauseSystem>();
 
         var roleContext = GetComponent<RoleContext>();
-        if (roleContext != null && roleContext.firstViewCinema != null)
+        if (roleContext != null && roleContext.FirstViewCinema != null)
         {
-            cameraTransform = roleContext.firstViewCinema.transform;
+            cameraTransform = roleContext.FirstViewCinema.transform;
         }
 
         var runtimeModel = this.GetModel<RoleRuntimeModel>();

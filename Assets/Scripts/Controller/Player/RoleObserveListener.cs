@@ -26,15 +26,15 @@ public class RoleObserveListener : MonoBehaviour, IController
     private void OnRoleObserve(RoleObserveEvent e)
     {
         if (_roleContext == null) return;
-        if (e.RuntimeIndex != _roleContext.roleRuntimeIndex) return;
+        if (e.RuntimeIndex != _roleContext.RoleRuntimeIndex) return;
 
-        if (_roleContext.observeCinema == null)
+        if (_roleContext.ObserveCinema == null)
         {
-            Debug.LogError($"{nameof(RoleObserveListener)}: roleRuntimeIndex={_roleContext.roleRuntimeIndex} 的 observeCinema 未配置");
+            Debug.LogError($"{nameof(RoleObserveListener)}: roleRuntimeIndex={_roleContext.RoleRuntimeIndex} 的 observeCinema 未配置");
             return;
         }
 
-        this.GetSystem<ICinemaChineCameraSystem>().TransitionTo(_roleContext.observeCinema);
+        this.GetSystem<ICinemaChineCameraSystem>().TransitionTo(_roleContext.ObserveCinema);
     }
 
     public IArchitecture GetArchitecture() => TianArchitecture.Interface;

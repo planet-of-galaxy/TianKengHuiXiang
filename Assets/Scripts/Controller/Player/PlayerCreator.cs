@@ -31,11 +31,11 @@ public class PlayerCreator : MonoBehaviour, IController
     private void EnableFirstViewCinema(GameObject roleInstance)
     {
         var roleContext = roleInstance.GetComponent<RoleContext>();
-        if (roleContext == null || roleContext.firstViewCinema == null)
+        if (roleContext == null || roleContext.FirstViewCinema == null)
         {
             return;
         }
 
-        this.GetSystem<ICinemaChineCameraSystem>().SetCinemaChineCamera(roleContext.firstViewCinema);
+        this.GetSystem<ICinemaChineCameraSystem>().SetCinemaChineCamera(roleContext.FirstViewCinema);
     }
 }
