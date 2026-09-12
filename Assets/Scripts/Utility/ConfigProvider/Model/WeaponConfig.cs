@@ -10,7 +10,25 @@ public class WeaponConfig
     /// </summary>
     public string icon;
 
-    public float attackSpeed;
-    public float attackPower;
     public float durability;
+
+    public WeaponAttackConfig lightAttack;
+    public WeaponAttackConfig heavyAttack;
+}
+
+/// <summary>
+/// 单种攻击的伤害、暴击和眩晕配置；概率取值为 0～1，眩晕时长单位为秒。
+/// </summary>
+[System.Serializable]
+public class WeaponAttackConfig
+{
+    public DamageType damageType;
+    public float attackPower;
+    public float attackSpeed;
+
+    public float criticalRate;
+    public float criticalMultiplier;
+
+    public float stunRate;
+    public float stunDuration;
 }

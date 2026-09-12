@@ -4,9 +4,25 @@
       "weaponId": 0,
       "name": "高尔夫球杆",
       "icon": "UI/PropItem/Weapon/icon_golf",
-      "attackSpeed": 1.0,
-      "attackPower": 10.0,
-      "durability": 100.0
+      "durability": 100.0,
+      "lightAttack": {
+        "damageType": "Blunt",
+        "attackPower": 10.0,
+        "attackSpeed": 1.0,
+        "criticalRate": 0.1,
+        "criticalMultiplier": 1.5,
+        "stunRate": 0.05,
+        "stunDuration": 0.5
+      },
+      "heavyAttack": {
+        "damageType": "Blunt",
+        "attackPower": 20.0,
+        "attackSpeed": 0.5,
+        "criticalRate": 0.2,
+        "criticalMultiplier": 2.0,
+        "stunRate": 0.3,
+        "stunDuration": 1.5
+      }
     }
   ]
 }

@@ -17,6 +17,9 @@ public class WeaponConfigProvider : IWeaponConfigProvider
     #region IWeaponConfigProvider
     private void LoadWeaponConfigs()
     {
+        // 支持配置中使用 "Blunt" 等伤害类型名称。
+        LitJson.JsonMapper.RegisterImporter<string, DamageType>(
+            value => (DamageType)System.Enum.Parse(typeof(DamageType), value));
         var data = _storage.Load<WeaponConfigData>("WeaponConfig");
 
         if (data?.weapons == null || data.weapons.Length == 0)
