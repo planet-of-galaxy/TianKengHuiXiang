@@ -16,6 +16,7 @@ public class TianArchitecture : Architecture<TianArchitecture>
 
         // 注册Model
         this.RegisterModel(new RoleRuntimeModel());
+        this.RegisterModel(new RoleInstanceModel());
         this.RegisterModel(new PackageModel());
         this.RegisterModel(new WareHouseModel());
         this.RegisterModel(new MonsterRuntimeModel());
@@ -25,6 +26,7 @@ public class TianArchitecture : Architecture<TianArchitecture>
         this.RegisterSystem<IGameProcedureSystem>(new GameProcedureSystem());
         this.RegisterSystem<ICinemaChineCameraSystem>(new CinemaChineCameraSystem());
         this.RegisterSystem<IRoleRuntimeSystem>(new RoleRuntimeSystem());
+        this.RegisterSystem<IRoleInstanceSystem>(new RoleInstanceSystem());
         this.RegisterSystem<IPackageSystem>(new PackageSystem());
         this.RegisterSystem<IWareHouseSystem>(new WareHouseSystem());
         this.RegisterSystem<IGamePauseSystem>(new GamePauseSystem());

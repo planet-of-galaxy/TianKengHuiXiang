@@ -3,7 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// 角色创建器：挂载到出生点（BornPoint）上。
-/// Awake 时委托 RoleRuntimeSystem 实例化当前角色并托管其生命周期，创建完成后启用第一人称虚拟相机，然后销毁自身。
+/// Awake 时选中第一个运行时角色，委托 RoleInstanceSystem 实例化并托管其生命周期，创建完成后启用第一人称虚拟相机，然后销毁自身。
 /// </summary>
 public class PlayerCreator : MonoBehaviour, IController
 {
@@ -11,9 +11,18 @@ public class PlayerCreator : MonoBehaviour, IController
 
     private void Awake()
     {
-        var roleRuntimeSystem = this.GetSystem<IRoleRuntimeSystem>();
+        var roleInstanceSystem = this.GetSystem<IRoleInstanceSystem>();
 
-        var instance = roleRuntimeSystem.SpawnCurrentRole(transform.position, transform.rotation);
+        var roleRuntimeIds = this.GetModel<RoleRuntimeModel>().GetAllRoleRuntimeIds();
+        if (roleRuntimeIds.Count == 0)
+        {
+            Debug.LogWarning("[PlayerCreator] 没有可创建的运行时角色。");
+            Destroy(gameObject);
+            return;
+        }
+
+        roleInstanceSystem.SetCurrentRole(roleRuntimeIds[0]);
+        var instance = roleInstanceSystem.SpawnCurrentRole(transform.position, transform.rotation);
         if (instance == null)
         {
             Destroy(gameObject);

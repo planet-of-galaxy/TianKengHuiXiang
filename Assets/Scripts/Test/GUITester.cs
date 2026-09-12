@@ -145,7 +145,7 @@ public class GUITester : MonoBehaviour, IController
     private bool TryGetCurrentRole(out int roleId)
     {
         var model = this.GetModel<RoleRuntimeModel>();
-        roleId = model.curRole.Value;
+        roleId = this.GetModel<RoleInstanceModel>().curRole.Value;
         if (roleId >= 0 && model.TryGetRoleRuntime(roleId, out _)) return true;
         Report("当前没有有效角色，请先选择角色。", true);
         return false;

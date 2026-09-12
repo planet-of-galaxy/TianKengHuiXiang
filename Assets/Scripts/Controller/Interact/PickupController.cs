@@ -22,7 +22,7 @@ public class PickupController : InteractableBaseA
     public override void InteractA()
     {
         var roleRuntimeModel = this.GetModel<RoleRuntimeModel>();
-        int roleId = roleRuntimeModel.curRole.Value;
+        int roleId = this.GetModel<RoleInstanceModel>().curRole.Value;
         if (roleId < 0)
         {
             Debug.LogWarning("[PickupController] 当前没有选中的角色(curRole=-1)，无法拾取");

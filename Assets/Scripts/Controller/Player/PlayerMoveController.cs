@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using QFramework;
 
 public class PlayerMoveController : MonoBehaviour, IController
@@ -9,6 +9,7 @@ public class PlayerMoveController : MonoBehaviour, IController
     private float moveSpeed;
     private float verticalVelocity;
     private IGamePauseSystem pauseSystem;
+    private IUnRegister currentRoleSubscription;
     [SerializeField] private float gravity = -15f;
     [SerializeField] private float mouseSensitivity = 2f;
 
@@ -29,16 +30,22 @@ public class PlayerMoveController : MonoBehaviour, IController
 
         void RefreshMoveSpeed()
         {
-            if (runtimeModel.TryGetRoleRuntime(runtimeModel.curRole.Value, out var info))
+            if (runtimeModel.TryGetRoleRuntime(this.GetModel<RoleInstanceModel>().curRole.Value, out var info))
             {
                 moveSpeed = info.MoveSpeed.Value;
             }
         }
 
         RefreshMoveSpeed();
-        runtimeModel.curRole.Register(_ => RefreshMoveSpeed()).UnRegisterWhenGameObjectDestroyed(gameObject);
+        currentRoleSubscription = this.GetModel<RoleInstanceModel>().curRole.Register(_ => RefreshMoveSpeed());
 
         CursorUtility.Lock();
+    }
+
+    void OnDestroy()
+    {
+        currentRoleSubscription?.UnRegister();
+        currentRoleSubscription = null;
     }
 
     void Update()

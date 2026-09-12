@@ -16,5 +16,4 @@ public class RoleRuntimeData
 public class RoleRuntimeSaveData
 {
     public List<RoleRuntimeData> roleRuntimeDatas;
-    public int curRole;
 }

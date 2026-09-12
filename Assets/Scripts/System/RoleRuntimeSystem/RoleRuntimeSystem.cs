@@ -5,33 +5,7 @@ using UnityEngine;
 public interface IRoleRuntimeSystem : ISystem
 {
     int CreateRole(int roleId);
-    void SetCurrentRole(int roleRuntimeId);
 
-    /// <summary>
-    /// 当前角色实例；未生成或已销毁时为 null。
-    /// </summary>
-    GameObject CurrentRoleInstance { get; }
-
-    /// <summary>
-    /// 获取当前角色的上下文；角色未生成、已销毁或缺少组件时返回 null。
-    /// </summary>
-    RoleContext GetCurrentRoleContext();
-
-    /// <summary>
-    /// 实例化当前选中的角色，返回实例；失败返回 null。
-    /// </summary>
-    GameObject SpawnCurrentRole(Vector3 position, Quaternion rotation);
-
-    /// <summary>
-    /// 将场景中已存在的角色设为当前角色：校验其 RoleContext 后挂载 PlayerController，不实例化新对象。
-    /// 上一个当前角色只被移除 PlayerController，实例保留在场景中。失败返回 null。
-    /// </summary>
-    GameObject SpawnCurrentRole(GameObject roleInstance);
-
-    /// <summary>
-    /// 根据指定角色运行时 id 实例化对应角色，并移除其上所有 IController 组件，返回实例；失败返回 null。
-    /// </summary>
-    GameObject SpawnRoleWithoutController(int runtimeId, Vector3 position, Quaternion rotation);
 }
 
 public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
@@ -39,7 +13,6 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
     private RoleRuntimeModel runtimeModel;
     private IRoleConfigProvider roleConfigProvider;
     private IJsonStorage storage;
-    private RoleViewFactory viewFactory;
     private int nextRoleRuntimeId = 1;
 
     protected override void OnInit()
@@ -47,7 +20,6 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
         runtimeModel = this.GetModel<RoleRuntimeModel>();
         roleConfigProvider = this.GetUtility<IRoleConfigProvider>();
         storage = this.GetUtility<IJsonStorage>();
-        viewFactory = new RoleViewFactory(runtimeModel, this.GetUtility<IResourceStorage>());
 
         Init();
     }
@@ -55,7 +27,6 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
     /// <summary>
     /// 读取存档，将数据直接写入 RoleRuntimeModel。
     /// 若无存档则创建一个角色配置 id=0 的默认运行时实例；
-    /// curRole 若无存档值或模型中不存在，则取模型第一个元素。
     /// </summary>
     private void Init()
     {
@@ -81,19 +52,6 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
             }
         }
 
-        var curRole = save?.curRole ?? -1;
-        if (curRole < 0 || !runtimeModel.TryGetRoleRuntime(curRole, out _))
-        {
-            foreach (var info in runtimeModel.GetAllRoleRuntimes())
-            {
-                curRole = info.runtimeIndex;
-                break;
-            }
-        }
-
-        runtimeModel.curRole.Value = curRole;
-
-        // 无存档时刚创建了默认角色，立即落盘，保证首帧后存档一致
         if (!hasSave)
         {
             SaveRoleRuntime();
@@ -174,74 +132,6 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
         return info.runtimeIndex;
     }
 
-    public void SetCurrentRole(int roleRuntimeId)
-    {
-        if (!runtimeModel.TryGetRoleRuntime(roleRuntimeId, out _))
-        {
-            Debug.LogWarning($"[RoleRuntimeSystem] RoleRuntimeInfo not found for id: {roleRuntimeId}");
-            return;
-        }
-
-        runtimeModel.curRole.Value = roleRuntimeId;
-        SaveRoleRuntime();
-    }
-
-    public GameObject CurrentRoleInstance => viewFactory.CurrentRoleInstance;
-
-    public RoleContext GetCurrentRoleContext()
-    {
-        var roleInstance = CurrentRoleInstance;
-        return roleInstance != null ? roleInstance.GetComponent<RoleContext>() : null;
-    }
-
-    /// <summary>
-    /// 实例化当前选中的角色，返回实例；失败返回 null。
-    /// </summary>
-    public GameObject SpawnCurrentRole(Vector3 position, Quaternion rotation)
-    {
-        return viewFactory.SpawnCurrentRole(position, rotation);
-    }
-
-    /// <summary>
-    /// 将场景中已存在的角色设为当前角色：以其 RoleContext 上的运行时 id 为准切换当前角色并落盘，
-    /// 校验通过后挂载 PlayerController，不实例化新对象。
-    /// 上一个当前角色只被移除 PlayerController，实例保留在场景中。失败返回 null。
-    /// </summary>
-    public GameObject SpawnCurrentRole(GameObject roleInstance)
-    {
-        if (roleInstance == null)
-        {
-            Debug.LogError("[RoleRuntimeSystem] SpawnCurrentRole 传入的 GameObject 为 null");
-            return null;
-        }
-
-        var roleContext = roleInstance.GetComponent<RoleContext>();
-        if (roleContext == null)
-        {
-            Debug.LogError($"[RoleRuntimeSystem] {roleInstance.name} 上没有 RoleContext，无法确定目标角色");
-            return null;
-        }
-
-        if (!runtimeModel.TryGetRoleRuntime(roleContext.RoleRuntimeIndex, out _))
-        {
-            Debug.LogError($"[RoleRuntimeSystem] RoleRuntimeInfo not found for id: {roleContext.RoleRuntimeIndex}");
-            return null;
-        }
-
-        // 先切换并落盘当前角色，再接管实例；SetCurrentRole 内已做存在性校验与存档
-        SetCurrentRole(roleContext.RoleRuntimeIndex);
-
-        return viewFactory.SpawnCurrentRole(roleInstance);
-    }
-
-    /// <summary>
-    /// 根据指定角色运行时 id 实例化对应角色，并移除其上所有 IController 组件，返回实例；失败返回 null。
-    /// </summary>
-    public GameObject SpawnRoleWithoutController(int runtimeId, Vector3 position, Quaternion rotation)
-    {
-        return viewFactory.SpawnRoleWithoutController(runtimeId, position, rotation);
-    }
-
     /// <summary>
     /// 从 RoleRuntimeModel 中读取数据并保存。
     /// </summary>
@@ -250,7 +140,6 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
         var save = new RoleRuntimeSaveData
         {
             roleRuntimeDatas = new List<RoleRuntimeData>(),
-            curRole = runtimeModel.curRole.Value,
         };
         foreach (var info in runtimeModel.GetAllRoleRuntimes())
         {

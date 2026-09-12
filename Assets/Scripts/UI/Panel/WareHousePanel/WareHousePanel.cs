@@ -192,7 +192,7 @@ public class WareHousePanel : UIPanel, IController
         if (!manualPicked)
         {
             displayedRoleId = -1;
-            if (roleRuntimeModel.TryGetRoleRuntime(roleRuntimeModel.curRole.Value, out var cur)
+            if (roleRuntimeModel.TryGetRoleRuntime(this.GetModel<RoleInstanceModel>().curRole.Value, out var cur)
                 && packageModel.TryGetPackage(cur.runtimeIndex, out _))
             {
                 displayedRoleId = cur.runtimeIndex;

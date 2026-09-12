@@ -4,7 +4,7 @@ using UnityEngine;
 
 /// <summary>
 /// 角色创建器：挂载到场景中，持有一组 Transform 作为角色生成点。
-/// Awake 时从 RoleRuntimeSystem 获取所有角色，为每个角色在对应 Transform 位置实例化一个展示用角色（不挂载 PlayerController）。
+/// Awake 时从 RoleInstanceSystem 获取所有角色，为每个角色在对应 Transform 位置实例化一个展示用角色（不挂载 PlayerController）。
 /// </summary>
 public class RoleCreator : MonoBehaviour, IController
 {
@@ -14,7 +14,7 @@ public class RoleCreator : MonoBehaviour, IController
 
     private void Awake()
     {
-        var roleRuntimeSystem = this.GetSystem<IRoleRuntimeSystem>();
+        var roleInstanceSystem = this.GetSystem<IRoleInstanceSystem>();
         var runtimeModel = this.GetModel<RoleRuntimeModel>();
 
         var allRoles = runtimeModel.GetAllRoleRuntimes();
@@ -36,7 +36,7 @@ public class RoleCreator : MonoBehaviour, IController
                 continue;
             }
 
-            var instance = roleRuntimeSystem.SpawnRoleWithoutController(
+            var instance = roleInstanceSystem.SpawnRoleWithoutController(
                 roleInfo.runtimeIndex,
                 spawnPoint.position,
                 spawnPoint.rotation

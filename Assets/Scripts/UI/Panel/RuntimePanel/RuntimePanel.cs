@@ -17,8 +17,8 @@ public class RuntimePanel : UIPanel, IController
     protected override void OnInit(IUIData uiData = null)
     {
         runtimeModel = this.GetModel<RoleRuntimeModel>();
-        runtimeModel.curRole.Register(OnCurrentRoleChanged).UnRegisterWhenGameObjectDestroyed(gameObject);
-        OnCurrentRoleChanged(runtimeModel.curRole.Value);
+        this.GetModel<RoleInstanceModel>().curRole.Register(OnCurrentRoleChanged).UnRegisterWhenGameObjectDestroyed(gameObject);
+        OnCurrentRoleChanged(this.GetModel<RoleInstanceModel>().curRole.Value);
     }
 
     /// <summary>

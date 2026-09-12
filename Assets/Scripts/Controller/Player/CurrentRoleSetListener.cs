@@ -1,4 +1,4 @@
-using QFramework;
+﻿using QFramework;
 using UnityEngine;
 
 [RequireComponent(typeof(RoleContext))]
@@ -28,7 +28,7 @@ public class CurrentRoleSetListener : MonoBehaviour, IController
         if (_roleContext == null) return;
         if (e.RuntimeIndex != _roleContext.RoleRuntimeIndex) return;
 
-        this.GetSystem<IRoleRuntimeSystem>().SpawnCurrentRole(gameObject);
+        if (this.GetSystem<IRoleInstanceSystem>().ControlRole(e.RuntimeIndex) == null) return;
         this.GetSystem<ICinemaChineCameraSystem>().TransitionTo(_roleContext.FirstViewCinema);
     }
 

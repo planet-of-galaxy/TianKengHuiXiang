@@ -8,11 +8,6 @@ public class RoleRuntimeModel : AbstractModel
     /// </summary>
     private readonly Dictionary<int, RoleRuntimeInfo> roleRuntimeInfo = new();
 
-    /// <summary>
-    /// 当前选中的角色运行时实例 id，用于 UI 响应角色切换。
-    /// </summary>
-    public BindableProperty<int> curRole { get; } = new BindableProperty<int>(-1);
-
     public int Count => roleRuntimeInfo.Count;
 
     public bool TryGetRoleRuntime(int id, out RoleRuntimeInfo info)
@@ -26,6 +21,14 @@ public class RoleRuntimeModel : AbstractModel
     public IEnumerable<RoleRuntimeInfo> GetAllRoleRuntimes()
     {
         return roleRuntimeInfo.Values;
+    }
+
+    /// <summary>
+    /// 返回所有角色运行时实例 id 的列表副本。
+    /// </summary>
+    public List<int> GetAllRoleRuntimeIds()
+    {
+        return new List<int>(roleRuntimeInfo.Keys);
     }
 
     /// <summary>
