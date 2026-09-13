@@ -6,6 +6,8 @@ using UnityEngine;
 /// </summary>
 public abstract class WeaponAttackBase : MonoBehaviour, IAttack
 {
+    [SerializeField] protected int weaponConfigId;
+
     /// <summary>
     /// 执行一次轻攻击，返回本次造成的伤害信息。
     /// 具体命中判定与伤害结算由子类实现；命中后可调用 <see cref="TryDeliverDamage"/> 把伤害交给目标。
