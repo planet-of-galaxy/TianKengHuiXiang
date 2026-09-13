@@ -4,6 +4,7 @@ using UnityEngine;
 /// 攻击输入监听：挂在具有 IAttack 实现组件的物体上，
 /// 持有该组件，左键短按松开时调用轻击，长按达到阈值时调用一次重击。
 /// </summary>
+[DisallowMultipleComponent]
 public class AttackListener : MonoBehaviour
 {
     [SerializeField, Min(0.01f)] private float heavyAttackHoldTime = 0.5f;
