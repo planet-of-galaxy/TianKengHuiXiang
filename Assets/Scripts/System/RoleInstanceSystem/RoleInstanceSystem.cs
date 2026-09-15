@@ -73,6 +73,12 @@ public class RoleInstanceSystem : AbstractSystem, IRoleInstanceSystem
             runtimeModel, resourceStorage, roleRuntimeId, position, rotation, HandleRoleInstanceDestroyed);
         if (context == null) return null;
 
+        // 实例系统统一挂载角色重力，不依赖是否接管为玩家控制对象。
+        if (context.GetComponent<RoleGravityController>() == null)
+        {
+            context.gameObject.AddComponent<RoleGravityController>();
+        }
+
         roleInstances[roleRuntimeId] = context;
         OnRoleInstanceCreated?.Invoke(context);
         return context;
