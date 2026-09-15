@@ -16,7 +16,6 @@ public class TianArchitecture : Architecture<TianArchitecture>
 
         // 注册Model
         this.RegisterModel(new RoleRuntimeModel());
-        this.RegisterModel(new RoleInstanceModel());
         this.RegisterModel(new PackageModel());
         this.RegisterModel(new WareHouseModel());
         this.RegisterModel(new MonsterRuntimeModel());

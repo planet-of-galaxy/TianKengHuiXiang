@@ -180,8 +180,14 @@ public class GUITester : MonoBehaviour, IController
     private bool TryGetCurrentRole(out int roleId)
     {
         var model = this.GetModel<RoleRuntimeModel>();
-        roleId = this.GetModel<RoleInstanceModel>().curRole.Value;
-        if (roleId >= 0 && model.TryGetRoleRuntime(roleId, out _)) return true;
+        var controllingRole = this.GetSystem<IRoleInstanceSystem>().ControllingRole;
+        if (controllingRole != null && model.TryGetRoleRuntime(controllingRole.RoleRuntimeIndex, out _))
+        {
+            roleId = controllingRole.RoleRuntimeIndex;
+            return true;
+        }
+
+        roleId = -1;
         Report("当前没有有效角色，请先选择角色。", true);
         return false;
     }

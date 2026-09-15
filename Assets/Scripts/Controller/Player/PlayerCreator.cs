@@ -3,7 +3,7 @@ using UnityEngine;
 
 /// <summary>
 /// 角色创建器：挂载到出生点（BornPoint）上。
-/// Awake 时选中第一个运行时角色，委托 RoleInstanceSystem 实例化并托管其生命周期，创建完成后启用第一人称虚拟相机，然后销毁自身。
+/// Awake 时创建第一个运行时角色并接管其控制，创建完成后启用第一人称虚拟相机，然后销毁自身。
 /// </summary>
 public class PlayerCreator : MonoBehaviour, IController
 {
@@ -21,15 +21,16 @@ public class PlayerCreator : MonoBehaviour, IController
             return;
         }
 
-        roleInstanceSystem.SetCurrentRole(roleRuntimeIds[0]);
-        var instance = roleInstanceSystem.SpawnCurrentRole(transform.position, transform.rotation);
-        if (instance == null)
+        var roleContext = roleInstanceSystem.CreateRoleInstance(roleRuntimeIds[0], transform.position, transform.rotation);
+        if (roleContext == null)
         {
             Destroy(gameObject);
             return;
         }
 
-        EnableFirstViewCinema(instance);
+        // 先接管控制再切相机：控制器与武器攻击监听都挂在「受控角色」上，顺序反了会漏掉这一帧的绑定。
+        roleInstanceSystem.AddPlayerMoveController(roleContext);
+        EnableFirstViewCinema(roleContext);
         Destroy(gameObject);
     }
 
@@ -37,10 +38,9 @@ public class PlayerCreator : MonoBehaviour, IController
     /// 启用角色实例身上的第一人称虚拟相机（FirstViewCinema），让新实例立即获得玩家视野。
     /// 与 CurrentRoleSetListener 在选中角色后的处理保持一致。
     /// </summary>
-    private void EnableFirstViewCinema(GameObject roleInstance)
+    private void EnableFirstViewCinema(RoleContext roleContext)
     {
-        var roleContext = roleInstance.GetComponent<RoleContext>();
-        if (roleContext == null || roleContext.FirstViewCinema == null)
+        if (roleContext.FirstViewCinema == null)
         {
             return;
         }

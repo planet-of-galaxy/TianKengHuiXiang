@@ -12,24 +12,28 @@ public class RuntimePanel : UIPanel, IController
     [SerializeField] private TextMeshProUGUI _maxHealth;
 
     private RoleRuntimeModel runtimeModel;
+    private IRoleInstanceSystem roleInstanceSystem;
     private RoleRuntimeInfo currentInfo;
 
     protected override void OnInit(IUIData uiData = null)
     {
         runtimeModel = this.GetModel<RoleRuntimeModel>();
-        this.GetModel<RoleInstanceModel>().curRole.Register(OnCurrentRoleChanged).UnRegisterWhenGameObjectDestroyed(gameObject);
-        OnCurrentRoleChanged(this.GetModel<RoleInstanceModel>().curRole.Value);
+        roleInstanceSystem = this.GetSystem<IRoleInstanceSystem>();
+        roleInstanceSystem.OnControllingInstanceChanged += OnControllingInstanceChanged;
+        OnControllingInstanceChanged(roleInstanceSystem.ControllingRole);
     }
 
     /// <summary>
     /// 切换当前角色：更新名称（不变），并重新订阅生命值变化。
     /// </summary>
-    private void OnCurrentRoleChanged(int roleId)
+    private void OnControllingInstanceChanged(RoleContext roleContext)
     {
         // 解绑上一个角色的生命值订阅
         UnbindHealth();
 
-        if (!runtimeModel.TryGetRoleRuntime(roleId, out currentInfo))
+        // 无受控角色（尚未创建 / 已销毁）时清空显示，currentInfo 已由 UnbindHealth 置空。
+        if (roleContext == null
+            || !runtimeModel.TryGetRoleRuntime(roleContext.RoleRuntimeIndex, out currentInfo))
         {
             _name.text = string.Empty;
             _curHealth.text = string.Empty;
@@ -66,6 +70,11 @@ public class RuntimePanel : UIPanel, IController
 
     protected override void OnClose()
     {
+        if (roleInstanceSystem != null)
+        {
+            roleInstanceSystem.OnControllingInstanceChanged -= OnControllingInstanceChanged;
+        }
+
         UnbindHealth();
     }
 

@@ -1,166 +1,183 @@
-﻿using QFramework;
+using System;
+using System.Collections.Generic;
+using QFramework;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 public interface IRoleInstanceSystem : ISystem
 {
-    event System.Action<int, GameObject> RoleInstanceCreated;
-    event System.Action<int, GameObject> RoleInstanceDestroyed;
-    /// <summary>选择运行时角色；尚未生成时释放控制，-1 表示取消选择。</summary>
-    void SetCurrentRole(int roleRuntimeId);
-    GameObject CurrentRoleInstance { get; }
-    RoleContext GetCurrentRoleContext();
+    /// <summary>当前受玩家控制的角色，无控制对象时为 null。</summary>
+    RoleContext ControllingRole { get; }
 
-    /// <summary>生成或复用当前选中角色，并接管控制；未选择或生成失败时返回 null。</summary>
-    GameObject SpawnCurrentRole(Vector3 position, Quaternion rotation);
+    /// <summary>角色实例创建完成（RoleContext 已初始化）。</summary>
+    event Action<RoleContext> OnRoleInstanceCreated;
+    /// <summary>角色实例已销毁，主动销毁与外部销毁都会触发一次。</summary>
+    event Action<RoleContext> OnRoleInstanceDestroyed;
+    /// <summary>控制对象发生变化；失去控制时参数为 null。</summary>
+    event Action<RoleContext> OnControllingInstanceChanged;
 
-    /// <summary>接管已登记的角色；-1 取消控制。无效索引不改变当前控制。</summary>
-    GameObject ControlRole(int runtimeIndex);
+    /// <summary>创建角色实例；该运行时 id 已有存活实例时直接复用，创建失败返回 null。</summary>
+    RoleContext CreateRoleInstance(int roleRuntimeId, Vector3 position, Quaternion rotation);
 
-    /// <summary>生成无控制器角色；已有实例直接复用，不改变其控制状态。</summary>
-    GameObject SpawnRoleWithoutController(int runtimeId, Vector3 position, Quaternion rotation);
-    GameObject TryGetRoleInstance(int roleRuntimeIndex);
-    void DestroyRoleInstance(int roleRuntimeIndex);
+    /// <summary>销毁角色实例；若它正受控制会先解除控制。</summary>
+    void DestroyRoleInstance(RoleContext roleContext);
+
+    /// <summary>接管角色：挂载 PlayerMoveController 并成为当前控制对象，原控制对象自动失去控制。</summary>
+    void AddPlayerMoveController(RoleContext roleContext);
+
+    /// <summary>解除对指定角色的控制并移除其 PlayerMoveController。</summary>
+    void RemovePlayerMoveController(RoleContext roleContext);
+
+    /// <summary>按运行时 id 获取已创建的角色实例；不存在或已销毁时返回 null。</summary>
+    RoleContext TryGetRoleInstance(int roleRuntimeId);
 }
 
-/// <summary>统一管理角色实例，以及唯一的 PlayerMoveController。</summary>
+/// <summary>统一管理角色实例的登记与生命周期，以及唯一的 PlayerMoveController。</summary>
 public class RoleInstanceSystem : AbstractSystem, IRoleInstanceSystem
 {
-    public event System.Action<int, GameObject> RoleInstanceCreated;
-    public event System.Action<int, GameObject> RoleInstanceDestroyed;
+    /// <summary>已创建的角色实例，key 为运行时 id。</summary>
+    private readonly Dictionary<int, RoleContext> roleInstances = new();
+
     private RoleRuntimeModel runtimeModel;
-    private RoleInstanceModel instanceModel;
-    private RoleViewFactory viewFactory;
-    private GameObject currentRoleInstance;
+    private IResourceStorage resourceStorage;
     private PlayerMoveController currentController;
-    private IUnRegister currentRoleSubscription;
+
+    public RoleContext ControllingRole { get; private set; }
+
+    public event Action<RoleContext> OnRoleInstanceCreated;
+    public event Action<RoleContext> OnRoleInstanceDestroyed;
+    public event Action<RoleContext> OnControllingInstanceChanged;
 
     protected override void OnInit()
     {
         runtimeModel = this.GetModel<RoleRuntimeModel>();
-        instanceModel = this.GetModel<RoleInstanceModel>();
-        viewFactory = new RoleViewFactory(runtimeModel, this.GetUtility<IResourceStorage>());
-        viewFactory.RoleInstanceCreated += OnRoleInstanceCreated;
-        viewFactory.RoleInstanceDestroyed += OnRoleInstanceDestroyed;
-        currentRoleSubscription = instanceModel.curRole.Register(SynchronizeControl);
-        SynchronizeControl(instanceModel.curRole.Value);
+        resourceStorage = this.GetUtility<IResourceStorage>();
     }
 
     protected override void OnDeinit()
     {
-        currentRoleSubscription?.UnRegister();
-        viewFactory.RoleInstanceCreated -= OnRoleInstanceCreated;
-        viewFactory.RoleInstanceDestroyed -= OnRoleInstanceDestroyed;
-        ReleaseControl();
-        instanceModel.curRole.Value = -1;
+        // 架构销毁时角色 GameObject 通常也在同批销毁，这里只清理自身引用，不主动销毁实例。
+        ReleaseController();
+        roleInstances.Clear();
+        OnRoleInstanceCreated = null;
+        OnRoleInstanceDestroyed = null;
+        OnControllingInstanceChanged = null;
     }
 
-    public void SetCurrentRole(int roleRuntimeId)
+    public RoleContext CreateRoleInstance(int roleRuntimeId, Vector3 position, Quaternion rotation)
     {
-        if (roleRuntimeId != -1 && !runtimeModel.TryGetRoleRuntime(roleRuntimeId, out _))
+        if (roleInstances.TryGetValue(roleRuntimeId, out var existing) && existing != null) return existing;
+
+        var context = RoleViewFactory.CreateRoleInstance(
+            runtimeModel, resourceStorage, roleRuntimeId, position, rotation, HandleRoleInstanceDestroyed);
+        if (context == null) return null;
+
+        roleInstances[roleRuntimeId] = context;
+        OnRoleInstanceCreated?.Invoke(context);
+        return context;
+    }
+
+    public void DestroyRoleInstance(RoleContext roleContext)
+    {
+        if (roleContext == null)
         {
-            Debug.LogWarning($"[RoleInstanceSystem] Invalid role runtime index: {roleRuntimeId}");
+            Debug.LogError("[RoleInstanceSystem] DestroyRoleInstance 收到 null。");
             return;
         }
-        instanceModel.curRole.Value = roleRuntimeId;
-        SynchronizeControl(roleRuntimeId);
+
+        // 主动销毁：在 GameObject 进入销毁流程前先移除控制器。
+        if (ReferenceEquals(ControllingRole, roleContext)) RemovePlayerMoveController(roleContext);
+
+        // 先注销再销毁，销毁回调随后触发时已是空操作，保证销毁事件只发一次。
+        if (UnregisterRoleInstance(roleContext)) OnRoleInstanceDestroyed?.Invoke(roleContext);
+        RoleViewFactory.DestroyRoleInstance(roleContext);
     }
 
-    public GameObject CurrentRoleInstance => currentRoleInstance != null ? currentRoleInstance : null;
-
-    public RoleContext GetCurrentRoleContext()
+    public void AddPlayerMoveController(RoleContext roleContext)
     {
-        return CurrentRoleInstance != null ? CurrentRoleInstance.GetComponent<RoleContext>() : null;
+        if (roleContext == null)
+        {
+            Debug.LogError("[RoleInstanceSystem] AddPlayerMoveController 收到 null。");
+            return;
+        }
+        if (ReferenceEquals(ControllingRole, roleContext) && currentController != null) return;
+
+        // 同一时刻只允许一个角色被控制，先释放旧角色。
+        ReleaseController();
+
+        var controller = roleContext.GetComponent<PlayerMoveController>();
+        if (controller == null) controller = roleContext.gameObject.AddComponent<PlayerMoveController>();
+        currentController = controller;
+        SetControllingRole(roleContext);
     }
 
-    public GameObject SpawnCurrentRole(Vector3 position, Quaternion rotation)
+    public void RemovePlayerMoveController(RoleContext roleContext)
     {
-        var runtimeIndex = instanceModel.curRole.Value;
-        if (runtimeIndex == -1)
+        if (roleContext == null)
         {
-            Debug.LogError($"[RoleInstanceSystem] 当前未选中任何角色");
-            return null;
+            Debug.LogError("[RoleInstanceSystem] RemovePlayerMoveController 收到 null。");
+            return;
         }
-        var instance = viewFactory.SpawnRoleWithoutController(runtimeIndex, position, rotation);
-        return instance != null ? ControlRole(runtimeIndex) : null;
+        if (!ReferenceEquals(ControllingRole, roleContext))
+        {
+            Debug.LogWarning($"[RoleInstanceSystem] 角色 {roleContext.RoleRuntimeIndex} 当前未受控制，无需移除控制器。");
+            return;
+        }
+
+        ReleaseController();
+        SetControllingRole(null);
     }
 
-    public GameObject ControlRole(int runtimeIndex)
+    public RoleContext TryGetRoleInstance(int roleRuntimeId)
     {
-        if (runtimeIndex == -1)
-        {
-            SetCurrentRole(-1);
-            return null;
-        }
-        var instance = TryGetRoleInstance(runtimeIndex);
-        if (instance == null || !runtimeModel.TryGetRoleRuntime(runtimeIndex, out _))
-        {
-            Debug.LogWarning($"[RoleInstanceSystem] Role instance not found: {runtimeIndex}");
-            return null;
-        }
-        SetCurrentRole(runtimeIndex);
-        return instance;
+        // context != null 走的是 Unity 重载的 ==：已被销毁但引用尚存的实例在这里会返回 null。
+        return roleInstances.TryGetValue(roleRuntimeId, out var context) && context != null ? context : null;
     }
 
-    private void SynchronizeControl(int runtimeIndex)
+    /// <summary>实例被外部销毁时由 RoleRuntimeLifecycle 回调。</summary>
+    private void HandleRoleInstanceDestroyed(RoleContext roleContext)
     {
-        var nextInstance = runtimeIndex == -1 ? null : TryGetRoleInstance(runtimeIndex);
-        if (nextInstance != null && nextInstance == currentRoleInstance && currentController != null) return;
+        if (!UnregisterRoleInstance(roleContext)) return;
 
-        ReleaseControl();
-        currentRoleInstance = nextInstance;
-        if (currentRoleInstance != null)
+        if (ReferenceEquals(ControllingRole, roleContext))
         {
-            currentController = currentRoleInstance.AddComponent<PlayerMoveController>();
+            // GameObject 已在销毁，控制器组件由 Unity 一并销毁；这里只清理引用，不能 DestroyImmediate。
+            currentController = null;
+            SetControllingRole(null);
         }
+
+        OnRoleInstanceDestroyed?.Invoke(roleContext);
     }
 
-    private void ReleaseControl()
+    private void SetControllingRole(RoleContext roleContext)
+    {
+        if (ReferenceEquals(ControllingRole, roleContext)) return;
+        ControllingRole = roleContext;
+        OnControllingInstanceChanged?.Invoke(roleContext);
+    }
+
+    /// <summary>销毁当前控制器并清空控制引用，不触发 OnControllingInstanceChanged。</summary>
+    private void ReleaseController()
     {
         var controller = currentController;
         // 先清空引用，避免组件生命周期回调重入时再次销毁同一组件。
         currentController = null;
-        currentRoleInstance = null;
-        if (controller != null)
-        {
-            controller.enabled = false;
-            // 必须立即移除：Destroy 会延迟到帧末，同帧切换时旧角色仍会保留组件。
-            Object.DestroyImmediate(controller);
-        }
+        ControllingRole = null;
+        if (controller == null) return;
+
+        controller.enabled = false;
+        // 必须立即移除：Destroy 会延迟到帧末，同帧切换时旧角色仍会保留组件。
+        Object.DestroyImmediate(controller);
     }
 
-    public GameObject SpawnRoleWithoutController(int runtimeId, Vector3 position, Quaternion rotation)
+    /// <summary>注销角色实例；实例不存在或已被注销返回 false。</summary>
+    private bool UnregisterRoleInstance(RoleContext roleContext)
     {
-        return viewFactory.SpawnRoleWithoutController(runtimeId, position, rotation);
-    }
-
-    public GameObject TryGetRoleInstance(int roleRuntimeIndex) => viewFactory.TryGetRoleInstance(roleRuntimeIndex);
-
-    public void DestroyRoleInstance(int roleRuntimeIndex)
-    {
-        var instance = TryGetRoleInstance(roleRuntimeIndex);
-        if (instance != null && ReferenceEquals(currentRoleInstance, instance))
-        {
-            // 主动销毁时，在 GameObject 进入销毁流程前移除控制器。
-            ReleaseControl();
-        }
-        viewFactory.DestroyRoleInstance(roleRuntimeIndex);
-    }
-
-    private void OnRoleInstanceCreated(int runtimeIndex, GameObject instance)
-    {
-        RoleInstanceCreated?.Invoke(runtimeIndex, instance);
-    }
-
-    private void OnRoleInstanceDestroyed(int runtimeIndex, GameObject instance)
-    {
-        if (ReferenceEquals(currentRoleInstance, instance))
-        {
-            // GameObject 已在销毁，组件由 Unity 一并销毁；这里只清理引用。
-            // 必须先清空，再更新 curRole，避免订阅回调再次释放控制器。
-            currentController = null;
-            currentRoleInstance = null;
-        }
-        if (instanceModel.curRole.Value == runtimeIndex) instanceModel.curRole.Value = -1;
-        RoleInstanceDestroyed?.Invoke(runtimeIndex, instance);
+        if (roleContext == null) return false;
+        var runtimeIndex = roleContext.RoleRuntimeIndex;
+        if (!roleInstances.TryGetValue(runtimeIndex, out var registered)) return false;
+        if (!ReferenceEquals(registered, roleContext)) return false;
+        roleInstances.Remove(runtimeIndex);
+        return true;
     }
 }

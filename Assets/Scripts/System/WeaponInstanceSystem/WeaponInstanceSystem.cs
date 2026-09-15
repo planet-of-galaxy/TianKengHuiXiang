@@ -19,7 +19,6 @@ public class WeaponInstanceSystem : AbstractSystem, IWeaponInstanceSystem
     private sealed class RoleBinding
     {
         public int RuntimeIndex;
-        public GameObject Role;
         public RoleContext Context;
         public RolePackageInfo Package;
         public IUnRegister HeldSubscription;
@@ -33,8 +32,6 @@ public class WeaponInstanceSystem : AbstractSystem, IWeaponInstanceSystem
     private PackageModel packageModel;
     private IWeaponConfigProvider weaponConfigs;
     private IResourceStorage resources;
-    private RoleInstanceModel instanceModel;
-    private IUnRegister currentRoleSubscription;
     private bool attackListenerEnabled = true;
 
     protected override void OnInit()
@@ -43,25 +40,24 @@ public class WeaponInstanceSystem : AbstractSystem, IWeaponInstanceSystem
         packageModel = this.GetModel<PackageModel>();
         weaponConfigs = this.GetUtility<IWeaponConfigProvider>();
         resources = this.GetUtility<IResourceStorage>();
-        instanceModel = this.GetModel<RoleInstanceModel>();
-        currentRoleSubscription = instanceModel.curRole.Register(_ => SynchronizeAttackListeners());
-        roleSystem.RoleInstanceCreated += OnRoleCreated;
-        roleSystem.RoleInstanceDestroyed += OnRoleDestroyed;
+        roleSystem.OnControllingInstanceChanged += OnControllingInstanceChanged;
+        roleSystem.OnRoleInstanceCreated += OnRoleCreated;
+        roleSystem.OnRoleInstanceDestroyed += OnRoleDestroyed;
         packageModel.PackageChanged += BindPackage;
 
+        // 本系统可能晚于 RoleInstanceSystem 初始化，补登记此间已创建的角色实例。
         foreach (var role in this.GetModel<RoleRuntimeModel>().GetAllRoleRuntimes())
         {
-            var instance = roleSystem.TryGetRoleInstance(role.runtimeIndex);
-            if (instance != null) OnRoleCreated(role.runtimeIndex, instance);
+            var context = roleSystem.TryGetRoleInstance(role.runtimeIndex);
+            if (context != null) OnRoleCreated(context);
         }
     }
 
     protected override void OnDeinit()
     {
-        currentRoleSubscription?.UnRegister();
-        currentRoleSubscription = null;
-        roleSystem.RoleInstanceCreated -= OnRoleCreated;
-        roleSystem.RoleInstanceDestroyed -= OnRoleDestroyed;
+        roleSystem.OnControllingInstanceChanged -= OnControllingInstanceChanged;
+        roleSystem.OnRoleInstanceCreated -= OnRoleCreated;
+        roleSystem.OnRoleInstanceDestroyed -= OnRoleDestroyed;
         packageModel.PackageChanged -= BindPackage;
         foreach (var binding in bindings.Values)
         {
@@ -74,7 +70,7 @@ public class WeaponInstanceSystem : AbstractSystem, IWeaponInstanceSystem
     public GameObject TryGetWeaponInstance(int roleRuntimeIndex)
     {
         return bindings.TryGetValue(roleRuntimeIndex, out var binding)
-            && binding.Role != null && binding.Weapon != null ? binding.Weapon : null;
+            && binding.Context != null && binding.Weapon != null ? binding.Weapon : null;
     }
 
     public void AddAttackListener()
@@ -89,16 +85,25 @@ public class WeaponInstanceSystem : AbstractSystem, IWeaponInstanceSystem
         SynchronizeAttackListeners();
     }
 
+    private void OnControllingInstanceChanged(RoleContext roleContext)
+    {
+        SynchronizeAttackListeners();
+    }
+
     private void SynchronizeAttackListeners()
     {
         // 先移除旧角色的监听，再为当前角色添加，确保只有当前角色接收输入。
+        var controllingRole = roleSystem.ControllingRole;
         foreach (var binding in bindings.Values)
         {
-            if (!attackListenerEnabled || binding.RuntimeIndex != instanceModel.curRole.Value)
-                RemoveWeaponAttackListeners(binding.Weapon);
+            // 显式判 controllingRole 非空：只写成 binding.Context != controllingRole 的话，
+            // 双方都为 null（角色已销毁 + 已无控制对象）会被 Unity 的 == 判成相等，监听反而留着。
+            var isControlling = attackListenerEnabled && controllingRole != null && binding.Context == controllingRole;
+            if (!isControlling) RemoveWeaponAttackListeners(binding.Weapon);
         }
 
-        if (attackListenerEnabled && bindings.TryGetValue(instanceModel.curRole.Value, out var current))
+        if (!attackListenerEnabled || controllingRole == null) return;
+        if (bindings.TryGetValue(controllingRole.RoleRuntimeIndex, out var current))
             AddWeaponAttackListener(current.Weapon);
     }
 
@@ -128,11 +133,15 @@ public class WeaponInstanceSystem : AbstractSystem, IWeaponInstanceSystem
         }
     }
 
-    private void OnRoleCreated(int runtimeIndex, GameObject instance)
+    private void OnRoleCreated(RoleContext context)
     {
+        if (context == null) return;
+        var runtimeIndex = context.RoleRuntimeIndex;
+
         if (bindings.TryGetValue(runtimeIndex, out var previous))
         {
-            if (ReferenceEquals(previous.Role, instance)) return;
+            // 同一个实例重复登记（如 OnInit 补登记）直接跳过，换了实例才需要清理旧绑定。
+            if (previous.Context == context) return;
             UnbindPackage(previous);
             DestroyWeapon(previous);
         }
@@ -142,16 +151,16 @@ public class WeaponInstanceSystem : AbstractSystem, IWeaponInstanceSystem
         bindings[runtimeIndex] = new RoleBinding
         {
             RuntimeIndex = runtimeIndex,
-            Role = instance,
-            Context = instance.GetComponent<RoleContext>()
+            Context = context,
         };
         BindPackage(runtimeIndex);
     }
 
-    private void OnRoleDestroyed(int runtimeIndex, GameObject instance)
+    private void OnRoleDestroyed(RoleContext context)
     {
-        if (!bindings.TryGetValue(runtimeIndex, out var binding)
-            || !ReferenceEquals(binding.Role, instance)) return;
+        if (context == null) return;
+        var runtimeIndex = context.RoleRuntimeIndex;
+        if (!bindings.TryGetValue(runtimeIndex, out var binding) || binding.Context != context) return;
 
         bindings.Remove(runtimeIndex);
         UnbindPackage(binding);
@@ -159,7 +168,6 @@ public class WeaponInstanceSystem : AbstractSystem, IWeaponInstanceSystem
         binding.Weapon = null;
         binding.HeldItem = null;
         binding.Context = null;
-        binding.Role = null;
     }
 
     private void BindPackage(int runtimeIndex)
@@ -203,12 +211,12 @@ public class WeaponInstanceSystem : AbstractSystem, IWeaponInstanceSystem
             && binding.Weapon != null) return;
 
         DestroyWeapon(binding);
-        if (heldItem == null || binding.Role == null) return;
+        if (heldItem == null || binding.Context == null) return;
         var config = weaponConfigs.GetWeaponConfig(heldItem.configId);
         if (config == null || string.IsNullOrEmpty(config.name)) return;
-        if (binding.Context == null || binding.Context.WeaponPosition == null)
+        if (binding.Context.WeaponPosition == null)
         {
-            Debug.LogWarning($"[WeaponInstanceSystem] Role {binding.Package.roleRuntimeId} has no weapon position.");
+            Debug.LogWarning($"[WeaponInstanceSystem] Role {binding.RuntimeIndex} has no weapon position.");
             return;
         }
 
@@ -224,7 +232,7 @@ public class WeaponInstanceSystem : AbstractSystem, IWeaponInstanceSystem
         binding.Weapon.transform.localPosition = Vector3.zero;
         binding.Weapon.transform.localRotation = Quaternion.identity;
         binding.HeldItem = heldItem;
-        if (attackListenerEnabled && binding.RuntimeIndex == instanceModel.curRole.Value)
+        if (attackListenerEnabled && binding.Context == roleSystem.ControllingRole)
             AddWeaponAttackListener(binding.Weapon);
         else
             RemoveWeaponAttackListeners(binding.Weapon);

@@ -9,7 +9,7 @@ public class PlayerMoveController : MonoBehaviour, IController
     private float moveSpeed;
     private float verticalVelocity;
     private IGamePauseSystem pauseSystem;
-    private IUnRegister currentRoleSubscription;
+    private IUnRegister moveSpeedSubscription;
     [SerializeField] private float gravity = -15f;
     [SerializeField] private float mouseSensitivity = 2f;
 
@@ -26,26 +26,21 @@ public class PlayerMoveController : MonoBehaviour, IController
             cameraTransform = roleContext.FirstViewCinema.transform;
         }
 
-        var runtimeModel = this.GetModel<RoleRuntimeModel>();
-
-        void RefreshMoveSpeed()
+        if (roleContext != null
+            && this.GetModel<RoleRuntimeModel>().TryGetRoleRuntime(roleContext.RoleRuntimeIndex, out var info))
         {
-            if (runtimeModel.TryGetRoleRuntime(this.GetModel<RoleInstanceModel>().curRole.Value, out var info))
-            {
-                moveSpeed = info.MoveSpeed.Value;
-            }
+            // Register 不会立刻回调一次，当前值要自己读。
+            moveSpeed = info.MoveSpeed.Value;
+            moveSpeedSubscription = info.MoveSpeed.Register(speed => moveSpeed = speed);
         }
-
-        RefreshMoveSpeed();
-        currentRoleSubscription = this.GetModel<RoleInstanceModel>().curRole.Register(_ => RefreshMoveSpeed());
 
         CursorUtility.Lock();
     }
 
     void OnDestroy()
     {
-        currentRoleSubscription?.UnRegister();
-        currentRoleSubscription = null;
+        moveSpeedSubscription?.UnRegister();
+        moveSpeedSubscription = null;
     }
 
     void Update()

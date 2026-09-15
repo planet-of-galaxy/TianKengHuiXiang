@@ -7,7 +7,7 @@ using UnityEngine;
 /// 职责：
 ///   1. 标题：显示「背包 - 当前角色名称」；
 ///   2. 槽位语义：按当前角色背包容量，决定每个槽位是道具、空栏位还是锁定；
-///   3. 订阅：当前角色（RoleInstanceModel.curRole）、其背包容量、以及背包内物品增减，变化时自动刷新。
+///   3. 订阅：当前控制角色（IRoleInstanceSystem.ControllingRole）、其背包容量、以及背包内物品增减，变化时自动刷新。
 /// 栏位本身由 PropPanelController 生成与渲染，本类只在刷新时把道具列表与容量交给它；
 /// KeyContent / FileContent 暂未接入逻辑。
 /// </summary>
@@ -17,9 +17,9 @@ public class PackageController : MonoBehaviour, IController
     private PackagePanel panel;
     private PackageModel packageModel;
     private RoleRuntimeModel roleRuntimeModel;
+    private IRoleInstanceSystem roleInstanceSystem;
     private PropPanelController propPanel;
 
-    private IUnRegister curRoleUnRegister;
     private IUnRegister capacityUnRegister;
     private readonly List<IUnRegister> durabilityUnRegisters = new List<IUnRegister>();
 
@@ -38,21 +38,28 @@ public class PackageController : MonoBehaviour, IController
     {
         get
         {
-            if (packageModel == null
-                || !packageModel.TryGetPackage(this.GetModel<RoleInstanceModel>().curRole.Value, out var package))
+            var role = CurrentRole;
+            if (packageModel == null || role == null
+                || !packageModel.TryGetPackage(role.RoleRuntimeIndex, out var package))
             {
                 return RolePackageInfo.DefaultCapacity;
             }
 
             if (package.capacity.Value < 1)
             {
-                Debug.LogError($"[PackageController] 角色 {this.GetModel<RoleInstanceModel>().curRole.Value} 的背包容量未初始化（{package.capacity.Value}），已按默认容量 {RolePackageInfo.DefaultCapacity} 显示");
+                Debug.LogError($"[PackageController] 角色 {role.RoleRuntimeIndex} 的背包容量未初始化（{package.capacity.Value}），已按默认容量 {RolePackageInfo.DefaultCapacity} 显示");
                 return RolePackageInfo.DefaultCapacity;
             }
 
             return package.capacity.Value;
         }
     }
+
+    /// <summary>
+    /// 当前受控角色，无控制对象时为 null。
+    /// 为 null 时查不到运行时角色与背包，各处会自然落到「只显示背包」「无道具」「默认容量」的默认分支。
+    /// </summary>
+    private RoleContext CurrentRole => roleInstanceSystem.ControllingRole;
 
     // ==================== 生命周期（由 PackagePanel 转发） ====================
 
@@ -62,6 +69,7 @@ public class PackageController : MonoBehaviour, IController
         panel = packagePanel;
         packageModel = this.GetModel<PackageModel>();
         roleRuntimeModel = this.GetModel<RoleRuntimeModel>();
+        roleInstanceSystem = this.GetSystem<IRoleInstanceSystem>();
 
         propPanel = panel.PropPanelController;
         if (propPanel == null)
@@ -74,8 +82,8 @@ public class PackageController : MonoBehaviour, IController
         }
 
         // 角色切换时重新订阅新角色背包的容量与物品变化并刷新栏位
-        curRoleUnRegister = this.GetModel<RoleInstanceModel>().curRole.Register(OnCurRoleChanged);
-        RegisterPackage(this.GetModel<RoleInstanceModel>().curRole.Value);
+        roleInstanceSystem.OnControllingInstanceChanged += OnControllingInstanceChanged;
+        RegisterPackage(CurrentRole);
     }
 
     /// <summary>面板打开：进入游戏暂停（时间停止、显示并解锁鼠标），并刷新一次显示。</summary>
@@ -94,8 +102,11 @@ public class PackageController : MonoBehaviour, IController
     /// <summary>面板关闭：取消订阅。</summary>
     public void OnClose()
     {
-        curRoleUnRegister?.UnRegister();
-        curRoleUnRegister = null;
+        if (roleInstanceSystem != null)
+        {
+            roleInstanceSystem.OnControllingInstanceChanged -= OnControllingInstanceChanged;
+        }
+
         UnRegisterPackage();
     }
 
@@ -116,8 +127,9 @@ public class PackageController : MonoBehaviour, IController
             return;
         }
 
-        panel.Title.text = roleRuntimeModel.TryGetRoleRuntime(this.GetModel<RoleInstanceModel>().curRole.Value, out var role)
-            ? $"背包 - {role.name}"
+        var role = CurrentRole;
+        panel.Title.text = role != null && roleRuntimeModel.TryGetRoleRuntime(role.RoleRuntimeIndex, out var info)
+            ? $"背包 - {info.name}"
             : "背包";
     }
 
@@ -139,29 +151,30 @@ public class PackageController : MonoBehaviour, IController
     /// <summary>当前角色背包的道具列表；无背包时返回 null。</summary>
     private IReadOnlyList<PropItemInfo> GetPackageItems()
     {
-        return packageModel.TryGetPackage(this.GetModel<RoleInstanceModel>().curRole.Value, out var package)
+        var role = CurrentRole;
+        return role != null && packageModel.TryGetPackage(role.RoleRuntimeIndex, out var package)
             ? package.Items
             : null;
     }
 
     // ==================== 订阅回调 ====================
 
-    private void OnCurRoleChanged(int roleRuntimeId)
+    private void OnControllingInstanceChanged(RoleContext roleContext)
     {
-        RegisterPackage(roleRuntimeId);
+        RegisterPackage(roleContext);
         RefreshAll();
     }
 
     /// <summary>
-    /// 改为订阅指定角色背包的容量与物品变化；该角色无背包时仅取消旧订阅。
+    /// 改为订阅指定角色背包的容量与物品变化；角色为 null 或无背包时仅取消旧订阅。
     /// 物品变化是 C# 事件（RolePackageInfo.OnPackageUpdate），退订必须交回同一个委托目标，
     /// 所以这里用 subscribedPackage 记住订阅的是哪个背包。
     /// </summary>
-    private void RegisterPackage(int roleRuntimeId)
+    private void RegisterPackage(RoleContext roleContext)
     {
         UnRegisterPackage();
 
-        if (!packageModel.TryGetPackage(roleRuntimeId, out var package))
+        if (roleContext == null || !packageModel.TryGetPackage(roleContext.RoleRuntimeIndex, out var package))
         {
             return;
         }

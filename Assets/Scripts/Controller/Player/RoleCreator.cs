@@ -4,7 +4,7 @@ using UnityEngine;
 
 /// <summary>
 /// 角色创建器：挂载到场景中，持有一组 Transform 作为角色生成点。
-/// Awake 时从 RoleInstanceSystem 获取所有角色，为每个角色在对应 Transform 位置实例化一个展示用角色（不挂载 PlayerController）。
+/// Awake 时从 RoleInstanceSystem 获取所有角色，为每个角色在对应 Transform 位置实例化一个展示用角色（不挂载 PlayerMoveController）。
 /// </summary>
 public class RoleCreator : MonoBehaviour, IController
 {
@@ -36,26 +36,18 @@ public class RoleCreator : MonoBehaviour, IController
                 continue;
             }
 
-            var instance = roleInstanceSystem.SpawnRoleWithoutController(
+            // 只创建实例、不接管控制：CreateRoleInstance 不挂 PlayerMoveController，
+            // 角色就停在生成点上供观察，玩家控制权留在别处。
+            var roleContext = roleInstanceSystem.CreateRoleInstance(
                 roleInfo.runtimeIndex,
                 spawnPoint.position,
                 spawnPoint.rotation
             );
 
-            if (instance != null)
+            // RoleContext 已由工厂初始化；创建失败时工厂已报错，这里跳过即可。
+            if (roleContext != null && roleContext.GetComponent<RoleObserveListener>() == null)
             {
-                var roleContext = instance.GetComponent<RoleContext>();
-                if (roleContext == null)
-                {
-                    roleContext = instance.AddComponent<RoleContext>();
-                }
-                roleContext.Initialize(roleInfo.runtimeIndex);
-
-                var listener = instance.GetComponent<RoleObserveListener>();
-                if (listener == null)
-                {
-                    instance.AddComponent<RoleObserveListener>();
-                }
+                roleContext.gameObject.AddComponent<RoleObserveListener>();
             }
 
             index++;

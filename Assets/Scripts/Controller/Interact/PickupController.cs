@@ -21,14 +21,14 @@ public class PickupController : InteractableBaseA
 
     public override void InteractA()
     {
-        var roleRuntimeModel = this.GetModel<RoleRuntimeModel>();
-        int roleId = this.GetModel<RoleInstanceModel>().curRole.Value;
-        if (roleId < 0)
+        var controllingRole = this.GetSystem<IRoleInstanceSystem>().ControllingRole;
+        if (controllingRole == null)
         {
-            Debug.LogWarning("[PickupController] 当前没有选中的角色(curRole=-1)，无法拾取");
+            Debug.LogWarning("[PickupController] 当前没有受控角色，无法拾取");
             return;
         }
 
+        int roleId = controllingRole.RoleRuntimeIndex;
         if (this.GetSystem<IPackageSystem>().AddItemToRolePackage(roleId, itemType, configId)
             && destroyOnPickup)
         {
