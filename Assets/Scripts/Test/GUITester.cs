@@ -92,8 +92,23 @@ public class GUITester : MonoBehaviour, IController
         GUILayout.EndHorizontal();
 
         if (GUILayout.Button("打印所有角色名称")) PrintRoleNames();
+        if (GUILayout.Button("退出控制")) ExitControl();
         GUILayout.Label(message);
         GUILayout.EndArea();
+    }
+
+    private void ExitControl()
+    {
+        var roleInstanceSystem = this.GetSystem<IRoleInstanceSystem>();
+        var controllingRole = roleInstanceSystem.ControllingRole;
+        if (controllingRole == null)
+        {
+            Report("当前没有控制角色。");
+            return;
+        }
+
+        roleInstanceSystem.RemovePlayerMoveController(controllingRole);
+        Report("已退出控制，当前控制角色为 null。");
     }
 
     private void AddRole()
