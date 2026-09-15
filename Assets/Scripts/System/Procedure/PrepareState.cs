@@ -5,9 +5,13 @@ using UnityEngine.SceneManagement;
 public class PrepareState : GameProcedureCompositeStateBase
 {
     private IRoleInstanceSystem _roleInstanceSystem;
+    private bool _isQuitting;
 
     protected override void OnSubStateEnter()
     {
+        _isQuitting = false;
+        Application.quitting += OnApplicationQuitting;
+
         Debug.Log("[GameProcedure] 进入 PrepareState");
 
         SceneManager.sceneLoaded += OnPrepareLoaded;
@@ -24,6 +28,7 @@ public class PrepareState : GameProcedureCompositeStateBase
 
     protected override void OnSubStateExit()
     {
+        Application.quitting -= OnApplicationQuitting;
         if (_roleInstanceSystem != null)
         {
             _roleInstanceSystem.OnControllingInstanceChanged -= OnControllingInstanceChanged;
@@ -41,6 +46,9 @@ public class PrepareState : GameProcedureCompositeStateBase
     /// </summary>
     private void OnControllingInstanceChanged(RoleContext roleContext)
     {
+        // 退出时角色销毁只是清理，不能再打开面板并重新创建 UIRoot。
+        if (_isQuitting) return;
+
         if (roleContext == null)
         {
             ChangeSubState<RoleSelectState>();
@@ -49,6 +57,19 @@ public class PrepareState : GameProcedureCompositeStateBase
         {
             ChangeSubState<RoleControlState>();
         }
+    }
+
+    private void OnApplicationQuitting()
+    {
+        _isQuitting = true;
+        // 停止 Play Mode 不保证流程状态会先 OnExit，提前解除业务事件订阅。
+        if (_roleInstanceSystem != null)
+        {
+            _roleInstanceSystem.OnControllingInstanceChanged -= OnControllingInstanceChanged;
+        }
+
+        SceneManager.sceneLoaded -= OnPrepareLoaded;
+        Application.quitting -= OnApplicationQuitting;
     }
 
     private void OnPrepareLoaded(Scene scene, LoadSceneMode mode)
