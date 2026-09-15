@@ -44,6 +44,7 @@ GameObject:
   - component: {fileID: 687044896668848174}
   - component: {fileID: 511504318918628180}
   - component: {fileID: 8117539600169439193}
+  - component: {fileID: 2176680104951087387}
   m_Layer: 0
   m_Name: "\u9AD8\u5C14\u592B\u7403\u6746"
   m_TagString: Untagged
@@ -155,3 +156,16 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   weaponConfigId: 0
   _damagePoint: {fileID: 7852014136443070296}
+--- !u!114 &2176680104951087387
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2162774798944797224}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80f44037fbd44776ba953969a8586f29, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  weaponConfigId: 0
