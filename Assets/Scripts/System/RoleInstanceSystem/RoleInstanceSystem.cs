@@ -58,6 +58,7 @@ public class RoleInstanceSystem : AbstractSystem, IRoleInstanceSystem
     {
         // 架构销毁时角色 GameObject 通常也在同批销毁，这里只清理自身引用，不主动销毁实例。
         ReleaseController();
+        ControllingRole = null;
         roleInstances.Clear();
         OnRoleInstanceCreated = null;
         OnRoleInstanceDestroyed = null;
@@ -156,13 +157,12 @@ public class RoleInstanceSystem : AbstractSystem, IRoleInstanceSystem
         OnControllingInstanceChanged?.Invoke(roleContext);
     }
 
-    /// <summary>销毁当前控制器并清空控制引用，不触发 OnControllingInstanceChanged。</summary>
+    /// <summary>销毁当前控制器；控制角色引用由调用方更新，以保留变更检测。</summary>
     private void ReleaseController()
     {
         var controller = currentController;
         // 先清空引用，避免组件生命周期回调重入时再次销毁同一组件。
         currentController = null;
-        ControllingRole = null;
         if (controller == null) return;
 
         controller.enabled = false;
