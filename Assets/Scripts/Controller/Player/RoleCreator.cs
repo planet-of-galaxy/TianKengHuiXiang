@@ -38,17 +38,12 @@ public class RoleCreator : MonoBehaviour, IController
 
             // 只创建实例、不接管控制：CreateRoleInstance 不挂 PlayerMoveController，
             // 角色就停在生成点上供观察，玩家控制权留在别处。
-            var roleContext = roleInstanceSystem.CreateRoleInstance(
+            // 创建失败时工厂已报错，这里不用额外处理。
+            roleInstanceSystem.CreateRoleInstance(
                 roleInfo.runtimeIndex,
                 spawnPoint.position,
                 spawnPoint.rotation
             );
-
-            // RoleContext 已由工厂初始化；创建失败时工厂已报错，这里跳过即可。
-            if (roleContext != null && roleContext.GetComponent<RoleObserveListener>() == null)
-            {
-                roleContext.gameObject.AddComponent<RoleObserveListener>();
-            }
 
             index++;
         }

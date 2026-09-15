@@ -36,7 +36,7 @@ public class PlayerCreator : MonoBehaviour, IController
 
     /// <summary>
     /// 启用角色实例身上的第一人称虚拟相机（FirstViewCinema），让新实例立即获得玩家视野。
-    /// 与 CurrentRoleSetListener 在选中角色后的处理保持一致。
+    /// 与 ControlRoleCmd 在选中角色后的处理保持一致。
     /// </summary>
     private void EnableFirstViewCinema(RoleContext roleContext)
     {
