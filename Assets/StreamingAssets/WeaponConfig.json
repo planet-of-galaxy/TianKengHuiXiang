@@ -1,6 +1,36 @@
 {
   "weapons": [
     {
+      "weaponId": -1,
+      "name": "无武器",
+      "icon": "",
+      "durability": 0.0,
+      "lightAttack": {
+        "damageType": "Melee",
+        "attackPower": 5.0,
+        "attackSpeed": 1.5,
+        "attackRange": 1.2,
+        "attackDuration": 0.25,
+        "attackWindup": 0.1,
+        "criticalRate": 0.1,
+        "criticalMultiplier": 1.5,
+        "stunRate": 0.02,
+        "stunDuration": 0.3
+      },
+      "heavyAttack": {
+        "damageType": "Melee",
+        "attackPower": 12.0,
+        "attackSpeed": 0.7,
+        "attackRange": 1.5,
+        "attackDuration": 0.4,
+        "attackWindup": 0.35,
+        "criticalRate": 0.2,
+        "criticalMultiplier": 2.0,
+        "stunRate": 0.15,
+        "stunDuration": 1.0
+      }
+    },
+    {
       "weaponId": 0,
       "name": "高尔夫球杆",
       "icon": "UI/PropItem/Weapon/icon_golf",
