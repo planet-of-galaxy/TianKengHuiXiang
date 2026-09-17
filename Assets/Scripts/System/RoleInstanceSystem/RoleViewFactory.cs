@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -11,14 +10,12 @@ public static class RoleViewFactory
     /// <summary>
     /// 实例化角色预制体并返回其 RoleContext。任何一步失败都直接报错并返回 null。
     /// </summary>
-    /// <param name="onDestroyed">实例被销毁时回调；用于外部销毁（非 DestroyRoleInstance）时通知调用方。</param>
     public static RoleContext CreateRoleInstance(
         RoleRuntimeModel runtimeModel,
         IResourceStorage resourceStorage,
         int roleRuntimeId,
         Vector3 position,
-        Quaternion rotation,
-        Action<RoleContext> onDestroyed)
+        Quaternion rotation)
     {
         if (!runtimeModel.TryGetRoleRuntime(roleRuntimeId, out var info) || string.IsNullOrEmpty(info.name))
         {
@@ -46,9 +43,6 @@ public static class RoleViewFactory
 
         context.Initialize(roleRuntimeId);
 
-        var lifecycle = instance.GetComponent<RoleRuntimeLifecycle>();
-        if (lifecycle == null) lifecycle = instance.AddComponent<RoleRuntimeLifecycle>();
-        lifecycle.Init(_ => onDestroyed?.Invoke(context));
         return context;
     }
 

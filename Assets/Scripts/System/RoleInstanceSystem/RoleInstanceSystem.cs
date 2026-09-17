@@ -65,6 +65,10 @@ public class RoleInstanceSystem : AbstractSystem, IRoleInstanceSystem
         // 架构销毁时角色 GameObject 通常也在同批销毁，这里只清理自身引用，不主动销毁实例。
         ReleaseController();
         ControllingRole = null;
+        foreach (var context in roleInstances.Values)
+        {
+            context.OnDestroyed -= HandleRoleInstanceDestroyed;
+        }
         roleInstances.Clear();
         OnRoleInstanceCreated = null;
         OnRoleInstanceDestroyed = null;
@@ -76,7 +80,7 @@ public class RoleInstanceSystem : AbstractSystem, IRoleInstanceSystem
         if (roleInstances.TryGetValue(roleRuntimeId, out var existing) && existing != null) return existing;
 
         var context = RoleViewFactory.CreateRoleInstance(
-            runtimeModel, resourceStorage, roleRuntimeId, position, rotation, HandleRoleInstanceDestroyed);
+            runtimeModel, resourceStorage, roleRuntimeId, position, rotation);
         if (context == null) return null;
 
         // 实例系统统一挂载角色重力，不依赖是否接管为玩家控制对象。
@@ -86,6 +90,7 @@ public class RoleInstanceSystem : AbstractSystem, IRoleInstanceSystem
         }
 
         roleInstances[roleRuntimeId] = context;
+        context.OnDestroyed += HandleRoleInstanceDestroyed;
         OnRoleInstanceCreated?.Invoke(context);
         return context;
     }
@@ -101,8 +106,6 @@ public class RoleInstanceSystem : AbstractSystem, IRoleInstanceSystem
         // 主动销毁：在 GameObject 进入销毁流程前先移除控制器。
         if (ReferenceEquals(ControllingRole, roleContext)) RemovePlayerMoveController(roleContext);
 
-        // 先注销再销毁，销毁回调随后触发时已是空操作，保证销毁事件只发一次。
-        if (UnregisterRoleInstance(roleContext)) OnRoleInstanceDestroyed?.Invoke(roleContext);
         RoleViewFactory.DestroyRoleInstance(roleContext);
     }
 
@@ -190,7 +193,7 @@ public class RoleInstanceSystem : AbstractSystem, IRoleInstanceSystem
         return roleInstances.TryGetValue(roleRuntimeId, out var context) && context != null ? context : null;
     }
 
-    /// <summary>实例被外部销毁时由 RoleRuntimeLifecycle 回调。</summary>
+    /// <summary>Handles RoleContext destruction and releases instance references.</summary>
     private void HandleRoleInstanceDestroyed(RoleContext roleContext)
     {
         if (!UnregisterRoleInstance(roleContext)) return;
@@ -228,10 +231,11 @@ public class RoleInstanceSystem : AbstractSystem, IRoleInstanceSystem
     /// <summary>注销角色实例；实例不存在或已被注销返回 false。</summary>
     private bool UnregisterRoleInstance(RoleContext roleContext)
     {
-        if (roleContext == null) return false;
+        if (ReferenceEquals(roleContext, null)) return false;
         var runtimeIndex = roleContext.RoleRuntimeIndex;
         if (!roleInstances.TryGetValue(runtimeIndex, out var registered)) return false;
         if (!ReferenceEquals(registered, roleContext)) return false;
+        roleContext.OnDestroyed -= HandleRoleInstanceDestroyed;
         roleInstances.Remove(runtimeIndex);
         return true;
     }

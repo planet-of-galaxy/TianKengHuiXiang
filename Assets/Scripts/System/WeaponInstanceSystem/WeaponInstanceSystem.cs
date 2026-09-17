@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System;
 using QFramework;
 using UnityEngine;
@@ -38,6 +38,10 @@ public class WeaponInstanceSystem : AbstractSystem, IWeaponInstanceSystem
 
     protected override void OnDeinit()
     {
+        foreach (var context in weapons.Keys)
+        {
+            context.OnDestroyed -= HandleRoleDestroyed;
+        }
         foreach (var weapon in weapons.Values)
         {
             DestroyWeapon(weapon);
@@ -86,7 +90,10 @@ public class WeaponInstanceSystem : AbstractSystem, IWeaponInstanceSystem
         weapon.transform.localPosition = Vector3.zero;
         weapon.transform.localRotation = Quaternion.identity;
 
-        weapons.TryGetValue(roleContext, out var previousWeapon);
+        if (!weapons.TryGetValue(roleContext, out var previousWeapon))
+        {
+            roleContext.OnDestroyed += HandleRoleDestroyed;
+        }
         weapons[roleContext] = weapon;
         DestroyWeapon(previousWeapon);
         OnWeaponChanged?.Invoke(roleContext, config);
@@ -100,6 +107,7 @@ public class WeaponInstanceSystem : AbstractSystem, IWeaponInstanceSystem
 
         if (roleContext == null)
         {
+            roleContext.OnDestroyed -= HandleRoleDestroyed;
             weapons.Remove(roleContext);
             DestroyWeapon(weapon);
             return;
@@ -116,9 +124,17 @@ public class WeaponInstanceSystem : AbstractSystem, IWeaponInstanceSystem
         if (!weapons.TryGetValue(roleContext, out var weapon)) return null;
         if (roleContext != null && weapon != null) return weapon;
 
+        roleContext.OnDestroyed -= HandleRoleDestroyed;
         weapons.Remove(roleContext);
         DestroyWeapon(weapon);
         return null;
+    }
+
+    private void HandleRoleDestroyed(RoleContext roleContext)
+    {
+        roleContext.OnDestroyed -= HandleRoleDestroyed;
+        // Child weapons are destroyed with the role; only release the reference here.
+        weapons.Remove(roleContext);
     }
 
     private static void DestroyWeapon(WeaponContext weapon)
