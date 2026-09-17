@@ -1,14 +1,18 @@
 ﻿using System.Collections.Generic;
+using System;
 using QFramework;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
 public interface IWeaponInstanceSystem : ISystem
 {
+    /// <summary>武器替换完成后触发；无武器时 newWeaponConfig.weaponId 为 -1。</summary>
+    event Action<RoleContext, WeaponConfig> OnWeaponChanged;
+
     /// <summary>创建角色的武器，成功后替换已有武器。</summary>
     void CreateWeapon(RoleContext roleContext, int weaponConfigId);
 
-    /// <summary>移除角色的武器，没有武器时不做处理。</summary>
+    /// <summary>将角色武器替换为配置 -1 的无武器对象；已是无武器对象时不做处理。</summary>
     void RemoveWeapon(RoleContext roleContext);
 
     /// <summary>获取角色的武器，不存在或已销毁时返回 null。</summary>
@@ -18,6 +22,10 @@ public interface IWeaponInstanceSystem : ISystem
 /// <summary>由调用方驱动角色武器的创建、移除和查询。</summary>
 public class WeaponInstanceSystem : AbstractSystem, IWeaponInstanceSystem
 {
+    private const int UnarmedWeaponConfigId = -1;
+
+    public event Action<RoleContext, WeaponConfig> OnWeaponChanged;
+
     private readonly Dictionary<RoleContext, WeaponContext> weapons = new();
     private IWeaponConfigProvider weaponConfigs;
     private IResourceStorage resources;
@@ -35,6 +43,7 @@ public class WeaponInstanceSystem : AbstractSystem, IWeaponInstanceSystem
             DestroyWeapon(weapon);
         }
         weapons.Clear();
+        OnWeaponChanged = null;
     }
 
     public void CreateWeapon(RoleContext roleContext, int weaponConfigId)
@@ -77,18 +86,28 @@ public class WeaponInstanceSystem : AbstractSystem, IWeaponInstanceSystem
         weapon.transform.localPosition = Vector3.zero;
         weapon.transform.localRotation = Quaternion.identity;
 
-        RemoveWeapon(roleContext);
+        weapons.TryGetValue(roleContext, out var previousWeapon);
         weapons[roleContext] = weapon;
+        DestroyWeapon(previousWeapon);
+        OnWeaponChanged?.Invoke(roleContext, config);
     }
 
     public void RemoveWeapon(RoleContext roleContext)
     {
         // 已销毁的 Unity 对象仍可作为字典键，用于清理残留登记。
         if (ReferenceEquals(roleContext, null)) return;
-        if (!weapons.TryGetValue(roleContext, out var weapon)) return;
+        weapons.TryGetValue(roleContext, out var weapon);
 
-        weapons.Remove(roleContext);
-        DestroyWeapon(weapon);
+        if (roleContext == null)
+        {
+            weapons.Remove(roleContext);
+            DestroyWeapon(weapon);
+            return;
+        }
+
+        if (weapon != null && weapon.WeaponConfigId == UnarmedWeaponConfigId) return;
+
+        CreateWeapon(roleContext, UnarmedWeaponConfigId);
     }
 
     public WeaponContext TryGetWeapon(RoleContext roleContext)
