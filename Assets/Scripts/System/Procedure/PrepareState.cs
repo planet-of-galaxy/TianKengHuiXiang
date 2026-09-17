@@ -75,8 +75,8 @@ public class PrepareState : GameProcedureCompositeStateBase
         SceneManager.sceneLoaded -= OnPrepareLoaded;
         foreach (var root in scene.GetRootGameObjects())
         {
-            _sceneContext = root.GetComponentInChildren<PrepareSceneContext>(true);
-            if (_sceneContext != null) break;
+            if (root.TryGetComponent<PrepareSceneContext>(out _sceneContext))
+                break;
         }
 
         if (_sceneContext == null)
