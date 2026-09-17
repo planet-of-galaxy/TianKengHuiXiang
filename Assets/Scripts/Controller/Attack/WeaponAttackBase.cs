@@ -4,9 +4,15 @@ using UnityEngine;
 /// 武器攻击基类：挂在武器物体上。
 /// 实现 IAttack，由同一物体上的 AttackListener 调用 ILightAttack。
 /// </summary>
+[RequireComponent(typeof(WeaponContext))]
 public abstract class WeaponAttackBase : MonoBehaviour, IAttack
 {
-    [SerializeField] protected int weaponConfigId;
+    protected WeaponContext weaponContext;
+
+    protected virtual void Awake()
+    {
+        weaponContext = GetComponent<WeaponContext>();
+    }
 
     /// <summary>
     /// 执行一次轻攻击，返回本次造成的伤害信息。

@@ -41,6 +41,7 @@ public class MeleeWeaponAttack : WeaponAttackBase
             return default;
         }
 
+        int weaponConfigId = weaponContext.WeaponConfigId;
         var weaponConfig = TianArchitecture.Interface.GetUtility<IWeaponConfigProvider>()
             .GetWeaponConfig(weaponConfigId);
         var attackConfig = heavyAttack ? weaponConfig?.heavyAttack : weaponConfig?.lightAttack;
