@@ -6,9 +6,18 @@ using UnityEngine;
 /// </summary>
 public class RoleSelectState : GameProcedureStateBase
 {
+    private readonly PrepareSceneContext _sceneContext;
+
+    public RoleSelectState(PrepareSceneContext sceneContext)
+    {
+        _sceneContext = sceneContext;
+    }
+
     public override void OnEnter()
     {
         Debug.Log("[GameProcedure] 进入 RoleSelectState");
+
+        this.GetSystem<ICinemaChineCameraSystem>().TransitionTo(_sceneContext.previewCinema);
 
         UIKit.OpenPanel<RoleSelectPanel>(prefabName: "resources://UI/Panel/roleselectpanel");
     }

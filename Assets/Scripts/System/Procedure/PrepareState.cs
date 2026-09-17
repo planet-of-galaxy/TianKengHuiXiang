@@ -5,6 +5,7 @@ using UnityEngine.SceneManagement;
 public class PrepareState : GameProcedureCompositeStateBase
 {
     private IRoleInstanceSystem _roleInstanceSystem;
+    private PrepareSceneContext _sceneContext;
     private bool _isQuitting;
 
     protected override void OnSubStateEnter()
@@ -14,16 +15,9 @@ public class PrepareState : GameProcedureCompositeStateBase
 
         Debug.Log("[GameProcedure] 进入 PrepareState");
 
+        _roleInstanceSystem = this.GetSystem<IRoleInstanceSystem>();
         SceneManager.sceneLoaded += OnPrepareLoaded;
         SceneManager.LoadScene("PrepareScene");
-
-        // 有没有受控角色决定处于选择阶段还是控制阶段
-        _roleInstanceSystem = this.GetSystem<IRoleInstanceSystem>();
-        _roleInstanceSystem.OnControllingInstanceChanged += OnControllingInstanceChanged;
-
-        AddSubState(new RoleSelectState());
-        AddSubState(new RoleControlState());
-        StartSubState<RoleSelectState>();
     }
 
     protected override void OnSubStateExit()
@@ -37,6 +31,7 @@ public class PrepareState : GameProcedureCompositeStateBase
 
         SceneManager.sceneLoaded -= OnPrepareLoaded;
 
+        _sceneContext = null;
         Debug.Log("[GameProcedure] 退出 PrepareState");
     }
 
@@ -69,14 +64,56 @@ public class PrepareState : GameProcedureCompositeStateBase
         }
 
         SceneManager.sceneLoaded -= OnPrepareLoaded;
+        _sceneContext = null;
         Application.quitting -= OnApplicationQuitting;
     }
 
     private void OnPrepareLoaded(Scene scene, LoadSceneMode mode)
     {
-        if (scene.name == "PrepareScene")
+        if (scene.name != "PrepareScene") return;
+
+        SceneManager.sceneLoaded -= OnPrepareLoaded;
+        foreach (var root in scene.GetRootGameObjects())
         {
-            Debug.Log("[GameProcedure] Prepare场景加载完成");
+            _sceneContext = root.GetComponentInChildren<PrepareSceneContext>(true);
+            if (_sceneContext != null) break;
+        }
+
+        if (_sceneContext == null)
+        {
+            Debug.LogError("[GameProcedure] PrepareScene 缺少 PrepareSceneContext");
+            return;
+        }
+
+        CreateRoles();
+        AddSubState(new RoleSelectState(_sceneContext));
+        AddSubState(new RoleControlState());
+        _roleInstanceSystem.OnControllingInstanceChanged += OnControllingInstanceChanged;
+        StartSubState<RoleSelectState>();
+        Debug.Log("[GameProcedure] Prepare场景加载完成");
+    }
+
+    private void CreateRoles()
+    {
+        var runtimeModel = this.GetModel<RoleRuntimeModel>();
+        int index = 0;
+        foreach (var roleInfo in runtimeModel.GetAllRoleRuntimes())
+        {
+            if (index >= _sceneContext.roleList.Count)
+            {
+                Debug.LogWarning($"[PrepareState] 角色数量 ({runtimeModel.Count}) 超过生成点数量 ({_sceneContext.roleList.Count})，剩余角色未生成");
+                break;
+            }
+
+            var spawnPoint = _sceneContext.roleList[index++];
+            if (spawnPoint == null)
+            {
+                Debug.LogWarning($"[PrepareState] 生成点 {index - 1} 为 null，跳过角色 {roleInfo.runtimeIndex}");
+                continue;
+            }
+
+            _roleInstanceSystem.CreateRoleInstance(
+                roleInfo.runtimeIndex, spawnPoint.position, spawnPoint.rotation);
         }
     }
 }

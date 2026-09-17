@@ -23,7 +23,7 @@ public class RoleSelectController : MonoBehaviour, IController
 
     /// <summary>
     /// 面板初始化：先为已经存在的角色实例补一遍选项，再订阅实例的创建与销毁。
-    /// 面板打开时角色实例早已由 RoleCreator 建好，只订阅事件的话会一个选项都不显示。
+    /// 面板打开时角色实例早已由 PrepareState 建好，只订阅事件的话会一个选项都不显示。
     /// </summary>
     public void Init(RoleSelectPanel roleSelectPanel)
     {
