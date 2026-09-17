@@ -28,6 +28,12 @@ public interface IRoleInstanceSystem : ISystem
     /// <summary>解除对指定角色的控制并移除其 PlayerMoveController。</summary>
     void RemovePlayerMoveController(RoleContext roleContext);
 
+    /// <summary>为角色添加并启用 AttackController 和 AttackListener，已有组件直接复用。</summary>
+    void AddAttackController(RoleContext roleContext);
+
+    /// <summary>移除角色的 AttackController 和 AttackListener。</summary>
+    void RemoveAttackController(RoleContext roleContext);
+
     /// <summary>按运行时 id 获取已创建的角色实例；不存在或已销毁时返回 null。</summary>
     RoleContext TryGetRoleInstance(int roleRuntimeId);
 }
@@ -133,6 +139,49 @@ public class RoleInstanceSystem : AbstractSystem, IRoleInstanceSystem
 
         ReleaseController();
         SetControllingRole(null);
+    }
+
+    public void AddAttackController(RoleContext roleContext)
+    {
+        if (roleContext == null)
+        {
+            Debug.LogError("[RoleInstanceSystem] AddAttackController 收到 null。");
+            return;
+        }
+
+        // 先准备输入监听器，供控制器 Awake 时关联；未激活的角色也会拥有两个组件。
+        var listener = roleContext.GetComponent<AttackListener>();
+        if (listener == null) listener = roleContext.gameObject.AddComponent<AttackListener>();
+        listener.enabled = true;
+
+        var controller = roleContext.GetComponent<AttackController>();
+        if (controller == null) controller = roleContext.gameObject.AddComponent<AttackController>();
+        controller.enabled = true;
+    }
+
+    public void RemoveAttackController(RoleContext roleContext)
+    {
+        if (roleContext == null)
+        {
+            Debug.LogError("[RoleInstanceSystem] RemoveAttackController 收到 null。");
+            return;
+        }
+
+        var controller = roleContext.GetComponent<AttackController>();
+        if (controller != null)
+        {
+            // 先禁用控制器以退订事件，再移除监听器。
+            controller.enabled = false;
+            // 与移动控制器保持一致，立即移除以支持同帧重新添加。
+            Object.DestroyImmediate(controller);
+        }
+
+        var listener = roleContext.GetComponent<AttackListener>();
+        if (listener != null)
+        {
+            listener.enabled = false;
+            Object.DestroyImmediate(listener);
+        }
     }
 
     public RoleContext TryGetRoleInstance(int roleRuntimeId)

@@ -1,11 +1,12 @@
 using System;
+using QFramework;
 using UnityEngine;
 
 /// <summary>
 /// 攻击输入监听：左键短按松开时触发轻击回调，右键长按达到阈值时触发一次重击回调。
 /// </summary>
 [DisallowMultipleComponent]
-public class AttackListener : MonoBehaviour
+public class AttackListener : MonoBehaviour, IController
 {
     [SerializeField, Min(0.01f)] private float heavyAttackHoldTime = 0.5f;
 
@@ -17,9 +18,24 @@ public class AttackListener : MonoBehaviour
     private float _heavyPressTime;
     private bool _isHeavyPressing;
     private bool _heavyAttackTriggered;
+    private IGamePauseSystem pauseSystem;
+
+    public IArchitecture GetArchitecture() => TianArchitecture.Interface;
+
+    private void Awake()
+    {
+        pauseSystem = this.GetSystem<IGamePauseSystem>();
+    }
 
     private void Update()
     {
+        // 暂停时丢弃进行中的按键，恢复后需要重新按下才能攻击。
+        if (pauseSystem != null && pauseSystem.IsPaused)
+        {
+            ResetPress();
+            return;
+        }
+
         if (Input.GetMouseButtonDown(0))
         {
             _lightPressTime = Time.time;
