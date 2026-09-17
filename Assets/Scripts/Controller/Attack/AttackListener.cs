@@ -1,57 +1,62 @@
+using System;
 using UnityEngine;
 
 /// <summary>
-/// 攻击输入监听：挂在具有 IAttack 实现组件的物体上，
-/// 持有该组件，左键短按松开时调用轻击，长按达到阈值时调用一次重击。
+/// 攻击输入监听：左键短按松开时触发轻击回调，右键长按达到阈值时触发一次重击回调。
 /// </summary>
 [DisallowMultipleComponent]
 public class AttackListener : MonoBehaviour
 {
     [SerializeField, Min(0.01f)] private float heavyAttackHoldTime = 0.5f;
 
-    private IAttack _attack;
-    private float _pressTime;
-    private bool _isPressing;
-    private bool _heavyAttackTriggered;
+    public event Action OnLightAttackKeyPressed;
+    public event Action OnHeavyAttackKeyPressed;
 
-    private void Awake()
-    {
-        _attack = GetComponent<IAttack>();
-        if (_attack == null)
-        {
-            Debug.LogError("AttackListener 必须挂载在具有 IAttack 实现组件的物体上。", this);
-            enabled = false;
-        }
-    }
+    private float _lightPressTime;
+    private bool _isLightPressing;
+    private float _heavyPressTime;
+    private bool _isHeavyPressing;
+    private bool _heavyAttackTriggered;
 
     private void Update()
     {
         if (Input.GetMouseButtonDown(0))
         {
-            _pressTime = Time.time;
-            _isPressing = true;
+            _lightPressTime = Time.time;
+            _isLightPressing = true;
+        }
+
+        if (Input.GetMouseButtonUp(0) && _isLightPressing)
+        {
+            _isLightPressing = false;
+            if (Time.time - _lightPressTime < heavyAttackHoldTime)
+            {
+                OnLightAttackKeyPressed?.Invoke();
+            }
+        }
+
+        if (Input.GetMouseButtonDown(1))
+        {
+            _heavyPressTime = Time.time;
+            _isHeavyPressing = true;
             _heavyAttackTriggered = false;
         }
 
-        if (!_isPressing)
+        if (!_isHeavyPressing)
         {
             return;
         }
 
-        if (!_heavyAttackTriggered && Time.time - _pressTime >= heavyAttackHoldTime)
+        if (!_heavyAttackTriggered && Time.time - _heavyPressTime >= heavyAttackHoldTime)
         {
             _heavyAttackTriggered = true;
-            _attack?.IHeavyAttack();
+            OnHeavyAttackKeyPressed?.Invoke();
         }
 
-        if (Input.GetMouseButtonUp(0))
+        if (Input.GetMouseButtonUp(1))
         {
-            bool shouldLightAttack = !_heavyAttackTriggered;
-            ResetPress();
-            if (shouldLightAttack)
-            {
-                _attack?.ILightAttack();
-            }
+            _isHeavyPressing = false;
+            _heavyAttackTriggered = false;
         }
     }
 
@@ -70,7 +75,8 @@ public class AttackListener : MonoBehaviour
 
     private void ResetPress()
     {
-        _isPressing = false;
+        _isLightPressing = false;
+        _isHeavyPressing = false;
         _heavyAttackTriggered = false;
     }
 }
