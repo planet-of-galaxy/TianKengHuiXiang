@@ -4,6 +4,12 @@ using UnityEngine;
 
 public interface IPackageSystem : ISystem
 {
+    /// <summary>角色手持物变化时触发；未手持有效物品时 item 为 null。</summary>
+    event System.Action<int, PropItemInfo> OnHeldItemChanged;
+
+    /// <summary>获取角色当前手持物；背包或槽位不存在时返回 null。</summary>
+    PropItemInfo GetHeldItem(int roleRuntimeId);
+
     /// <summary>
     /// 读取存档，初始化 PackageModel；无存档时为每个角色实例创建默认空背包。
     /// </summary>
@@ -46,6 +52,10 @@ public interface IPackageSystem : ISystem
 
 public class PackageSystem : AbstractSystem, IPackageSystem
 {
+    public event System.Action<int, PropItemInfo> OnHeldItemChanged;
+
+    private readonly Dictionary<int, System.Action> heldItemUnsubscribers = new();
+
     /// <summary>
     /// 背包容量上限：可通过升级解锁的最大栏位数。
     /// capacity 与 maxCapacity 之间的栏位在 UI 中以灰色锁定显示。
@@ -91,7 +101,59 @@ public class PackageSystem : AbstractSystem, IPackageSystem
         weaponConfigProvider = this.GetUtility<IWeaponConfigProvider>();
         storage = this.GetUtility<IJsonStorage>();
 
+        packageModel.PackageChanged += BindHeldItem;
         InitPackageModel();
+    }
+
+    protected override void OnDeinit()
+    {
+        packageModel.PackageChanged -= BindHeldItem;
+        foreach (var unsubscribe in heldItemUnsubscribers.Values) unsubscribe();
+        heldItemUnsubscribers.Clear();
+        OnHeldItemChanged = null;
+        RemovePackageListener();
+    }
+
+    public PropItemInfo GetHeldItem(int roleRuntimeId)
+    {
+        if (!packageModel.TryGetPackage(roleRuntimeId, out var package)) return null;
+        if (package.heldIndex.Value < 0) return null;
+        foreach (var item in package.Items)
+        {
+            if (item != null && item.index == package.heldIndex.Value) return item;
+        }
+        return null;
+    }
+
+    private void BindHeldItem(int roleRuntimeId)
+    {
+        if (heldItemUnsubscribers.TryGetValue(roleRuntimeId, out var unsubscribe))
+        {
+            unsubscribe();
+            heldItemUnsubscribers.Remove(roleRuntimeId);
+        }
+
+        var heldItem = GetHeldItem(roleRuntimeId);
+        if (packageModel.TryGetPackage(roleRuntimeId, out var package))
+        {
+            void RefreshHeldItem()
+            {
+                var newItem = GetHeldItem(roleRuntimeId);
+                if (ReferenceEquals(heldItem, newItem)) return;
+                heldItem = newItem;
+                OnHeldItemChanged?.Invoke(roleRuntimeId, newItem);
+            }
+
+            var registration = package.heldIndex.Register(_ => RefreshHeldItem());
+            package.OnPackageUpdate += RefreshHeldItem;
+            heldItemUnsubscribers[roleRuntimeId] = () =>
+            {
+                registration.UnRegister();
+                package.OnPackageUpdate -= RefreshHeldItem;
+            };
+        }
+
+        OnHeldItemChanged?.Invoke(roleRuntimeId, heldItem);
     }
 
     /// <summary>

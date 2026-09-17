@@ -195,6 +195,7 @@ GameObject:
   - component: {fileID: 6672999812446699403}
   - component: {fileID: 3496026979049236611}
   - component: {fileID: 2204951838504804015}
+  - component: {fileID: -3612829190264556340}
   m_Layer: 0
   m_Name: "\u53A8\u5E08"
   m_TagString: Player
@@ -337,3 +338,15 @@ MonoBehaviour:
   weaponPosition: {fileID: 7505743132693864588}
   firstViewCinema: {fileID: 1302483106240401099}
   observeCinema: {fileID: 7402828477911177459}
+--- !u!114 &-3612829190264556340
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7629578533471628078}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 687870b148484513997e2d45c795c4e7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
