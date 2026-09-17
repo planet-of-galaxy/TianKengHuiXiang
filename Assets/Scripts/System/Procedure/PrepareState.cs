@@ -16,6 +16,7 @@ public class PrepareState : GameProcedureCompositeStateBase
         Debug.Log("[GameProcedure] 进入 PrepareState");
 
         _roleInstanceSystem = this.GetSystem<IRoleInstanceSystem>();
+        UIKit.OpenPanel<LoadingPanel>(UILevel.PopUI, prefabName: "resources://UI/Panel/LoadingPanel");
         SceneManager.sceneLoaded += OnPrepareLoaded;
         SceneManager.LoadScene("PrepareScene");
     }
@@ -72,6 +73,7 @@ public class PrepareState : GameProcedureCompositeStateBase
     {
         if (scene.name != "PrepareScene") return;
 
+        UIKit.HidePanel<LoadingPanel>();
         SceneManager.sceneLoaded -= OnPrepareLoaded;
         foreach (var root in scene.GetRootGameObjects())
         {
