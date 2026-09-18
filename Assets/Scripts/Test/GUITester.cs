@@ -122,7 +122,7 @@ public class GUITester : MonoBehaviour, IController
 
     private void PrintRoleNames()
     {
-        var model = this.GetModel<RoleRuntimeModel>();
+        var model = this.GetModel<IRoleRuntimeModel>();
         if (model.Count == 0)
         {
             Report("当前没有角色。");
@@ -194,7 +194,7 @@ public class GUITester : MonoBehaviour, IController
 
     private bool TryGetCurrentRole(out int roleId)
     {
-        var model = this.GetModel<RoleRuntimeModel>();
+        var model = this.GetModel<IRoleRuntimeModel>();
         var controllingRole = this.GetSystem<IRoleInstanceSystem>().ControllingRole;
         if (controllingRole != null && model.TryGetRoleRuntime(controllingRole.RoleRuntimeIndex, out _))
         {
@@ -211,7 +211,7 @@ public class GUITester : MonoBehaviour, IController
     {
         package = null;
         if (!TryGetCurrentRole(out int roleId)) return false;
-        if (this.GetModel<PackageModel>().TryGetPackage(roleId, out package)) return true;
+        if (this.GetModel<IPackageModel>().TryGetPackage(roleId, out package)) return true;
         Report($"角色 {roleId} 尚未创建背包。", true);
         return false;
     }

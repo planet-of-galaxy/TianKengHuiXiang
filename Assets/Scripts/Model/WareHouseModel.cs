@@ -1,7 +1,15 @@
 using System.Collections.Generic;
 using QFramework;
 
-public class WareHouseModel : AbstractModel
+public interface IWareHouseModel : IModel
+{
+    int Count { get; }
+    IReadOnlyDictionary<int, PropItemInfo> wareHouseItems { get; }
+    bool TryGetItem(int instanceId, out PropItemInfo item);
+    IEnumerable<PropItemInfo> GetAllItems();
+}
+
+public class WareHouseModel : AbstractModel, IWareHouseModel
 {
     /// <summary>
     /// 仓库道具集合，key 为道具实例 id（唯一；逐件道具独占一个条目并各自携带独立耐久，

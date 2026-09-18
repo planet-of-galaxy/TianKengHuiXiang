@@ -11,7 +11,7 @@ public static class RoleViewFactory
     /// 实例化角色预制体并返回其 RoleContext。任何一步失败都直接报错并返回 null。
     /// </summary>
     public static RoleContext CreateRoleInstance(
-        RoleRuntimeModel runtimeModel,
+        IRoleRuntimeModel runtimeModel,
         IResourceStorage resourceStorage,
         int roleRuntimeId,
         Vector3 position,

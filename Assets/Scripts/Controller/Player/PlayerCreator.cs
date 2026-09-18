@@ -13,7 +13,7 @@ public class PlayerCreator : MonoBehaviour, IController
     {
         var roleInstanceSystem = this.GetSystem<IRoleInstanceSystem>();
 
-        var roleRuntimeIds = this.GetModel<RoleRuntimeModel>().GetAllRoleRuntimeIds();
+        var roleRuntimeIds = this.GetModel<IRoleRuntimeModel>().GetAllRoleRuntimeIds();
         if (roleRuntimeIds.Count == 0)
         {
             Debug.LogWarning("[PlayerCreator] 没有可创建的运行时角色。");

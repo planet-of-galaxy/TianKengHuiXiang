@@ -1,7 +1,15 @@
 using System.Collections.Generic;
 using QFramework;
 
-public class RoleRuntimeModel : AbstractModel
+public interface IRoleRuntimeModel : IModel
+{
+    int Count { get; }
+    bool TryGetRoleRuntime(int id, out RoleRuntimeInfo info);
+    IEnumerable<RoleRuntimeInfo> GetAllRoleRuntimes();
+    List<int> GetAllRoleRuntimeIds();
+}
+
+public class RoleRuntimeModel : AbstractModel, IRoleRuntimeModel
 {
     /// <summary>
     /// 所有角色运行时信息的集合，key 为运行时实例 id（唯一，同一角色配置可有多份实例）。

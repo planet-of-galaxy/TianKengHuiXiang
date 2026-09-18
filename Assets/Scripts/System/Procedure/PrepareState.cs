@@ -97,7 +97,7 @@ public class PrepareState : GameProcedureCompositeStateBase
 
     private void CreateRoles()
     {
-        var runtimeModel = this.GetModel<RoleRuntimeModel>();
+        var runtimeModel = this.GetModel<IRoleRuntimeModel>();
         int index = 0;
         foreach (var roleInfo in runtimeModel.GetAllRoleRuntimes())
         {

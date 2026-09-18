@@ -11,13 +11,13 @@ public class RuntimePanel : UIPanel, IController
     [SerializeField] private TextMeshProUGUI _curHealth;
     [SerializeField] private TextMeshProUGUI _maxHealth;
 
-    private RoleRuntimeModel runtimeModel;
+    private IRoleRuntimeModel runtimeModel;
     private IRoleInstanceSystem roleInstanceSystem;
     private RoleRuntimeInfo currentInfo;
 
     protected override void OnInit(IUIData uiData = null)
     {
-        runtimeModel = this.GetModel<RoleRuntimeModel>();
+        runtimeModel = this.GetModel<IRoleRuntimeModel>();
         roleInstanceSystem = this.GetSystem<IRoleInstanceSystem>();
         roleInstanceSystem.OnControllingInstanceChanged += OnControllingInstanceChanged;
         OnControllingInstanceChanged(roleInstanceSystem.ControllingRole);

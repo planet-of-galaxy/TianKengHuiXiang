@@ -44,7 +44,7 @@ public class RoleInstanceSystem : AbstractSystem, IRoleInstanceSystem
     /// <summary>已创建的角色实例，key 为运行时 id。</summary>
     private readonly Dictionary<int, RoleContext> roleInstances = new();
 
-    private RoleRuntimeModel runtimeModel;
+    private IRoleRuntimeModel runtimeModel;
     private IResourceStorage resourceStorage;
     private PlayerMoveController currentController;
 
@@ -56,7 +56,7 @@ public class RoleInstanceSystem : AbstractSystem, IRoleInstanceSystem
 
     protected override void OnInit()
     {
-        runtimeModel = this.GetModel<RoleRuntimeModel>();
+        runtimeModel = this.GetModel<IRoleRuntimeModel>();
         resourceStorage = this.GetUtility<IResourceStorage>();
     }
 

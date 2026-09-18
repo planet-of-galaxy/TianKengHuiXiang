@@ -1,7 +1,14 @@
 ﻿using System.Collections.Generic;
 using QFramework;
 
-public class MonsterRuntimeModel : AbstractModel
+public interface IMonsterRuntimeModel : IModel
+{
+    int Count { get; }
+    bool TryGetMonsterRuntime(MonsterContext context, out MonsterRuntimeInfo info);
+    IEnumerable<MonsterRuntimeInfo> GetAllMonsterRuntimes();
+}
+
+public class MonsterRuntimeModel : AbstractModel, IMonsterRuntimeModel
 {
     // 每个 Context 对应一个怪物实例的运行数据。
     private readonly Dictionary<MonsterContext, MonsterRuntimeInfo> monsterRuntimeInfo = new();

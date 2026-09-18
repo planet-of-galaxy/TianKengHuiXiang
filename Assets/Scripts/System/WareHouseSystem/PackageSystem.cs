@@ -71,7 +71,7 @@ public class PackageSystem : AbstractSystem, IPackageSystem
     /// 角色运行时数据模型：背包按角色运行时实例 id 划分，
     /// 初始化时需要为每个角色实例建立对应的背包。
     /// </summary>
-    private RoleRuntimeModel roleRuntimeModel;
+    private IRoleRuntimeModel roleRuntimeModel;
 
     /// <summary>
     /// 武器配置提供者，用于拾取武器时初始化耐久，以及修复武器时限制满耐久。
@@ -96,8 +96,8 @@ public class PackageSystem : AbstractSystem, IPackageSystem
     /// </summary>
     protected override void OnInit()
     {
-        packageModel = this.GetModel<PackageModel>();
-        roleRuntimeModel = this.GetModel<RoleRuntimeModel>();
+        packageModel = (PackageModel)this.GetModel<IPackageModel>();
+        roleRuntimeModel = this.GetModel<IRoleRuntimeModel>();
         weaponConfigProvider = this.GetUtility<IWeaponConfigProvider>();
         storage = this.GetUtility<IJsonStorage>();
 

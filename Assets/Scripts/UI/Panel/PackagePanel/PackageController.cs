@@ -15,8 +15,8 @@ using UnityEngine;
 public class PackageController : MonoBehaviour, IController
 {
     private PackagePanel panel;
-    private PackageModel packageModel;
-    private RoleRuntimeModel roleRuntimeModel;
+    private IPackageModel packageModel;
+    private IRoleRuntimeModel roleRuntimeModel;
     private IRoleInstanceSystem roleInstanceSystem;
     private PropPanelController propPanel;
 
@@ -67,8 +67,8 @@ public class PackageController : MonoBehaviour, IController
     public void Init(PackagePanel packagePanel)
     {
         panel = packagePanel;
-        packageModel = this.GetModel<PackageModel>();
-        roleRuntimeModel = this.GetModel<RoleRuntimeModel>();
+        packageModel = this.GetModel<IPackageModel>();
+        roleRuntimeModel = this.GetModel<IRoleRuntimeModel>();
         roleInstanceSystem = this.GetSystem<IRoleInstanceSystem>();
 
         propPanel = panel.PropPanelController;

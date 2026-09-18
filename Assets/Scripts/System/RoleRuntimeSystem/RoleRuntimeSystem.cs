@@ -17,7 +17,7 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
 
     protected override void OnInit()
     {
-        runtimeModel = this.GetModel<RoleRuntimeModel>();
+        runtimeModel = (RoleRuntimeModel)this.GetModel<IRoleRuntimeModel>();
         roleConfigProvider = this.GetUtility<IRoleConfigProvider>();
         storage = this.GetUtility<IJsonStorage>();
 

@@ -25,9 +25,9 @@ public class WareHousePanel : UIPanel, IController
     [SerializeField] private Color buttonColor = new Color(0.25f, 0.25f, 0.25f, 1f);
     [SerializeField] private Color buttonActiveColor = new Color(0.15f, 0.45f, 0.25f, 1f);
 
-    private PackageModel packageModel;
-    private RoleRuntimeModel roleRuntimeModel;
-    private WareHouseModel wareHouseModel;
+    private IPackageModel packageModel;
+    private IRoleRuntimeModel roleRuntimeModel;
+    private IWareHouseModel wareHouseModel;
     private IWeaponConfigProvider weaponConfigProvider;
 
     /// <summary>右侧当前展示的角色运行时实例 id；默认跟随当前角色，点击人物按钮后改为本地选择。</summary>
@@ -61,9 +61,9 @@ public class WareHousePanel : UIPanel, IController
 
     protected override void OnInit(IUIData uiData = null)
     {
-        packageModel = this.GetModel<PackageModel>();
-        roleRuntimeModel = this.GetModel<RoleRuntimeModel>();
-        wareHouseModel = this.GetModel<WareHouseModel>();
+        packageModel = this.GetModel<IPackageModel>();
+        roleRuntimeModel = this.GetModel<IRoleRuntimeModel>();
+        wareHouseModel = this.GetModel<IWareHouseModel>();
         weaponConfigProvider = this.GetUtility<IWeaponConfigProvider>();
 
         // 面板根节点铺满 UIKit 根节点

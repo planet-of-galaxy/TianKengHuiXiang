@@ -15,10 +15,10 @@ public class TianArchitecture : Architecture<TianArchitecture>
         this.RegisterUtility<IMonsterConfigProvider>(new MonsterConfigProvider(this.GetUtility<IJsonStorage>()));
 
         // 注册Model
-        this.RegisterModel(new RoleRuntimeModel());
-        this.RegisterModel(new PackageModel());
-        this.RegisterModel(new WareHouseModel());
-        this.RegisterModel(new MonsterRuntimeModel());
+        this.RegisterModel<IRoleRuntimeModel>(new RoleRuntimeModel());
+        this.RegisterModel<IPackageModel>(new PackageModel());
+        this.RegisterModel<IWareHouseModel>(new WareHouseModel());
+        this.RegisterModel<IMonsterRuntimeModel>(new MonsterRuntimeModel());
 
         // 注册System
         this.RegisterSystem<ICameraSystem>(new CameraSystem());

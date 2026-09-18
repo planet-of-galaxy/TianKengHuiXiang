@@ -14,7 +14,7 @@ public class RoleSelectController : MonoBehaviour, IController
 {
     private RoleSelectPanel panel;
     private IRoleInstanceSystem roleInstanceSystem;
-    private RoleRuntimeModel roleRuntimeModel;
+    private IRoleRuntimeModel roleRuntimeModel;
 
     /// <summary>角色实例 → 它对应的选项；实例销毁时用它在列表里反查出要销毁的选项。</summary>
     private readonly Dictionary<RoleContext, RoleSelectItem> items = new Dictionary<RoleContext, RoleSelectItem>();
@@ -29,7 +29,7 @@ public class RoleSelectController : MonoBehaviour, IController
     {
         panel = roleSelectPanel;
         roleInstanceSystem = this.GetSystem<IRoleInstanceSystem>();
-        roleRuntimeModel = this.GetModel<RoleRuntimeModel>();
+        roleRuntimeModel = this.GetModel<IRoleRuntimeModel>();
 
         roleInstanceSystem.OnRoleInstanceCreated += OnRoleInstanceCreated;
         roleInstanceSystem.OnRoleInstanceDestroyed += OnRoleInstanceDestroyed;

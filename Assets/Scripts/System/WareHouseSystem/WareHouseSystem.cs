@@ -66,7 +66,7 @@ public class WareHouseSystem : AbstractSystem, IWareHouseSystem
     /// </summary>
     protected override void OnInit()
     {
-        wareHouseModel = this.GetModel<WareHouseModel>();
+        wareHouseModel = (WareHouseModel)this.GetModel<IWareHouseModel>();
         weaponConfigProvider = this.GetUtility<IWeaponConfigProvider>();
         storage = this.GetUtility<IJsonStorage>();
 

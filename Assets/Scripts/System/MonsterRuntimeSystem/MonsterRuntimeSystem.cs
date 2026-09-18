@@ -55,7 +55,7 @@ public class MonsterRuntimeSystem : AbstractSystem, IMonsterRuntimeSystem
 
     protected override void OnInit()
     {
-        runtimeModel = this.GetModel<MonsterRuntimeModel>();
+        runtimeModel = (MonsterRuntimeModel)this.GetModel<IMonsterRuntimeModel>();
         monsterConfigProvider = this.GetUtility<IMonsterConfigProvider>();
         viewFactory = new MonsterViewFactory(monsterConfigProvider, this.GetUtility<IResourceStorage>());
     }

@@ -25,7 +25,7 @@ public class PlayerMoveController : MonoBehaviour, IController
         }
 
         if (roleContext != null
-            && this.GetModel<RoleRuntimeModel>().TryGetRoleRuntime(roleContext.RoleRuntimeIndex, out var info))
+            && this.GetModel<IRoleRuntimeModel>().TryGetRoleRuntime(roleContext.RoleRuntimeIndex, out var info))
         {
             // Register 不会立刻回调一次，当前值要自己读。
             moveSpeed = info.MoveSpeed.Value;

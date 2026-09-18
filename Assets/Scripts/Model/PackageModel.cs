@@ -1,7 +1,15 @@
 using System.Collections.Generic;
 using QFramework;
 
-public class PackageModel : AbstractModel
+public interface IPackageModel : IModel
+{
+    event System.Action<int> PackageChanged;
+    int PackageCount { get; }
+    bool TryGetPackage(int roleRuntimeId, out RolePackageInfo package);
+    IEnumerable<RolePackageInfo> GetAllPackages();
+}
+
+public class PackageModel : AbstractModel, IPackageModel
 {
     /// <summary>
     /// 各角色的背包运行时信息（物品列表、容量、手持槽位），
