@@ -46,11 +46,7 @@ public class WeaponChanger : MonoBehaviour, IController
 
     private void SubscribePackage()
     {
-        if (!this.GetModel<IPackageModel>().TryGetPackage(roleContext.RoleRuntimeIndex, out package))
-        {
-            Debug.LogError($"[WeaponChanger] 角色 {roleContext.RoleRuntimeIndex} 的背包尚未初始化", this);
-            return;
-        }
+        package = this.GetModel<IPackageModel>().GetOrCreatePackage(roleContext.RoleRuntimeIndex);
 
         heldIndexRegistration = package.heldIndex.Register(_ => RefreshWeapon());
         package.OnPackageUpdate += RefreshWeapon;

@@ -5,6 +5,7 @@ public interface IPackageModel : IModel
 {
     int PackageCount { get; }
     bool TryGetPackage(int roleRuntimeId, out RolePackageInfo package);
+    RolePackageInfo GetOrCreatePackage(int roleRuntimeId);
     IEnumerable<RolePackageInfo> GetAllPackages();
 }
 
