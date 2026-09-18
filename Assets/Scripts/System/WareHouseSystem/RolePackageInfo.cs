@@ -53,6 +53,14 @@ public class RolePackageInfo
     /// </summary>
     public BindableProperty<int> heldIndex { get; } = new BindableProperty<int>(-1);
 
+    /// <summary>清空物品并取消手持，保留背包对象、容量及订阅。</summary>
+    public void ClearItems()
+    {
+        packageItems.Clear();
+        heldIndex.Value = -1;
+        OnPackageUpdate?.Invoke();
+    }
+
     /// <summary>
     /// 加入一件道具，自动分配槽位号（当前最大槽位号 + 1），加入后触发 <see cref="OnPackageUpdate"/>。
     /// 容量是否已满由调用方（PackageSystem）校验，本方法不做校验。

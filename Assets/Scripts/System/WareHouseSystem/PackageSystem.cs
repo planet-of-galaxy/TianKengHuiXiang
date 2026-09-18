@@ -4,9 +4,6 @@ using UnityEngine;
 
 public interface IPackageSystem : ISystem
 {
-    /// <summary>角色手持物变化时触发；未手持有效物品时 item 为 null。</summary>
-    event System.Action<int, PropItemInfo> OnHeldItemChanged;
-
     /// <summary>获取角色当前手持物；背包或槽位不存在时返回 null。</summary>
     PropItemInfo GetHeldItem(int roleRuntimeId);
 
@@ -52,10 +49,6 @@ public interface IPackageSystem : ISystem
 
 public class PackageSystem : AbstractSystem, IPackageSystem
 {
-    public event System.Action<int, PropItemInfo> OnHeldItemChanged;
-
-    private readonly Dictionary<int, System.Action> heldItemUnsubscribers = new();
-
     /// <summary>
     /// 背包容量上限：可通过升级解锁的最大栏位数。
     /// capacity 与 maxCapacity 之间的栏位在 UI 中以灰色锁定显示。
@@ -101,16 +94,11 @@ public class PackageSystem : AbstractSystem, IPackageSystem
         weaponConfigProvider = this.GetUtility<IWeaponConfigProvider>();
         storage = this.GetUtility<IJsonStorage>();
 
-        packageModel.PackageChanged += BindHeldItem;
         InitPackageModel();
     }
 
     protected override void OnDeinit()
     {
-        packageModel.PackageChanged -= BindHeldItem;
-        foreach (var unsubscribe in heldItemUnsubscribers.Values) unsubscribe();
-        heldItemUnsubscribers.Clear();
-        OnHeldItemChanged = null;
         RemovePackageListener();
     }
 
@@ -125,40 +113,9 @@ public class PackageSystem : AbstractSystem, IPackageSystem
         return null;
     }
 
-    private void BindHeldItem(int roleRuntimeId)
-    {
-        if (heldItemUnsubscribers.TryGetValue(roleRuntimeId, out var unsubscribe))
-        {
-            unsubscribe();
-            heldItemUnsubscribers.Remove(roleRuntimeId);
-        }
-
-        var heldItem = GetHeldItem(roleRuntimeId);
-        if (packageModel.TryGetPackage(roleRuntimeId, out var package))
-        {
-            void RefreshHeldItem()
-            {
-                var newItem = GetHeldItem(roleRuntimeId);
-                if (ReferenceEquals(heldItem, newItem)) return;
-                heldItem = newItem;
-                OnHeldItemChanged?.Invoke(roleRuntimeId, newItem);
-            }
-
-            var registration = package.heldIndex.Register(_ => RefreshHeldItem());
-            package.OnPackageUpdate += RefreshHeldItem;
-            heldItemUnsubscribers[roleRuntimeId] = () =>
-            {
-                registration.UnRegister();
-                package.OnPackageUpdate -= RefreshHeldItem;
-            };
-        }
-
-        OnHeldItemChanged?.Invoke(roleRuntimeId, heldItem);
-    }
-
     /// <summary>
     /// 读取存档，将数据直接写入 PackageModel：
-    /// 1. 按存档中的 rolePackages 重建各角色背包（物品、容量、手持槽位）；
+    /// 1. 按存档中的 rolePackages 更新各角色背包内容（物品、容量、手持槽位），保留已有背包对象；
     ///    其中每个物品按 PropItemData.ItemType 实例化为对应的 PropItemInfo 子类
     ///    （如 ItemType.Weapon -> WeaponItemInfo）；
     /// 2. 为 RoleRuntimeModel 中每个角色实例补齐背包，保证运行时 id 与背包一一对应；
@@ -169,7 +126,6 @@ public class PackageSystem : AbstractSystem, IPackageSystem
     {
         var save = storage.Load<PackageSaveData>("Package");
 
-        // 背包字典按存档重新构建（由 PackageSystem 初始化时使用）
         packageModel.ClearPackages();
 
         if (save?.rolePackages != null)
@@ -177,7 +133,7 @@ public class PackageSystem : AbstractSystem, IPackageSystem
             foreach (var data in save.rolePackages)
             {
                 if (data == null) continue;
-                packageModel.AddPackage(ToRolePackageInfo(data));
+                RestorePackage(data);
             }
         }
 
@@ -374,12 +330,10 @@ public class PackageSystem : AbstractSystem, IPackageSystem
     /// 将单个角色的持久化背包数据转换为运行时信息并写入模型。
     /// capacity < 1 视为非法，回退默认容量。
     /// </summary>
-    private RolePackageInfo ToRolePackageInfo(RolePackageData data)
+    private void RestorePackage(RolePackageData data)
     {
-        var info = new RolePackageInfo
-        {
-            roleRuntimeId = data.roleRuntimeId,
-        };
+        var info = packageModel.GetOrCreatePackage(data.roleRuntimeId);
+        info.ClearItems();
 
         if (data.packageItems != null)
         {
@@ -399,7 +353,6 @@ public class PackageSystem : AbstractSystem, IPackageSystem
 
         info.capacity.Value = data.capacity < 1 ? RolePackageInfo.DefaultCapacity : data.capacity;
         info.heldIndex.Value = data.heldIndex;
-        return info;
     }
 
     /// <summary>

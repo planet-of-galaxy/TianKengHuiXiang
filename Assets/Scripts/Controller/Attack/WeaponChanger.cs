@@ -9,6 +9,9 @@ public class WeaponChanger : MonoBehaviour, IController
     private RoleContext roleContext;
     private IPackageSystem packageSystem;
     private IWeaponInstanceSystem weaponInstanceSystem;
+    private RolePackageInfo package;
+    private IUnRegister heldIndexRegistration;
+    private PropItemInfo heldItem;
     private bool started;
 
     public IArchitecture GetArchitecture() => TianArchitecture.Interface;
@@ -22,31 +25,45 @@ public class WeaponChanger : MonoBehaviour, IController
 
     private void OnEnable()
     {
-        packageSystem.OnHeldItemChanged += HandleHeldItemChanged;
-        if (started) RefreshWeapon();
+        if (started) SubscribePackage();
     }
 
     private void Start()
     {
         // 角色工厂在 Instantiate 返回后初始化 RoleContext，避免 Awake 时读取未赋值的角色 id。
         started = true;
-        RefreshWeapon();
+        SubscribePackage();
     }
 
     private void OnDisable()
     {
-        if (packageSystem != null) packageSystem.OnHeldItemChanged -= HandleHeldItemChanged;
+        heldIndexRegistration?.UnRegister();
+        heldIndexRegistration = null;
+        if (package != null) package.OnPackageUpdate -= RefreshWeapon;
+        package = null;
+        heldItem = null;
     }
 
-    private void HandleHeldItemChanged(int roleRuntimeId, PropItemInfo item)
+    private void SubscribePackage()
     {
-        if (!started || roleRuntimeId != roleContext.RoleRuntimeIndex) return;
-        ChangeWeapon(item);
+        if (!this.GetModel<IPackageModel>().TryGetPackage(roleContext.RoleRuntimeIndex, out package))
+        {
+            Debug.LogError($"[WeaponChanger] 角色 {roleContext.RoleRuntimeIndex} 的背包尚未初始化", this);
+            return;
+        }
+
+        heldIndexRegistration = package.heldIndex.Register(_ => RefreshWeapon());
+        package.OnPackageUpdate += RefreshWeapon;
+        heldItem = packageSystem.GetHeldItem(roleContext.RoleRuntimeIndex);
+        ChangeWeapon(heldItem);
     }
 
     private void RefreshWeapon()
     {
-        ChangeWeapon(packageSystem.GetHeldItem(roleContext.RoleRuntimeIndex));
+        var item = packageSystem.GetHeldItem(roleContext.RoleRuntimeIndex);
+        if (ReferenceEquals(heldItem, item)) return;
+        heldItem = item;
+        ChangeWeapon(item);
     }
 
     private void ChangeWeapon(PropItemInfo item)

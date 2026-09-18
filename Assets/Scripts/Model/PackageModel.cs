@@ -3,7 +3,6 @@ using QFramework;
 
 public interface IPackageModel : IModel
 {
-    event System.Action<int> PackageChanged;
     int PackageCount { get; }
     bool TryGetPackage(int roleRuntimeId, out RolePackageInfo package);
     IEnumerable<RolePackageInfo> GetAllPackages();
@@ -16,9 +15,6 @@ public class PackageModel : AbstractModel, IPackageModel
     /// key 为 RoleRuntimeModel 中的角色运行时实例 id（由 PackageSystem 初始化时写入）。
     /// </summary>
     private readonly Dictionary<int, RolePackageInfo> rolePackages = new();
-
-    /// <summary>背包对象创建、替换或移除后通知订阅方重新绑定。</summary>
-    public event System.Action<int> PackageChanged;
 
     /// <summary>
     /// 拥有背包的角色数量。
@@ -44,22 +40,9 @@ public class PackageModel : AbstractModel, IPackageModel
             package = new RolePackageInfo { roleRuntimeId = roleRuntimeId };
             rolePackages[roleRuntimeId] = package;
             EnsureCapacityInitialized(package);
-            PackageChanged?.Invoke(roleRuntimeId);
         }
 
         return package;
-    }
-
-    /// <summary>
-    /// 添加或覆盖一个角色的背包信息（由 PackageSystem 写入），以 info.roleRuntimeId 为 key。
-    /// </summary>
-    public void AddPackage(RolePackageInfo info)
-    {
-        if (info == null) return;
-
-        rolePackages[info.roleRuntimeId] = info;
-        EnsureCapacityInitialized(info);
-        PackageChanged?.Invoke(info.roleRuntimeId);
     }
 
     /// <summary>
@@ -77,16 +60,6 @@ public class PackageModel : AbstractModel, IPackageModel
     }
 
     /// <summary>
-    /// 移除指定角色运行时实例的背包（角色实例销毁时使用）。
-    /// </summary>
-    public bool RemovePackage(int roleRuntimeId)
-    {
-        if (!rolePackages.Remove(roleRuntimeId)) return false;
-        PackageChanged?.Invoke(roleRuntimeId);
-        return true;
-    }
-
-    /// <summary>
     /// 遍历所有角色的背包信息（只读）。
     /// </summary>
     public IEnumerable<RolePackageInfo> GetAllPackages()
@@ -95,13 +68,11 @@ public class PackageModel : AbstractModel, IPackageModel
     }
 
     /// <summary>
-    /// 清空所有角色的背包（由 PackageSystem 初始化时使用）。
+    /// 清空所有角色背包中的物品，保留背包对象、容量及订阅。
     /// </summary>
     public void ClearPackages()
     {
-        var runtimeIds = new List<int>(rolePackages.Keys);
-        rolePackages.Clear();
-        foreach (var runtimeId in runtimeIds) PackageChanged?.Invoke(runtimeId);
+        foreach (var package in rolePackages.Values) package.ClearItems();
     }
 
     protected override void OnInit()
