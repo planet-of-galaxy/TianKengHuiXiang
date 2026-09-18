@@ -1,4 +1,4 @@
-%YAML 1.1
+﻿%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
 --- !u!1 &4069713687871092731
 GameObject:
@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 3818598452631759940}
   - component: {fileID: 225169183220856288}
   - component: {fileID: 1954442886654641816}
+  - component: {fileID: 8947684523814672001}
   m_Layer: 0
   m_Name: "\u53F2\u83B1\u59C6"
   m_TagString: Untagged
@@ -108,3 +109,16 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &8947684523814672001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4069713687871092731}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8842bd735e8422ba9a51f8477e502f7, type: 3}
+  m_Name:
+  m_EditorClassIdentifier:
+  configId: 0

@@ -1,42 +1,50 @@
-using QFramework;
+﻿using QFramework;
 using UnityEngine;
 
+/// <summary>
+/// 管理怪物实例的创建、运行数据查询、血量修改和删除。
+/// 通过实例上的 MonsterContext 标识怪物，运行数据存储在 MonsterRuntimeModel 中。
+/// </summary>
 public interface IMonsterRuntimeSystem : ISystem
 {
     /// <summary>
-    /// 根据怪物配置 id 创建一个怪物运行时实例，返回其运行时 id；配置不存在返回 -1。
+    /// 根据配置实例化怪物预制体，并以配置中的血量初始化、登记运行数据。
     /// </summary>
-    int CreateMonster(int configId);
+    /// <param name="configId">怪物配置 ID</param>
+    /// <param name="position">生成位置（世界坐标）。</param>
+    /// <param name="rotation">生成朝向（世界旋转）。</param>
+    /// <returns>新实例的 MonsterContext；配置或预制体无效时返回 null。</returns>
+    MonsterContext CreateMonster(int configId, Vector3 position, Quaternion rotation);
+
+    /// <summary>获取指定怪物实例的运行数据。</summary>
+    /// <param name="context">用于标识怪物实例的 Context。</param>
+    /// <returns>已登记的运行数据；未找到时返回 null。</returns>
+    MonsterRuntimeInfo GetMonsterRuntime(MonsterContext context);
+
+    /// <summary>尝试获取指定怪物实例的运行数据。</summary>
+    /// <param name="context">用于标识怪物实例的 Context。</param>
+    /// <param name="info">找到的运行数据；未找到时为 null。</param>
+    /// <returns>找到运行数据时返回 true，否则返回 false。</returns>
+    bool TryGetMonsterRuntime(MonsterContext context, out MonsterRuntimeInfo info);
+
+    /// <summary>移除运行数据并销毁 Context 所在的怪物实例。</summary>
+    /// <param name="context">要移除的怪物实例的 Context。</param>
+    /// <returns>成功移除时返回 true；未登记运行数据时返回 false，且不销毁实例。</returns>
+    bool RemoveMonster(MonsterContext context);
 
     /// <summary>
-    /// 获取指定运行时 id 的怪物信息；不存在返回 null。
+    /// 设置当前血量，结果限制在 [0, MaxHealth] 范围内；未找到运行数据时不执行操作。
     /// </summary>
-    MonsterRuntimeInfo GetMonsterRuntime(int runtimeId);
+    /// <param name="context">要修改血量的怪物实例的 Context。</param>
+    /// <param name="value">目标血量。</param>
+    void SetCurHealth(MonsterContext context, float value);
 
     /// <summary>
-    /// 尝试获取指定运行时 id 的怪物信息。
+    /// 在当前血量上增减指定数值，结果限制在 [0, MaxHealth] 范围内；未找到运行数据时不执行操作。
     /// </summary>
-    bool TryGetMonsterRuntime(int runtimeId, out MonsterRuntimeInfo info);
-
-    /// <summary>
-    /// 删除指定运行时 id 的怪物：先销毁表现层，再从模型中移除。不存在返回 false。
-    /// </summary>
-    bool RemoveMonster(int runtimeId);
-
-    /// <summary>
-    /// 直接设置怪物当前生命值（限制在 [0, MaxHealth]）。
-    /// </summary>
-    void SetCurHealth(int runtimeId, float value);
-
-    /// <summary>
-    /// 增减怪物当前生命值（delta 为负表示受伤）。
-    /// </summary>
-    void ChangeCurHealth(int runtimeId, float delta);
-
-    /// <summary>
-    /// 为指定运行时 id 的怪物创建表现层 GameObject，返回实例；失败返回 null。
-    /// </summary>
-    GameObject SpawnMonster(int runtimeId, Vector3 position, Quaternion rotation);
+    /// <param name="context">要修改血量的怪物实例的 Context。</param>
+    /// <param name="delta">血量变化值，负数表示扣血，正数表示回血。</param>
+    void ChangeCurHealth(MonsterContext context, float delta);
 }
 
 public class MonsterRuntimeSystem : AbstractSystem, IMonsterRuntimeSystem
@@ -44,90 +52,56 @@ public class MonsterRuntimeSystem : AbstractSystem, IMonsterRuntimeSystem
     private MonsterRuntimeModel runtimeModel;
     private IMonsterConfigProvider monsterConfigProvider;
     private MonsterViewFactory viewFactory;
-    private int nextMonsterRuntimeId = 1;
 
     protected override void OnInit()
     {
         runtimeModel = this.GetModel<MonsterRuntimeModel>();
         monsterConfigProvider = this.GetUtility<IMonsterConfigProvider>();
-        viewFactory = new MonsterViewFactory(runtimeModel, monsterConfigProvider, this.GetUtility<IResourceStorage>());
+        viewFactory = new MonsterViewFactory(monsterConfigProvider, this.GetUtility<IResourceStorage>());
     }
 
-    private int AllocateRuntimeId()
+    public MonsterContext CreateMonster(int configId, Vector3 position, Quaternion rotation)
     {
-        return nextMonsterRuntimeId++;
-    }
+        var context = viewFactory.SpawnMonster(configId, position, rotation);
+        if (context == null) return null;
 
-    public int CreateMonster(int configId)
-    {
-        var config = monsterConfigProvider.GetMonster(configId);
-        if (config == null)
-        {
-            Debug.LogError($"[MonsterRuntimeSystem] MonsterConfig not found for monsterId: {configId}");
-            return -1;
-        }
-
-        var info = new MonsterRuntimeInfo
-        {
-            runtimeId = AllocateRuntimeId(),
-            configId = configId,
-        };
+        var config = monsterConfigProvider.GetMonster(context.ConfigId);
+        var info = new MonsterRuntimeInfo();
         info.CurHealth.Value = config.health;
         info.MaxHealth.Value = config.health;
-
-        runtimeModel.AddMonsterRuntime(info);
-
-        return info.runtimeId;
+        runtimeModel.AddMonsterRuntime(context, info);
+        return context;
     }
 
-    public MonsterRuntimeInfo GetMonsterRuntime(int runtimeId)
+    public MonsterRuntimeInfo GetMonsterRuntime(MonsterContext context)
     {
-        runtimeModel.TryGetMonsterRuntime(runtimeId, out var info);
+        runtimeModel.TryGetMonsterRuntime(context, out var info);
         return info;
     }
 
-    public bool TryGetMonsterRuntime(int runtimeId, out MonsterRuntimeInfo info)
+    public bool TryGetMonsterRuntime(MonsterContext context, out MonsterRuntimeInfo info)
     {
-        return runtimeModel.TryGetMonsterRuntime(runtimeId, out info);
+        return runtimeModel.TryGetMonsterRuntime(context, out info);
     }
 
-    public bool RemoveMonster(int runtimeId)
+    public bool RemoveMonster(MonsterContext context)
     {
-        if (!runtimeModel.TryGetMonsterRuntime(runtimeId, out _))
-        {
-            Debug.LogWarning($"[MonsterRuntimeSystem] MonsterRuntimeInfo not found for id: {runtimeId}");
-            return false;
-        }
+        if (!runtimeModel.TryGetMonsterRuntime(context, out _)) return false;
 
-        viewFactory.DestroyMonsterView(runtimeId);
-        runtimeModel.RemoveMonsterRuntime(runtimeId);
+        runtimeModel.RemoveMonsterRuntime(context);
+        if (context != null) Object.Destroy(context.gameObject);
         return true;
     }
 
-    public void SetCurHealth(int runtimeId, float value)
+    public void SetCurHealth(MonsterContext context, float value)
     {
-        if (!runtimeModel.TryGetMonsterRuntime(runtimeId, out var info))
-        {
-            Debug.LogWarning($"[MonsterRuntimeSystem] MonsterRuntimeInfo not found for id: {runtimeId}");
-            return;
-        }
-
+        if (!runtimeModel.TryGetMonsterRuntime(context, out var info)) return;
         info.CurHealth.Value = Mathf.Clamp(value, 0f, info.MaxHealth.Value);
     }
 
-    public void ChangeCurHealth(int runtimeId, float delta)
+    public void ChangeCurHealth(MonsterContext context, float delta)
     {
-        if (!runtimeModel.TryGetMonsterRuntime(runtimeId, out var info))
-        {
-            Debug.LogWarning($"[MonsterRuntimeSystem] MonsterRuntimeInfo not found for id: {runtimeId}");
-            return;
-        }
-
+        if (!runtimeModel.TryGetMonsterRuntime(context, out var info)) return;
         info.CurHealth.Value = Mathf.Clamp(info.CurHealth.Value + delta, 0f, info.MaxHealth.Value);
-    }
-
-    public GameObject SpawnMonster(int runtimeId, Vector3 position, Quaternion rotation)
-    {
-        return viewFactory.SpawnMonster(runtimeId, position, rotation);
     }
 }
