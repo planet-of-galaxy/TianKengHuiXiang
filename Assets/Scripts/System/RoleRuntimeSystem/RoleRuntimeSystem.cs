@@ -6,6 +6,8 @@ public interface IRoleRuntimeSystem : ISystem
 {
     int CreateRole(int roleId);
 
+    /// <summary>修改指定角色的当前血量，负数表示扣血；结果限制在 [0, MaxHealth]，未登记的角色不执行操作。</summary>
+    void ChangeCurHealth(RoleContext context, float delta);
 }
 
 public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
@@ -56,6 +58,12 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
         {
             SaveRoleRuntime();
         }
+    }
+
+    public void ChangeCurHealth(RoleContext context, float delta)
+    {
+        if (context == null || !runtimeModel.TryGetRoleRuntime(context.RoleRuntimeIndex, out var info)) return;
+        info.CurHealth.Value = Mathf.Clamp(info.CurHealth.Value + delta, 0f, info.MaxHealth.Value);
     }
 
     private int AllocateRuntimeId()
