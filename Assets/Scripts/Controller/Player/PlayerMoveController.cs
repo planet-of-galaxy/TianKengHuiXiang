@@ -62,16 +62,8 @@ public class PlayerMoveController : MonoBehaviour, IController
 
         // 水平移动（A/D，沿用轴输入）
         float h = Input.GetAxis("Horizontal");
-        // 前后移动（W/S，按键由全局快捷键配置提供）
-        float v = 0f;
-        if (Input.GetKey(HotKeyUtility.Forward))
-        {
-            v += 1f;
-        }
-        if (Input.GetKey(HotKeyUtility.Backward))
-        {
-            v -= 1f;
-        }
+        // 前后移动（W/S，沿用轴输入）
+        float v = Input.GetAxis("Vertical");
         Vector3 horizontalMove = (transform.right * h + transform.forward * v) * moveSpeed;
         characterController.Move(horizontalMove * Time.deltaTime);
     }
