@@ -30,7 +30,7 @@ public class RolePackageInfo
 
     /// <summary>
     /// 背包内物品的只读视图，供 UI 遍历渲染。
-    /// 需要增删请调用 <see cref="AddItem"/> / <see cref="AddRestoredItem"/>，以便触发 <see cref="OnPackageUpdate"/>。
+    /// 需要增删请调用 <see cref="AddItem"/> / <see cref="AddRestoredItem"/> / <see cref="RemoveItem"/>，以便触发 <see cref="OnPackageUpdate"/>。
     /// </summary>
     public IReadOnlyList<PropItemInfo> Items => packageItems;
 
@@ -93,8 +93,20 @@ public class RolePackageInfo
     }
 
     /// <summary>
+    /// 移除物品，清空对应手持槽位，并通知 UI；物品不存在时返回 false。
+    /// </summary>
+    public bool RemoveItem(PropItemInfo item)
+    {
+        if (item == null || !packageItems.Remove(item)) return false;
+
+        if (heldIndex.Value == item.index) heldIndex.Value = -1;
+        OnPackageUpdate?.Invoke();
+        return true;
+    }
+
+    /// <summary>
     /// 分配下一个槽位号：当前最大槽位号的后继（空背包从 0 开始）。
-    /// 只保证唯一、不回填空洞——将来支持移除道具后，被空出的槽位号不会复用。
+    /// 不回填中间空洞；移除末尾物品后，其槽位号可能被复用。
     /// </summary>
     private int AllocateSlotIndex()
     {

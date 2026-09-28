@@ -4,6 +4,21 @@ using UnityEngine;
 
 public interface IPackageSystem : ISystem
 {
+    /// <summary>
+    /// 通过 AddItemToRolePackage 成功添加物品后触发，参数为角色运行时 id 和已入包的物品。
+    /// 添加失败或加载存档时不触发；监听方应在失效时退订。
+    /// </summary>
+    System.Action<int, PropItemInfo> OnItemAddToPackage { get; set; }
+
+    /// <summary>
+    /// 数量变更完成后触发，参数为角色运行时 id 和物品（数量为变更后的值）。
+    /// 扣完时数量归零，先移除物品并触发移除回调，再触发本回调。
+    /// </summary>
+    System.Action<int, PropItemInfo> OnItemNumChanged { get; set; }
+
+    /// <summary>物品移除后触发，参数为角色运行时 id 和已移除的物品。</summary>
+    System.Action<int, PropItemInfo> OnItemRemoveFromPackage { get; set; }
+
     /// <summary>获取角色当前手持物；背包或槽位不存在时返回 null。</summary>
     PropItemInfo GetHeldItem(int roleRuntimeId);
 
@@ -22,6 +37,19 @@ public interface IPackageSystem : ISystem
     /// 背包已满、角色不存在或 configId 无法解析时返回 false。
     /// </summary>
     bool AddItemToRolePackage(int roleRuntimeId, ItemType itemType, int configId);
+
+    /// <summary>
+    /// 按 amount 调整指定槽位的物品数量：正数增加，负数减少，结果不大于 0 时归零并移除物品。
+    /// 目标或数量字段不存在、amount 为 0 或结果超过 int.MaxValue 时返回 false，不触发回调。
+    /// 仅修改内存，需调用 SavePackage() 落盘。
+    /// </summary>
+    bool AddItemNumFromRolePackage(int roleRuntimeId, int itemIndex, int amount);
+
+    /// <summary>
+    /// 移除指定槽位的整件物品，若为手持物则取消手持。
+    /// 目标不存在时返回 false；仅修改内存，需调用 SavePackage() 落盘。
+    /// </summary>
+    bool RemoveItemFromRolePackage(int roleRuntimeId, int itemIndex);
 
     /// <summary>
     /// 增加指定角色背包槽位中武器的耐久，结果不会超过武器配置的满耐久。
@@ -49,6 +77,15 @@ public interface IPackageSystem : ISystem
 
 public class PackageSystem : AbstractSystem, IPackageSystem
 {
+    /// <inheritdoc />
+    public System.Action<int, PropItemInfo> OnItemAddToPackage { get; set; }
+
+    /// <inheritdoc />
+    public System.Action<int, PropItemInfo> OnItemNumChanged { get; set; }
+
+    /// <inheritdoc />
+    public System.Action<int, PropItemInfo> OnItemRemoveFromPackage { get; set; }
+
     /// <summary>
     /// 背包容量上限：可通过升级解锁的最大栏位数。
     /// capacity 与 maxCapacity 之间的栏位在 UI 中以灰色锁定显示。
@@ -100,6 +137,9 @@ public class PackageSystem : AbstractSystem, IPackageSystem
     protected override void OnDeinit()
     {
         RemovePackageListener();
+        OnItemAddToPackage = null;
+        OnItemNumChanged = null;
+        OnItemRemoveFromPackage = null;
     }
 
     public PropItemInfo GetHeldItem(int roleRuntimeId)
@@ -203,9 +243,62 @@ public class PackageSystem : AbstractSystem, IPackageSystem
 
         // 槽位号由背包自己分配（当前最大槽位号 + 1），加入后触发 OnPackageUpdate 通知 UI
         package.AddItem(item);
+        OnItemAddToPackage?.Invoke(roleRuntimeId, item);
 
         Debug.Log($"[PackageSystem] 已将 {itemType}(configId={configId}) 加入角色 {roleRuntimeId} 的背包（未保存）");
         return true;
+    }
+
+    /// <inheritdoc />
+    public bool AddItemNumFromRolePackage(int roleRuntimeId, int itemIndex, int amount)
+    {
+        if (amount == 0 || !TryGetPackageItem(roleRuntimeId, itemIndex, out var package, out var item)
+            || item.num == null)
+        {
+            return false;
+        }
+
+        long newNum = (long)item.num.Value + amount;
+        if (newNum > int.MaxValue) return false;
+
+        item.num.Value = newNum <= 0 ? 0 : (int)newNum;
+        if (item.num.Value <= 0 && package.RemoveItem(item))
+        {
+            OnItemRemoveFromPackage?.Invoke(roleRuntimeId, item);
+        }
+
+        OnItemNumChanged?.Invoke(roleRuntimeId, item);
+        return true;
+    }
+
+    /// <inheritdoc />
+    public bool RemoveItemFromRolePackage(int roleRuntimeId, int itemIndex)
+    {
+        if (!TryGetPackageItem(roleRuntimeId, itemIndex, out var package, out var item)
+            || !package.RemoveItem(item))
+        {
+            return false;
+        }
+
+        OnItemRemoveFromPackage?.Invoke(roleRuntimeId, item);
+        return true;
+    }
+
+    private bool TryGetPackageItem(int roleRuntimeId, int itemIndex, out RolePackageInfo package, out PropItemInfo item)
+    {
+        item = null;
+        if (!packageModel.TryGetPackage(roleRuntimeId, out package)) return false;
+
+        foreach (var candidate in package.Items)
+        {
+            if (candidate != null && candidate.index == itemIndex)
+            {
+                item = candidate;
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <inheritdoc />
