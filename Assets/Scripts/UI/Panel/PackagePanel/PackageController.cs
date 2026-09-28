@@ -167,7 +167,7 @@ public class PackageController : MonoBehaviour, IController
 
     /// <summary>
     /// 改为订阅指定角色背包的容量与物品变化；角色为 null 或无背包时仅取消旧订阅。
-    /// 物品变化是 C# 事件（RolePackageInfo.OnPackageUpdate），退订必须交回同一个委托目标，
+    /// 物品变化是 C# 事件（RolePackageInfo.OnItemListChanged），退订必须交回同一个委托目标，
     /// 所以这里用 subscribedPackage 记住订阅的是哪个背包。
     /// </summary>
     private void RegisterPackage(RoleContext roleContext)
@@ -181,7 +181,7 @@ public class PackageController : MonoBehaviour, IController
 
         subscribedPackage = package;
         capacityUnRegister = package.capacity.Register(OnCapacityChanged);
-        subscribedPackage.OnPackageUpdate += OnPackageItemsChanged;
+        subscribedPackage.OnItemListChanged += OnPackageItemsChanged;
         RegisterWeaponDurabilities(package);
     }
 
@@ -194,7 +194,7 @@ public class PackageController : MonoBehaviour, IController
 
         if (subscribedPackage != null)
         {
-            subscribedPackage.OnPackageUpdate -= OnPackageItemsChanged;
+            subscribedPackage.OnItemListChanged -= OnPackageItemsChanged;
             subscribedPackage = null;
         }
     }

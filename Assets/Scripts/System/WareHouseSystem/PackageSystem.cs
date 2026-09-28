@@ -241,7 +241,7 @@ public class PackageSystem : AbstractSystem, IPackageSystem
             return false;
         }
 
-        // 槽位号由背包自己分配（当前最大槽位号 + 1），加入后触发 OnPackageUpdate 通知 UI
+        // 槽位号由背包自己分配（当前最大槽位号 + 1），加入后触发 OnItemListChanged 通知 UI
         package.AddItem(item);
         OnItemAddToPackage?.Invoke(roleRuntimeId, item);
 

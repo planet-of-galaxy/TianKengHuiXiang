@@ -6,7 +6,7 @@ using QFramework;
 /// 单个角色的背包运行时信息，roleRuntimeId 对应 RoleRuntimeModel 中的角色运行时实例 id。
 /// 由 PackageSystem 初始化时写入 PackageModel。
 ///
-/// 物品列表对外只读：所有增删都必须走本类的方法，以便在变更后触发 OnPackageUpdate 通知 UI。
+/// 物品列表对外只读：所有增删都必须走本类的方法，以便在变更后触发 OnItemListChanged 通知 UI。
 /// 直接改 Items 里的内容是无效的（拿不到可写视图），这样设计是为了让「变更即通知」不被绕过。
 /// </summary>
 public class RolePackageInfo
@@ -30,7 +30,7 @@ public class RolePackageInfo
 
     /// <summary>
     /// 背包内物品的只读视图，供 UI 遍历渲染。
-    /// 需要增删请调用 <see cref="AddItem"/> / <see cref="AddRestoredItem"/> / <see cref="RemoveItem"/>，以便触发 <see cref="OnPackageUpdate"/>。
+    /// 需要增删请调用 <see cref="AddItem"/> / <see cref="AddRestoredItem"/> / <see cref="RemoveItem"/>，以便触发 <see cref="OnItemListChanged"/>。
     /// </summary>
     public IReadOnlyList<PropItemInfo> Items => packageItems;
 
@@ -39,7 +39,7 @@ public class RolePackageInfo
     /// 订阅方必须在失效时退订：本对象存活于 PackageModel 中，比 UI 面板活得久，
     /// 忘记退订会让已销毁的面板继续被回调。
     /// </summary>
-    public event Action OnPackageUpdate;
+    public event Action OnItemListChanged;
 
     /// <summary>
     /// 该角色的背包容量，取值 &gt;= 1；-1 表示尚未初始化，属异常状态（正常流程由
@@ -58,11 +58,11 @@ public class RolePackageInfo
     {
         packageItems.Clear();
         heldIndex.Value = -1;
-        OnPackageUpdate?.Invoke();
+        OnItemListChanged?.Invoke();
     }
 
     /// <summary>
-    /// 加入一件道具，自动分配槽位号（当前最大槽位号 + 1），加入后触发 <see cref="OnPackageUpdate"/>。
+    /// 加入一件道具，自动分配槽位号（当前最大槽位号 + 1），加入后触发 <see cref="OnItemListChanged"/>。
     /// 容量是否已满由调用方（PackageSystem）校验，本方法不做校验。
     /// </summary>
     public void AddItem(PropItemInfo item)
@@ -74,11 +74,11 @@ public class RolePackageInfo
 
         item.index = AllocateSlotIndex();
         packageItems.Add(item);
-        OnPackageUpdate?.Invoke();
+        OnItemListChanged?.Invoke();
     }
 
     /// <summary>
-    /// 按 item.index 原样放入一件道具（读档用），不重新分配槽位号，放入后触发 <see cref="OnPackageUpdate"/>。
+    /// 按 item.index 原样放入一件道具（读档用），不重新分配槽位号，放入后触发 <see cref="OnItemListChanged"/>。
     /// 存档里的槽位号必须保留，否则道具位置会与存档时不一致。
     /// </summary>
     public void AddRestoredItem(PropItemInfo item)
@@ -89,7 +89,7 @@ public class RolePackageInfo
         }
 
         packageItems.Add(item);
-        OnPackageUpdate?.Invoke();
+        OnItemListChanged?.Invoke();
     }
 
     /// <summary>
@@ -100,7 +100,7 @@ public class RolePackageInfo
         if (item == null || !packageItems.Remove(item)) return false;
 
         if (heldIndex.Value == item.index) heldIndex.Value = -1;
-        OnPackageUpdate?.Invoke();
+        OnItemListChanged?.Invoke();
         return true;
     }
 

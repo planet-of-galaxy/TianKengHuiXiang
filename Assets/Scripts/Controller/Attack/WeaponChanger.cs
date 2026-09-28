@@ -39,7 +39,7 @@ public class WeaponChanger : MonoBehaviour, IController
     {
         heldIndexRegistration?.UnRegister();
         heldIndexRegistration = null;
-        if (package != null) package.OnPackageUpdate -= RefreshWeapon;
+        if (package != null) package.OnItemListChanged -= RefreshWeapon;
         package = null;
         heldItem = null;
     }
@@ -49,7 +49,7 @@ public class WeaponChanger : MonoBehaviour, IController
         package = this.GetModel<IPackageModel>().GetOrCreatePackage(roleContext.RoleRuntimeIndex);
 
         heldIndexRegistration = package.heldIndex.Register(_ => RefreshWeapon());
-        package.OnPackageUpdate += RefreshWeapon;
+        package.OnItemListChanged += RefreshWeapon;
         heldItem = packageSystem.GetHeldItem(roleContext.RoleRuntimeIndex);
         ChangeWeapon(heldItem);
     }
