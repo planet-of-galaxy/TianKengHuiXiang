@@ -19,6 +19,7 @@ public class TianArchitecture : Architecture<TianArchitecture>
         this.RegisterModel<IPackageModel>(new PackageModel());
         this.RegisterModel<IWareHouseModel>(new WareHouseModel());
         this.RegisterModel<IMonsterRuntimeModel>(new MonsterRuntimeModel());
+        this.RegisterModel<IQuestModel>(new QuestModel());
 
         // 注册System
         this.RegisterSystem<ICameraSystem>(new CameraSystem());
@@ -31,6 +32,7 @@ public class TianArchitecture : Architecture<TianArchitecture>
         this.RegisterSystem<IWareHouseSystem>(new WareHouseSystem());
         this.RegisterSystem<IGamePauseSystem>(new GamePauseSystem());
         this.RegisterSystem<IMonsterRuntimeSystem>(new MonsterRuntimeSystem());
+        this.RegisterSystem<IQuestSystem>(new QuestSystem());
 
         Debug.Log("Tian Keng architecture initialized.");
     }
