@@ -39,7 +39,7 @@ public class PlayerMoveController : MonoBehaviour, IController
     {
         moveSpeedSubscription?.UnRegister();
         moveSpeedSubscription = null;
-        CursorUtility.ShowAndUnlock();
+        CursorUtility.ReleaseLock();
     }
 
     void Update()

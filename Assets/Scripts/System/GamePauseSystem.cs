@@ -21,8 +21,8 @@ public interface IGamePauseSystem : ISystem
 /// <summary>
 /// 全局暂停系统（QFramework System，由 TianArchitecture 注册）。
 /// 集中处理暂停的两个副作用：时间缩放与鼠标光标。
-/// 首次 Pause 时记录进入前的 timeScale 与光标状态，仅在全部暂停来源退出后还原，
-/// 保证“从哪里暂停、恢复回哪里”。
+/// 首次 Pause 时记录 timeScale，全部暂停来源退出后还原。
+/// 每次 Pause/Resume 配对申请和释放解锁显示引用。
 /// </summary>
 public class GamePauseSystem : AbstractSystem, IGamePauseSystem
 {
@@ -31,9 +31,6 @@ public class GamePauseSystem : AbstractSystem, IGamePauseSystem
 
     /// <summary>暂停前的时间缩放（首次 Pause 时记录），全部恢复时还原。</summary>
     private float timeScaleBeforePause = 1f;
-
-    /// <summary>暂停前的光标状态快照（首次 Pause 时记录），全部恢复时还原。</summary>
-    private CursorUtility.CursorSnapshot cursorBeforePause;
 
     public bool IsPaused => pauseRequestCount > 0;
 
@@ -47,7 +44,6 @@ public class GamePauseSystem : AbstractSystem, IGamePauseSystem
         {
             // 首次进入暂停：记录进入前的状态，供退出时还原
             timeScaleBeforePause = Time.timeScale;
-            cursorBeforePause = CursorUtility.Capture();
         }
 
         pauseRequestCount++;
@@ -65,13 +61,13 @@ public class GamePauseSystem : AbstractSystem, IGamePauseSystem
         }
 
         pauseRequestCount--;
+        CursorUtility.ReleaseShowAndUnlock();
         if (pauseRequestCount > 0)
         {
             return; // 仍有其它暂停来源，保持暂停
         }
 
-        // 全部暂停来源已恢复：还原暂停前的 timeScale 与光标状态
+        // 全部暂停来源已恢复：还原暂停前的 timeScale
         Time.timeScale = timeScaleBeforePause;
-        cursorBeforePause.Restore();
     }
 }

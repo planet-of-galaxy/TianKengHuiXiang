@@ -7,7 +7,6 @@ public class GUITester : MonoBehaviour, IController
 {
     private static GUITester instance;
     private bool visible;
-    private CursorUtility.CursorSnapshot cursorBeforeOpen;
     private string configIdText = "0";
     private string roleConfigIdText = "0";
     private string slotIndexText = "0";
@@ -54,12 +53,11 @@ public class GUITester : MonoBehaviour, IController
 
         if (show)
         {
-            cursorBeforeOpen = CursorUtility.Capture();
             CursorUtility.ShowAndUnlock();
         }
         else
         {
-            cursorBeforeOpen.Restore();
+            CursorUtility.ReleaseShowAndUnlock();
         }
 
         visible = show;

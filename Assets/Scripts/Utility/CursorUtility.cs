@@ -1,77 +1,60 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 /// <summary>
-/// 鼠标光标工具类：集中封装对 Cursor 的加锁、解锁与显隐控制，
-/// 供 PlayerMoveController 等统一调用，避免 Cursor.lockState / visible 硬编码散落各处。
+/// 按引用计数管理光标：加锁与隐藏绑定，解锁与显示绑定，解锁显示优先。
+/// 每次请求必须配对释放；没有请求时默认解锁显示。
 /// </summary>
 public static class CursorUtility
 {
-    /// <summary>光标是否可见</summary>
-    public static bool IsVisible => Cursor.visible;
+    private static int lockRequestCount;
+    private static int showRequestCount;
 
-    /// <summary>光标是否处于锁定状态</summary>
+    public static bool IsVisible => Cursor.visible;
     public static bool IsLocked => Cursor.lockState == CursorLockMode.Locked;
 
-    /// <summary>锁定并隐藏光标（第一人称视角常用）</summary>
+    /// <summary>申请加锁隐藏，与 ReleaseLock 配对；显示请求清零后才生效。</summary>
     public static void Lock()
     {
-        Cursor.lockState = CursorLockMode.Locked;
+        lockRequestCount++;
+        ApplyState();
     }
 
-    /// <summary>解锁光标（Lock 的反向操作）</summary>
-    public static void UnLock()
+    /// <summary>释放一次加锁隐藏请求，忽略多余的释放。</summary>
+    public static void ReleaseLock()
     {
-        Cursor.lockState = CursorLockMode.None;
+        if (lockRequestCount == 0) return;
+        lockRequestCount--;
+        ApplyState();
     }
 
-    /// <summary>设置光标是否可见</summary>
-    public static void SetVisible(bool visible)
-    {
-        Cursor.visible = visible;
-    }
-
-    /// <summary>
-    /// 显示并解锁光标：打开背包/仓库等需要鼠标操作 UI 的面板时调用。
-    /// 退出时应通过打开时 Capture 的快照 Restore() 还原为进入前状态。
-    /// </summary>
+    /// <summary>申请解锁显示，与 ReleaseShowAndUnlock 配对，优先于所有锁定请求。</summary>
     public static void ShowAndUnlock()
     {
-        UnLock();
-        SetVisible(true);
+        showRequestCount++;
+        ApplyState();
     }
 
-    /// <summary>暂存当前光标状态，供打开面板前调用；退出面板时对快照调用 Restore() 还原。</summary>
-    public static CursorSnapshot Capture()
+    /// <summary>释放一次解锁显示请求，忽略多余的释放。</summary>
+    public static void ReleaseShowAndUnlock()
     {
-        return new CursorSnapshot(IsVisible, IsLocked);
+        if (showRequestCount == 0) return;
+        showRequestCount--;
+        ApplyState();
     }
 
-    /// <summary>
-    /// 光标状态快照：记录打开面板前的可见性/锁定状态，用于退出时还原。
-    /// 锁定状态下光标必然隐藏，因此 wasLocked 时只需重新锁定，无需再处理可见性。
-    /// </summary>
-    public struct CursorSnapshot
+    // 禁用 Domain Reload 时，进入运行模式也需要清空静态引用计数。
+    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+    private static void Reset()
     {
-        private readonly bool wasVisible;
-        private readonly bool wasLocked;
+        lockRequestCount = 0;
+        showRequestCount = 0;
+        ApplyState();
+    }
 
-        internal CursorSnapshot(bool visible, bool locked)
-        {
-            wasVisible = visible;
-            wasLocked = locked;
-        }
-
-        /// <summary>还原为记录时的光标状态。</summary>
-        public void Restore()
-        {
-            if (wasLocked)
-            {
-                Lock();
-            }
-            else
-            {
-                SetVisible(wasVisible);
-            }
-        }
+    private static void ApplyState()
+    {
+        bool locked = lockRequestCount > 0 && showRequestCount == 0;
+        Cursor.lockState = locked ? CursorLockMode.Locked : CursorLockMode.None;
+        Cursor.visible = !locked;
     }
 }
