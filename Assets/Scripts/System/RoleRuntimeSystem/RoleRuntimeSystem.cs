@@ -85,8 +85,9 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
             info.CurHealth.Value = roleConfig.health;
             info.MaxHealth.Value = roleConfig.health;
         }
-        // moveSpeed 是静态配置，不随存档变化，直接从配置取
-        info.MoveSpeed.Value = roleConfig?.moveSpeed ?? 0f;
+        // 移动速度是静态配置，不随存档变化，直接从配置取
+        info.WalkSpeed.Value = roleConfig?.walkSpeed ?? 0f;
+        info.RunSpeed.Value = roleConfig?.runSpeed ?? 0f;
 
         runtimeModel.AddRoleRuntime(info);
     }
@@ -104,9 +105,10 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
         info.CurHealth.Value = data.curHealth;
         info.MaxHealth.Value = data.maxHealth;
 
-        // moveSpeed 是静态配置，不随存档变化，直接从配置取
+        // 移动速度是静态配置，不随存档变化，直接从配置取
         var config = roleConfigProvider.GetRoleConfig(data.configId);
-        info.MoveSpeed.Value = config?.moveSpeed ?? 0f;
+        info.WalkSpeed.Value = config?.walkSpeed ?? 0f;
+        info.RunSpeed.Value = config?.runSpeed ?? 0f;
         info.name = config?.name;
         return info;
     }
@@ -131,7 +133,8 @@ public class RoleRuntimeSystem : AbstractSystem, IRoleRuntimeSystem
         info.name = roleConfig.name;
         info.CurHealth.Value = roleConfig.health;
         info.MaxHealth.Value = roleConfig.health;
-        info.MoveSpeed.Value = roleConfig.moveSpeed;
+        info.WalkSpeed.Value = roleConfig.walkSpeed;
+        info.RunSpeed.Value = roleConfig.runSpeed;
 
         runtimeModel.AddRoleRuntime(info);
 

@@ -6,9 +6,9 @@ public class PlayerMoveController : MonoBehaviour, IController
     private CharacterController characterController;
     private Transform cameraTransform;
     private float verticalRotation;
-    private float moveSpeed;
+    private float runSpeed;
     private IGamePauseSystem pauseSystem;
-    private IUnRegister moveSpeedSubscription;
+    private IUnRegister runSpeedSubscription;
     [SerializeField] private float mouseSensitivity = 2f;
 
     public IArchitecture GetArchitecture() => TianArchitecture.Interface;
@@ -28,8 +28,8 @@ public class PlayerMoveController : MonoBehaviour, IController
             && this.GetModel<IRoleRuntimeModel>().TryGetRoleRuntime(roleContext.RoleRuntimeIndex, out var info))
         {
             // Register 不会立刻回调一次，当前值要自己读。
-            moveSpeed = info.MoveSpeed.Value;
-            moveSpeedSubscription = info.MoveSpeed.Register(speed => moveSpeed = speed);
+            runSpeed = info.RunSpeed.Value;
+            runSpeedSubscription = info.RunSpeed.Register(speed => runSpeed = speed);
         }
 
         CursorUtility.Lock();
@@ -37,8 +37,8 @@ public class PlayerMoveController : MonoBehaviour, IController
 
     void OnDestroy()
     {
-        moveSpeedSubscription?.UnRegister();
-        moveSpeedSubscription = null;
+        runSpeedSubscription?.UnRegister();
+        runSpeedSubscription = null;
         CursorUtility.ReleaseLock();
     }
 
@@ -64,7 +64,7 @@ public class PlayerMoveController : MonoBehaviour, IController
         float h = Input.GetAxis("Horizontal");
         // 前后移动（W/S，沿用轴输入）
         float v = Input.GetAxis("Vertical");
-        Vector3 horizontalMove = (transform.right * h + transform.forward * v) * moveSpeed;
+        Vector3 horizontalMove = (transform.right * h + transform.forward * v) * runSpeed;
         characterController.Move(horizontalMove * Time.deltaTime);
     }
 }

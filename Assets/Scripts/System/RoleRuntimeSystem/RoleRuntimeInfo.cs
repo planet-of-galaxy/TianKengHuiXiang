@@ -7,5 +7,6 @@ public class RoleRuntimeInfo
     public string name;
     public BindableProperty<float> CurHealth { get; } = new();
     public BindableProperty<float> MaxHealth { get; } = new();
-    public BindableProperty<float> MoveSpeed { get; } = new();
+    public BindableProperty<float> WalkSpeed { get; } = new();
+    public BindableProperty<float> RunSpeed { get; } = new();
 }
