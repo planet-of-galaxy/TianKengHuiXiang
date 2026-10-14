@@ -25,32 +25,6 @@ public class RoleAnimatorController : MonoBehaviour
         animator = GetComponent<Animator>();
     }
 
-    private void Update()
-    {
-        float vertical = (Input.GetKey(KeyCode.W) ? 1f : 0f)
-            - (Input.GetKey(KeyCode.S) ? 1f : 0f);
-        float horizontal = (Input.GetKey(KeyCode.D) ? 1f : 0f)
-            - (Input.GetKey(KeyCode.A) ? 1f : 0f);
-        PlayMoveAnimation(vertical, horizontal);
-
-        IsRunning = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
-
-        if (Input.GetMouseButtonDown(0))
-        {
-            PlayLightAttackAnimation();
-        }
-
-        if (Input.GetMouseButtonDown(1))
-        {
-            animator.SetTrigger("Hit");
-        }
-
-        if (Input.GetMouseButtonDown(2))
-        {
-            animator.SetBool("IsDead", true);
-        }
-    }
-
     public void PlayMoveAnimation(float vertical, float horizontal)
     {
         animator.SetFloat("MoveVertical", vertical);
