@@ -3,13 +3,15 @@ using QFramework;
 
 public class PlayerMoveController : MonoBehaviour, IController
 {
-    private CharacterController characterController;
-    private Transform cameraTransform;
-    private float verticalRotation;
-    private float runSpeed;
-    private IGamePauseSystem pauseSystem;
-    private IUnRegister runSpeedSubscription;
-    [SerializeField] private float mouseSensitivity = 2f;
+    private CharacterController characterController; // 执行角色移动并处理碰撞的组件。
+    private Transform cameraTransform; // 第一人称摄像机的 Transform，用于调整俯仰角度。
+    private float verticalRotation; // 当前摄像机俯仰角度，限制在 -90 到 90 度之间。
+    private float walkSpeed; // 角色当前走路速度，与运行时角色数据同步。
+    private float runSpeed; // 角色当前奔跑速度，按住 Shift 且向前移动时使用。
+    private IGamePauseSystem pauseSystem; // 查询游戏暂停状态，暂停时屏蔽移动和视角输入。
+    private IUnRegister walkSpeedSubscription; // 走路速度变化的订阅句柄，销毁时取消订阅。
+    private IUnRegister runSpeedSubscription; // 奔跑速度变化的订阅句柄，销毁时取消订阅。
+    [SerializeField] private float mouseSensitivity = 2f; // 鼠标控制视角旋转的灵敏度，可在 Inspector 中调整。
 
     public IArchitecture GetArchitecture() => TianArchitecture.Interface;
 
@@ -28,7 +30,9 @@ public class PlayerMoveController : MonoBehaviour, IController
             && this.GetModel<IRoleRuntimeModel>().TryGetRoleRuntime(roleContext.RoleRuntimeIndex, out var info))
         {
             // Register 不会立刻回调一次，当前值要自己读。
+            walkSpeed = info.WalkSpeed.Value;
             runSpeed = info.RunSpeed.Value;
+            walkSpeedSubscription = info.WalkSpeed.Register(speed => walkSpeed = speed);
             runSpeedSubscription = info.RunSpeed.Register(speed => runSpeed = speed);
         }
 
@@ -37,6 +41,8 @@ public class PlayerMoveController : MonoBehaviour, IController
 
     void OnDestroy()
     {
+        walkSpeedSubscription?.UnRegister();
+        walkSpeedSubscription = null;
         runSpeedSubscription?.UnRegister();
         runSpeedSubscription = null;
         CursorUtility.ReleaseLock();
@@ -64,7 +70,9 @@ public class PlayerMoveController : MonoBehaviour, IController
         float h = Input.GetAxis("Horizontal");
         // 前后移动（W/S，沿用轴输入）
         float v = Input.GetAxis("Vertical");
-        Vector3 horizontalMove = (transform.right * h + transform.forward * v) * runSpeed;
+        bool isShiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+        float moveSpeed = isShiftHeld && v > 0f ? runSpeed : walkSpeed;
+        Vector3 horizontalMove = (transform.right * h + transform.forward * v) * moveSpeed;
         characterController.Move(horizontalMove * Time.deltaTime);
     }
 }
