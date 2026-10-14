@@ -10,6 +10,7 @@ public class StateMachine<TOwner> where TOwner : class
     public TOwner Owner { get; private set; }
     public StateBase<TOwner> CurrentState { get; private set; }
     public StateBase<TOwner> PreviousState { get; private set; }
+    public event Action<StateBase<TOwner>> OnStateChanged;
 
     private readonly Dictionary<Type, StateBase<TOwner>> _states = new();
 
@@ -48,6 +49,28 @@ public class StateMachine<TOwner> where TOwner : class
         {
             CurrentState.OnExit();
             CurrentState = null;
+            OnStateChanged?.Invoke(CurrentState);
+        }
+
+        if (ReferenceEquals(PreviousState, state))
+            PreviousState = null;
+
+        _states.Remove(type);
+        state.StateMachine = null;
+        return true;
+    }
+
+    public bool RemoveState<TState>() where TState : StateBase<TOwner>
+    {
+        var type = typeof(TState);
+        if (!_states.TryGetValue(type, out var state))
+            return false;
+
+        if (ReferenceEquals(CurrentState, state))
+        {
+            CurrentState.OnExit();
+            CurrentState = null;
+            OnStateChanged?.Invoke(CurrentState);
         }
 
         if (ReferenceEquals(PreviousState, state))
@@ -65,6 +88,7 @@ public class StateMachine<TOwner> where TOwner : class
     {
         CurrentState = GetState<TState>();
         CurrentState.OnEnter();
+        OnStateChanged?.Invoke(CurrentState);
     }
 
     /// <summary>
@@ -79,6 +103,7 @@ public class StateMachine<TOwner> where TOwner : class
         CurrentState?.OnExit();
         CurrentState = next;
         CurrentState.OnEnter();
+        OnStateChanged?.Invoke(CurrentState);
     }
 
     public void Update(float deltaTime)
@@ -107,6 +132,7 @@ public class StateMachine<TOwner> where TOwner : class
         CurrentState?.OnExit();
         CurrentState = prev;
         CurrentState.OnEnter();
+        OnStateChanged?.Invoke(CurrentState);
     }
 
     /// <summary>

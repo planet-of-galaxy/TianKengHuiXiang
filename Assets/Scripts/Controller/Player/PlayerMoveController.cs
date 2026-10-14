@@ -10,7 +10,6 @@ public class PlayerMoveController : MonoBehaviour, IController
     private float runSpeed; // 角色当前奔跑速度，按住 Shift 且向前移动时使用。
     private IGamePauseSystem pauseSystem; // 查询游戏暂停状态，暂停时屏蔽移动和视角输入。
     private PlayerStateMachine playerStateMachine;
-    private PlayerMoveState playerMoveState;
     private IUnRegister walkSpeedSubscription; // 走路速度变化的订阅句柄，销毁时取消订阅。
     private IUnRegister runSpeedSubscription; // 奔跑速度变化的订阅句柄，销毁时取消订阅。
     [SerializeField] private float mouseSensitivity = 2f; // 鼠标控制视角旋转的灵敏度，可在 Inspector 中调整。
@@ -19,6 +18,7 @@ public class PlayerMoveController : MonoBehaviour, IController
 
     public float Horizontal { get; private set; }
     public float Vertical { get; private set; }
+    public bool IsRunning { get; private set; }
 
 	void Awake()
     {
@@ -29,8 +29,8 @@ public class PlayerMoveController : MonoBehaviour, IController
         if (roleContext != null && roleContext.PlayerStateMachine != null)
         {
             playerStateMachine = roleContext.PlayerStateMachine;
-            playerMoveState = new PlayerMoveState(this);
-            playerStateMachine.RegisterState(playerMoveState);
+            playerStateMachine.RegisterState(new PlayerMoveState(this));
+            playerStateMachine.ChangeState<PlayerMoveState>();
         }
 
         if (roleContext != null && roleContext.FirstViewCinema != null)
@@ -53,11 +53,10 @@ public class PlayerMoveController : MonoBehaviour, IController
 
     void OnDestroy()
     {
-        if (playerStateMachine != null && playerMoveState != null)
+        if (playerStateMachine != null)
         {
-            playerStateMachine.UnRegisterState(playerMoveState);
+            playerStateMachine.UnRegisterState<PlayerMoveState>();
         }
-        playerMoveState = null;
         playerStateMachine = null;
 
         walkSpeedSubscription?.UnRegister();
@@ -73,6 +72,7 @@ public class PlayerMoveController : MonoBehaviour, IController
         // 避免鼠标移到 UI 外时带动镜头转动
         if (pauseSystem != null && pauseSystem.IsPaused)
         {
+            IsRunning = false;
             return;
         }
 
@@ -90,7 +90,8 @@ public class PlayerMoveController : MonoBehaviour, IController
         // 前后移动（W/S，沿用轴输入）
         Vertical = Input.GetAxis("Vertical");
         bool isShiftHeld = Input.GetKey(HotKeyUtility.Run) || Input.GetKey(HotKeyUtility.RunAlternate);
-        float moveSpeed = isShiftHeld && Vertical > 0f ? runSpeed : walkSpeed;
+        IsRunning = isShiftHeld && Vertical > 0f;
+        float moveSpeed = IsRunning ? runSpeed : walkSpeed;
         Vector3 horizontalMove = (transform.right * Horizontal + transform.forward * Vertical) * moveSpeed;
         characterController.Move(horizontalMove * Time.deltaTime);
     }

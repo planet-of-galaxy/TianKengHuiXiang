@@ -9,4 +9,5 @@ public class PlayerMoveState : StateBase<PlayerStateMachine>
 
     public float Horizontal => playerMoveController.Horizontal;
     public float Vertical => playerMoveController.Vertical;
+    public bool IsRunning => playerMoveController.IsRunning;
 }

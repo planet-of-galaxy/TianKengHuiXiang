@@ -38,9 +38,9 @@ public class PlayerStateMachine : MonoBehaviour
         StateMachine.ChangeState<T>();
     }
 
-    public void UnRegisterState<T>(T state) where T : StateBase<PlayerStateMachine>
+    public void UnRegisterState<T>() where T : StateBase<PlayerStateMachine>
     {
-        _stateMachine?.RemoveState(state);
+        _stateMachine?.RemoveState<T>();
     }
 
     private void Update()
