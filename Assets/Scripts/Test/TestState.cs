@@ -80,9 +80,9 @@ public class TestState : GameProcedureStateBase
             player.gameObject.AddComponent<WeaponChanger>();
         }
 
-        if (player.FirstViewCinema != null)
+        if (player.ThirdViewCinema != null)
         {
-            this.GetSystem<ICinemaChineCameraSystem>().SetCinemaChineCamera(player.FirstViewCinema);
+            this.GetSystem<ICinemaChineCameraSystem>().SetCinemaChineCamera(player.ThirdViewCinema);
         }
     }
 }

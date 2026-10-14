@@ -9,6 +9,7 @@ public class RoleContext : MonoBehaviour
     [SerializeField] private PlayerStateMachine playerStateMachine;
     [SerializeField] private Transform weaponPosition;
     [SerializeField] private CinemachineCamera firstViewCinema;
+    [SerializeField] private CinemachineCamera thirdViewCinema;
     [SerializeField] private CinemachineCamera observeCinema;
 
     public event Action<RoleContext> OnDestroyed;
@@ -16,6 +17,7 @@ public class RoleContext : MonoBehaviour
     public int RoleRuntimeIndex => roleRuntimeIndex;
     public Transform WeaponPosition => weaponPosition;
     public CinemachineCamera FirstViewCinema => firstViewCinema;
+    public CinemachineCamera ThirdViewCinema => thirdViewCinema;
     public CinemachineCamera ObserveCinema => observeCinema;
     public PlayerStateMachine PlayerStateMachine => playerStateMachine;
 
