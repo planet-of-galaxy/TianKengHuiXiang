@@ -1,8 +1,9 @@
+using QFramework;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-public class BillboardController : MonoBehaviour
+public class BillboardController : MonoBehaviour, IController
 {
     [SerializeField] private Image _key;
     [SerializeField] private Sprite _focusSprite;
@@ -51,12 +52,6 @@ public class BillboardController : MonoBehaviour
             return;
         }
 
-        Camera mainCamera = Camera.main;
-        if (mainCamera == null)
-        {
-            return;
-        }
-
         bool focused = IsFocused();
         if (focused != _isFocused)
         {
@@ -64,7 +59,7 @@ public class BillboardController : MonoBehaviour
         }
     }
 
-    /// <summary>判断物体是否大致处于主相机正前方。</summary>
+    /// <summary>判断物体是否在当前玩家的聚焦距离内，并大致处于主相机正前方。</summary>
     private bool IsFocused()
     {
         if (_key == null || Camera.main == null)
@@ -73,20 +68,23 @@ public class BillboardController : MonoBehaviour
         }
 
         Camera mainCamera = Camera.main;
-        Vector3 toSelf = transform.position - mainCamera.transform.position;
+        var controllingRole = this.GetSystem<IRoleInstanceSystem>().ControllingRole;
+        if (controllingRole == null)
+        {
+            return false;
+        }
 
-        // 距离条件：先计算距离(含一次开方)，不满足直接返回；
-        // 该开方结果可复用于下面的归一化，避免二次开方
-        float distance = toSelf.magnitude;
+        // 距离条件：使用当前玩家到物体的距离。
+        float distance = Vector3.Distance(controllingRole.transform.position, transform.position);
         if (distance > _maxFocusDistance)
         {
             return false;
         }
 
-        // 角度条件：复用 distance 做归一化(仅一次除法)，再做点乘。
+        // 角度条件：使用相机指向物体的方向，与玩家距离计算独立。
         // 点乘 = cos(摄像机朝向 与 指向物体的夹角)，角度越小点乘越大，
         // 当夹角小于指定最大角度(即点乘大于阈值)时视为聚焦
-        Vector3 toSelfNormalized = toSelf / distance;
+        Vector3 toSelfNormalized = (transform.position - mainCamera.transform.position).normalized;
         float dot = Vector3.Dot(mainCamera.transform.forward, toSelfNormalized);
         return dot > _showKeyMaxDot;
     }
@@ -119,4 +117,6 @@ public class BillboardController : MonoBehaviour
             _key.sprite = _initialSprite;
         }
     }
+
+    public IArchitecture GetArchitecture() => TianArchitecture.Interface;
 }
