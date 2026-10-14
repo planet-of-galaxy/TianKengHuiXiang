@@ -35,6 +35,30 @@ public class StateMachine<TOwner> where TOwner : class
     }
 
     /// <summary>
+    /// 注销指定实例，避免移除同类型的其他实例。
+    /// </summary>
+    public bool RemoveState<TState>(TState state) where TState : StateBase<TOwner>
+    {
+        var type = typeof(TState);
+        if (!_states.TryGetValue(type, out var registeredState)
+            || !ReferenceEquals(registeredState, state))
+            return false;
+
+        if (ReferenceEquals(CurrentState, state))
+        {
+            CurrentState.OnExit();
+            CurrentState = null;
+        }
+
+        if (ReferenceEquals(PreviousState, state))
+            PreviousState = null;
+
+        _states.Remove(type);
+        state.StateMachine = null;
+        return true;
+    }
+
+    /// <summary>
     /// 设置初始状态（不触发 OnExit）
     /// </summary>
     public void Start<TState>() where TState : StateBase<TOwner>

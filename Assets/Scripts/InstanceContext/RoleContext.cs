@@ -5,7 +5,8 @@ using UnityEngine;
 /// <summary>Shares the role instance lifetime and notifies systems on destruction.</summary>
 public class RoleContext : MonoBehaviour
 {
-    [SerializeField] private int roleRuntimeIndex = -1;
+        [SerializeField] private int roleRuntimeIndex = -1;
+    [SerializeField] private PlayerStateMachine playerStateMachine;
     [SerializeField] private Transform weaponPosition;
     [SerializeField] private CinemachineCamera firstViewCinema;
     [SerializeField] private CinemachineCamera observeCinema;
@@ -16,6 +17,7 @@ public class RoleContext : MonoBehaviour
     public Transform WeaponPosition => weaponPosition;
     public CinemachineCamera FirstViewCinema => firstViewCinema;
     public CinemachineCamera ObserveCinema => observeCinema;
+    public PlayerStateMachine PlayerStateMachine => playerStateMachine;
 
     private void OnDestroy()
     {
