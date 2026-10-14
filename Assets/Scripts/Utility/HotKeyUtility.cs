@@ -7,6 +7,12 @@ using UnityEngine;
 /// </summary>
 public static class HotKeyUtility
 {
+    /// <summary>跑步（左 Shift）</summary>
+    public static readonly KeyCode Run = KeyCode.LeftShift;
+
+    /// <summary>跑步（右 Shift）</summary>
+    public static readonly KeyCode RunAlternate = KeyCode.RightShift;
+
     /// <summary>交互A</summary>
     public static readonly KeyCode InteractA = KeyCode.E;
 

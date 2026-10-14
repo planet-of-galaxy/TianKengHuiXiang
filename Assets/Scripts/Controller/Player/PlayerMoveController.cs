@@ -70,7 +70,7 @@ public class PlayerMoveController : MonoBehaviour, IController
         float h = Input.GetAxis("Horizontal");
         // 前后移动（W/S，沿用轴输入）
         float v = Input.GetAxis("Vertical");
-        bool isShiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+        bool isShiftHeld = Input.GetKey(HotKeyUtility.Run) || Input.GetKey(HotKeyUtility.RunAlternate);
         float moveSpeed = isShiftHeld && v > 0f ? runSpeed : walkSpeed;
         Vector3 horizontalMove = (transform.right * h + transform.forward * v) * moveSpeed;
         characterController.Move(horizontalMove * Time.deltaTime);
