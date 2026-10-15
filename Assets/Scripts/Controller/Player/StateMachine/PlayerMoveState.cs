@@ -1,13 +1,24 @@
 public class PlayerMoveState : StateBase<PlayerStateMachine>
 {
-    private readonly PlayerMoveController playerMoveController;
+    private readonly IMove move;
 
-    public PlayerMoveState(PlayerMoveController playerMoveController)
+    public PlayerMoveState(IMove move)
     {
-        this.playerMoveController = playerMoveController;
+        this.move = move;
     }
 
-    public float Horizontal => playerMoveController.Horizontal;
-    public float Vertical => playerMoveController.Vertical;
-    public bool IsRunning => playerMoveController.IsRunning;
+    public float Horizontal => move.Horizontal;
+    public float Vertical => move.Vertical;
+    public bool IsRunning => move.IsRunning;
+    public bool IsMoveDisabled => move.IsMoveDisabled;
+
+    public override void OnEnter()
+    {
+        move.IsMoveDisabled = false;
+    }
+
+    public override void OnExit()
+    {
+        move.IsMoveDisabled = true;
+    }
 }

@@ -4,7 +4,7 @@ using QFramework;
 // 在 CinemachineBrain 的 LateUpdate 前更新虚拟相机的位置。
 [DefaultExecutionOrder(-100)]
 [RequireComponent(typeof(CharacterController))]
-public class PlayerMoveController : MonoBehaviour, IController
+public class PlayerMoveController : MonoBehaviour, IController, IMove
 {
     private CharacterController characterController;
     private Transform cameraTransform;
@@ -31,6 +31,7 @@ public class PlayerMoveController : MonoBehaviour, IController
     public float Horizontal { get; private set; }
     public float Vertical { get; private set; }
     public bool IsRunning { get; private set; }
+    public bool IsMoveDisabled { get; set; }
 
     private void Awake()
     {
@@ -97,6 +98,14 @@ public class PlayerMoveController : MonoBehaviour, IController
         cameraYaw = Mathf.Repeat(cameraYaw + Input.GetAxis("Mouse X") * mouseSensitivity, 360f);
         cameraPitch = Mathf.Clamp(
             cameraPitch - Input.GetAxis("Mouse Y") * mouseSensitivity, minimumPitch, maximumPitch);
+
+        if (IsMoveDisabled)
+        {
+            Horizontal = 0f;
+            Vertical = 0f;
+            IsRunning = false;
+            return;
+        }
 
         var input = Vector2.ClampMagnitude(
             new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical")), 1f);
