@@ -70,10 +70,6 @@ public class MonsterRuntimeSystem : AbstractSystem, IMonsterRuntimeSystem
         info.CurHealth.Value = config.health;
         info.MaxHealth.Value = config.health;
         runtimeModel.AddMonsterRuntime(context, info);
-        var healthController = context.GetComponent<MonsterHealthController>();
-        if (healthController == null)
-            healthController = context.gameObject.AddComponent<MonsterHealthController>();
-        healthController.Initialize(info, this);
         return context;
     }
 

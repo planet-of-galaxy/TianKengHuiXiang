@@ -5,8 +5,9 @@ public class MonsterStunnedState : StateBase<MonsterStateMachine>, IController
 {
     private float remainingTime;
     private IGamePauseSystem pauseSystem;
+    private MonsterRuntimeInfo runtimeInfo;
 
-    public override bool CanExit => remainingTime <= 0f;
+    public override bool CanExit => remainingTime <= 0f || (runtimeInfo != null && runtimeInfo.CurHealth.Value <= 0f);
 
     public IArchitecture GetArchitecture() => TianArchitecture.Interface;
 
@@ -14,6 +15,7 @@ public class MonsterStunnedState : StateBase<MonsterStateMachine>, IController
     {
         remainingTime = Mathf.Max(0f, duration);
         pauseSystem = this.GetSystem<IGamePauseSystem>();
+        runtimeInfo = this.GetSystem<IMonsterRuntimeSystem>().GetMonsterRuntime(Owner.GetComponent<MonsterContext>());
         Owner.MonsterAnimatorController?.PlayHitAnimation();
     }
 
@@ -30,5 +32,6 @@ public class MonsterStunnedState : StateBase<MonsterStateMachine>, IController
     public override void OnExit()
     {
         remainingTime = 0f;
+        runtimeInfo = null;
     }
 }

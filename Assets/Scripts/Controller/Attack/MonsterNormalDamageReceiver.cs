@@ -31,10 +31,15 @@ public class MonsterNormalDamageReceiver : DamageReceiverBase
 
     public override void GetDamage(DamageInfo damageInfo)
     {
+        if (monsterStateMachine == null || monsterStateMachine.StateMachine.IsInState<MonsterDeathState>()) return;
+        if (!monsterRuntimeSystem.TryGetMonsterRuntime(monsterContext, out var runtimeInfo)) return;
+
         // 普通怪物不做减伤，直接按伤害段数和每段数值扣血。
         float damage = damageInfo.hintCount * damageInfo.hintValue;
         monsterRuntimeSystem.ChangeCurHealth(monsterContext, -damage);
-        if (damage > 0f && monsterStateMachine != null)
+        if (runtimeInfo.CurHealth.Value <= 0f)
+            monsterStateMachine.ChangeState<MonsterDeathState>();
+        else if (damage > 0f)
             monsterStateMachine.ChangeState<MonsterStunnedState>(0.2f);
     }
 }
