@@ -1,8 +1,8 @@
-/// <summary>
-/// 攻击接口：可执行轻攻击或重攻击并返回本次造成的伤害信息。
-/// </summary>
+/// <summary>由动画事件驱动的攻击生命周期。</summary>
 public interface IAttack
 {
-    DamageInfo ILightAttack();
-    DamageInfo IHeavyAttack();
+    void StartAttack(AttackType attackType);
+    void DoAttackHitFrame();
+    void DoAttackInterrupt();
+    void EndAttack();
 }

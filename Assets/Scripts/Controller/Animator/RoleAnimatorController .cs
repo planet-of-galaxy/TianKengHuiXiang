@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using UnityEngine;
 
 [RequireComponent(typeof(Animator))]
@@ -9,7 +9,7 @@ public class RoleAnimatorController : MonoBehaviour
     private PlayerMoveState moveState;
     private PlayerAttackState attackState;
 
-    public Action OnAttackStart;
+    public Action<AttackType> OnAttackStart;
     public Action OnAttackHitFrame;
     public Action OnAttackEnd;
 
@@ -60,7 +60,7 @@ public class RoleAnimatorController : MonoBehaviour
 
         if (attackState == null) return;
 
-        OnAttackStart?.Invoke();
+        OnAttackStart?.Invoke(attackState.attackType);
         if (attackState.attackType == AttackType.Light)
             PlayLightAttackAnimation();
         else

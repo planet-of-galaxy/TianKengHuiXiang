@@ -1,112 +1,96 @@
-using System.Collections;
 using QFramework;
 using UnityEngine;
 
-/// <summary>使用武器配置执行近战轻攻击和重攻击。</summary>
+/// <summary>在动画命中帧执行近战伤害判定。</summary>
 public class MeleeWeaponAttack : WeaponAttackBase
 {
-    private const float DamageCheckInterval = 0.03f;
-
     [SerializeField] private Transform _damagePoint;
 
     private float _attackCooldown;
     private bool _isAttacking;
+    private bool _hasDetectedTarget;
+    private float _attackRange;
+    private int _monsterMask;
+    private DamageInfo _damageInfo;
 
     private void Update()
     {
         _attackCooldown = Mathf.Max(0f, _attackCooldown - Time.deltaTime);
     }
 
-    // 返回本次攻击预先计算的伤害；实际伤害在前摇后命中时交付，未能发起攻击则返回 default。
-    public override DamageInfo ILightAttack()
-    {
-        return TryStartAttack(false);
-    }
-
-    public override DamageInfo IHeavyAttack()
-    {
-        return TryStartAttack(true);
-    }
-
-    private DamageInfo TryStartAttack(bool heavyAttack)
+    public override void StartAttack(AttackType attackType)
     {
         if (!isActiveAndEnabled || _isAttacking || _attackCooldown > 0f)
-        {
-            return default;
-        }
+            return;
 
         if (_damagePoint == null)
         {
             Debug.LogWarning("MeleeWeaponAttack 未设置伤害检测点。", this);
-            return default;
+            return;
         }
 
         int weaponConfigId = weaponContext.WeaponConfigId;
         var weaponConfig = TianArchitecture.Interface.GetUtility<IWeaponConfigProvider>()
             .GetWeaponConfig(weaponConfigId);
-        var attackConfig = heavyAttack ? weaponConfig?.heavyAttack : weaponConfig?.lightAttack;
-        if (attackConfig == null)
+        var config = attackType == AttackType.Light ? weaponConfig?.lightAttack : weaponConfig?.heavyAttack;
+        if (config == null)
         {
             Debug.LogWarning($"MeleeWeaponAttack 找不到武器 {weaponConfigId} 的攻击配置。", this);
-            return default;
+            return;
         }
 
-        int monsterMask = LayerMask.GetMask("Monster");
-        if (monsterMask == 0)
+        _monsterMask = LayerMask.GetMask("Monster");
+        if (_monsterMask == 0)
         {
             Debug.LogWarning("MeleeWeaponAttack 找不到 Monster 层。", this);
-            return default;
+            return;
         }
 
-        bool isCritical = Random.value < Mathf.Clamp01(attackConfig.criticalRate);
-        var damageInfo = new DamageInfo
+        bool isCritical = Random.value < Mathf.Clamp01(config.criticalRate);
+        _damageInfo = new DamageInfo
         {
-            type = attackConfig.damageType,
+            type = config.damageType,
             hintCount = 1,
-            hintValue = attackConfig.attackPower * (isCritical ? attackConfig.criticalMultiplier : 1f)
+            hintValue = config.attackPower * (isCritical ? config.criticalMultiplier : 1f)
         };
-
-        _attackCooldown = Mathf.Max(0f, attackConfig.attackSpeed);
+        _attackRange = Mathf.Max(0f, config.attackRange);
+        _attackCooldown = Mathf.Max(0f, config.attackSpeed);
+        _hasDetectedTarget = false;
         _isAttacking = true;
-        StartCoroutine(Attack(attackConfig, monsterMask, damageInfo));
-        return damageInfo;
     }
 
-    private IEnumerator Attack(WeaponAttackConfig config, int monsterMask, DamageInfo damageInfo)
+    public override void DoAttackHitFrame()
     {
-        try
-        {
-            if (config.attackWindup > 0f)
-            {
-                yield return new WaitForSeconds(config.attackWindup);
-            }
+        if (!isActiveAndEnabled || !_isAttacking || _hasDetectedTarget || _damagePoint == null)
+            return;
 
-            float endTime = Time.time + Mathf.Max(0f, config.attackDuration);
-            var checkDelay = new WaitForSeconds(DamageCheckInterval);
-            while (Time.time < endTime && _damagePoint != null)
-            {
-                var targets = Physics.OverlapSphere(_damagePoint.position,
-                    Mathf.Max(0f, config.attackRange), monsterMask, QueryTriggerInteraction.Collide);
-                foreach (var target in targets)
-                {
-                    if (TryDeliverDamage(target.gameObject, damageInfo))
-                    {
-                        yield break;
-                    }
-                }
+        var targets = Physics.OverlapSphere(_damagePoint.position, _attackRange,
+            _monsterMask, QueryTriggerInteraction.Collide);
+        if (targets.Length == 0) return;
 
-                yield return checkDelay;
-            }
-        }
-        finally
+        // 先锁定本次判定，防止后续命中帧或伤害回调重复触发。
+        _hasDetectedTarget = true;
+        foreach (var target in targets)
         {
-            _isAttacking = false;
+            if (TryDeliverDamage(target.gameObject, _damageInfo))
+                break;
         }
+    }
+
+    public override void DoAttackInterrupt()
+    {
+        EndAttack();
+    }
+
+    public override void EndAttack()
+    {
+        _isAttacking = false;
+        _hasDetectedTarget = false;
+        _damageInfo = default;
     }
 
     private void OnDisable()
     {
-        StopAllCoroutines();
-        _isAttacking = false;
+        DoAttackInterrupt();
     }
 }

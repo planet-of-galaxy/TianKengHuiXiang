@@ -1,4 +1,4 @@
-﻿using QFramework;
+using QFramework;
 using UnityEngine;
 
 /// <summary>将角色攻击输入转发给当前武器，并在武器切换后更新引用。</summary>
@@ -13,6 +13,7 @@ public class AttackController : MonoBehaviour, IController
     private IWeaponInstanceSystem weaponInstanceSystem;
     private WeaponContext weaponContext;
     private IAttack attack;
+    private RoleAnimatorController roleAnimatorController;
 
     public IArchitecture GetArchitecture() => TianArchitecture.Interface;
 
@@ -20,18 +21,36 @@ public class AttackController : MonoBehaviour, IController
     {
         roleContext = GetComponent<RoleContext>();
         weaponInstanceSystem = this.GetSystem<IWeaponInstanceSystem>();
+        roleAnimatorController = GetComponentInChildren<RoleAnimatorController>(true);
         RefreshWeapon();
     }
 
     private void OnEnable()
     {
         weaponInstanceSystem.OnWeaponChanged += HandleWeaponChanged;
+        if (roleAnimatorController != null)
+        {
+            roleAnimatorController.OnAttackStart += HandleAttackStart;
+            roleAnimatorController.OnAttackHitFrame += DoAttackHitFrame;
+            roleAnimatorController.OnAttackEnd += EndAttack;
+        }
+        else
+        {
+            Debug.LogWarning("[AttackController] RoleAnimatorController was not found.", this);
+        }
         LogDebug("已订阅攻击输入和武器切换事件。");
         RefreshWeapon();
     }
 
     private void OnDisable()
     {
+        if (roleAnimatorController != null)
+        {
+            roleAnimatorController.OnAttackStart -= HandleAttackStart;
+            roleAnimatorController.OnAttackHitFrame -= DoAttackHitFrame;
+            roleAnimatorController.OnAttackEnd -= EndAttack;
+        }
+        DoAttackInterrupt();
         if (weaponInstanceSystem != null)
         {
             weaponInstanceSystem.OnWeaponChanged -= HandleWeaponChanged;
@@ -50,44 +69,24 @@ public class AttackController : MonoBehaviour, IController
 
     private void RefreshWeapon()
     {
-        weaponContext = weaponInstanceSystem.TryGetWeapon(roleContext);
+        var nextWeapon = weaponInstanceSystem.TryGetWeapon(roleContext);
+        if (weaponContext != nextWeapon)
+            DoAttackInterrupt();
+        weaponContext = nextWeapon;
         attack = weaponContext != null ? weaponContext.Attack : null;
         LogDebug($"更新武器引用：{(weaponContext != null ? weaponContext.name : "未获取到武器")}，IAttack：{(attack != null ? attack.GetType().Name : "未找到")}。");
     }
 
-    public void DoLightAttack()
+    private void HandleAttackStart(AttackType attackType)
     {
-        if (weaponContext == null || attack == null)
-        {
-            LogDebug("跳过轻攻击：当前武器或 IAttack 不存在。");
-            return;
-        }
-
-        attack.ILightAttack();
+        attack?.StartAttack(attackType);
     }
 
-    public void DoHeavyAttack()
-    {
-        if (weaponContext == null || attack == null)
-        {
-            LogDebug("跳过重攻击：当前武器或 IAttack 不存在。");
-            return;
-        }
+    public void DoAttackInterrupt() => attack?.DoAttackInterrupt();
 
-        attack.IHeavyAttack();
-    }
+    public void DoAttackHitFrame() => attack?.DoAttackHitFrame();
 
-    /// <summary>预留攻击打断入口。</summary>
-    public void DonInterruptAttack()
-    {
-        LogDebug("调用 DonInterruptAttack（预留入口，尚未实现）。");
-    }
-
-    /// <summary>预留攻击命中帧入口。</summary>
-    public void DoAttackHitFrame()
-    {
-        LogDebug("调用 DoAttackHitFrame（预留入口，尚未实现）。");
-    }
+    public void EndAttack() => attack?.EndAttack();
 
     private void LogDebug(string message)
     {

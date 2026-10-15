@@ -1,6 +1,6 @@
 /// <summary>
 /// 伤害信息：描述一次攻击造成的伤害。
-/// 作为 IAttack.ILightAttack 和 IAttack.IHeavyAttack 的返回值，也作为 IGetDamage.GetDamage 的入参，在攻击方与受伤方之间传递。
+/// Passed from an attacker to IGetDamage.GetDamage.
 /// </summary>
 public struct DamageInfo
 {
