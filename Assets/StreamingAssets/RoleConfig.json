@@ -2,14 +2,14 @@
   "roles": [
     {
       "roleId": 0,
-      "name": "富二代",
+      "name": "默认角色",
       "walkSpeed": 1.0,
       "runSpeed": 5.0,
       "health": 100.0
     },
     {
       "roleId": 1,
-      "name": "厨师",
+      "name": "一号角色",
       "walkSpeed": 1.0,
       "runSpeed": 4.5,
       "health": 150

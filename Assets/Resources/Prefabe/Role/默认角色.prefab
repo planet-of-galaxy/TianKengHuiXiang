@@ -2196,7 +2196,7 @@ GameObject:
   - component: {fileID: 7301471097882161247}
   - component: {fileID: 2638938829048230488}
   m_Layer: 0
-  m_Name: "\u5BCC\u4E8C\u4EE3"
+  m_Name: "\u9ED8\u8BA4\u89D2\u8272"
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
