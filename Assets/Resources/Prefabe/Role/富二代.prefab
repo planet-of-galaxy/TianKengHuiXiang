@@ -2294,6 +2294,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   roleRuntimeIndex: -1
   playerStateMachine: {fileID: 2638938829048230488}
+  roleAnimatorController: {fileID: 2884596680579419101}
   weaponPosition: {fileID: 7811931678930091552}
   firstViewCinema: {fileID: 1302483106240401099}
   thirdViewCinema: {fileID: 9000000000000000003}
