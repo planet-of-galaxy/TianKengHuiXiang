@@ -27,6 +27,11 @@ public class RoleAnimatorController : MonoBehaviour
         Animator.SetTrigger("Hit");
     }
 
+    public void PlayDeathAnimation()
+    {
+        Animator.SetBool("IsDead", true);
+    }
+
     public void StartAttack(AttackType attackType)
     {
         OnAttackStart?.Invoke(attackType);

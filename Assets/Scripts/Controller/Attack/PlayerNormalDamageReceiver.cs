@@ -31,10 +31,15 @@ public class PlayerNormalDamageReceiver : DamageReceiverBase
 
     public override void GetDamage(DamageInfo damageInfo)
     {
+        if (playerStateMachine == null || playerStateMachine.StateMachine.IsInState<PlayerDeathState>()) return;
+        if (!this.GetModel<IRoleRuntimeModel>().TryGetRoleRuntime(roleContext.RoleRuntimeIndex, out var runtimeInfo)) return;
+
         // 不做减伤，直接按伤害段数和每段数值扣血。
         float damage = damageInfo.hintCount * damageInfo.hintValue;
         roleRuntimeSystem.ChangeCurHealth(roleContext, -damage);
-        if (damage > 0f && playerStateMachine != null)
+        if (runtimeInfo.CurHealth.Value <= 0f)
+            playerStateMachine.ChangeState<PlayerDeathState>();
+        else if (damage > 0f)
             playerStateMachine.ChangeState<PlayerStunnedState>(0.2f);
     }
 }

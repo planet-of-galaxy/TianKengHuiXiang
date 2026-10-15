@@ -28,6 +28,7 @@ public class PlayerStateMachine : MonoBehaviour
             {
                 _stateMachine = new StateMachine<PlayerStateMachine>(this);
                 RegisterState(new PlayerDefualtState());
+                RegisterState(new PlayerDeathState());
             }
 
             return _stateMachine;

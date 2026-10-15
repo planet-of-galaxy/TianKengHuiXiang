@@ -5,8 +5,9 @@ public class PlayerStunnedState : StateBase<PlayerStateMachine>, IController
 {
     private float remainingTime;
     private IGamePauseSystem pauseSystem;
+    private RoleRuntimeInfo runtimeInfo;
 
-    public override bool CanExit => remainingTime <= 0f;
+    public override bool CanExit => remainingTime <= 0f || (runtimeInfo != null && runtimeInfo.CurHealth.Value <= 0f);
 
     public IArchitecture GetArchitecture() => TianArchitecture.Interface;
 
@@ -14,6 +15,7 @@ public class PlayerStunnedState : StateBase<PlayerStateMachine>, IController
     {
         remainingTime = Mathf.Max(0f, duration);
         pauseSystem = this.GetSystem<IGamePauseSystem>();
+        this.GetModel<IRoleRuntimeModel>().TryGetRoleRuntime(Owner.GetComponent<RoleContext>().RoleRuntimeIndex, out runtimeInfo);
         Owner.RoleAnimatorController?.PlayHitAnimation();
     }
 
@@ -33,5 +35,6 @@ public class PlayerStunnedState : StateBase<PlayerStateMachine>, IController
     public override void OnExit()
     {
         remainingTime = 0f;
+        runtimeInfo = null;
     }
 }
