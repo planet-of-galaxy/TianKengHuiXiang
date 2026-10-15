@@ -15,10 +15,24 @@ public class PlayerMoveState : StateBase<PlayerStateMachine>
     public override void OnEnter()
     {
         move.IsMoveDisabled = false;
+        UpdateAnimation();
+    }
+
+    public override void OnUpdate(float deltaTime)
+    {
+        UpdateAnimation();
     }
 
     public override void OnExit()
     {
         move.IsMoveDisabled = true;
+        Owner.RoleAnimatorController?.SetRunning(false);
+        Owner.RoleAnimatorController?.PlayMoveAnimation(0f, 0f);
+    }
+
+    private void UpdateAnimation()
+    {
+        Owner.RoleAnimatorController?.SetRunning(IsRunning);
+        Owner.RoleAnimatorController?.PlayMoveAnimation(Vertical, Horizontal);
     }
 }

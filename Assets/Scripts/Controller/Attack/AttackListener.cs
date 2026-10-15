@@ -1,22 +1,19 @@
 ﻿using QFramework;
 using UnityEngine;
 
-/// <summary>Listens for attack input and manages the timed player attack state.</summary>
+/// <summary>Listens for attack input and requests player state transitions.</summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(RoleContext))]
 public class AttackListener : MonoBehaviour, IController, IAttackListener
 {
     [SerializeField, Min(0.01f)] private float heavyAttackHoldTime = 0.5f;
 
-    public bool IsAttacking { get; private set; }
+    public bool IsAttacking => playerStateMachine != null && attackState != null
+        && playerStateMachine.StateMachine.CurrentState == attackState;
     public AttackType attackType { get; private set; }
 
-    private RoleContext roleContext;
     private PlayerStateMachine playerStateMachine;
     private PlayerAttackState attackState;
-    private IWeaponInstanceSystem weaponInstanceSystem;
-    private IWeaponConfigProvider weaponConfigs;
-    private float remainingAttackTime;
 
     private float _lightPressTime;
     private bool _isLightPressing;
@@ -30,9 +27,7 @@ public class AttackListener : MonoBehaviour, IController, IAttackListener
     private void Awake()
     {
         pauseSystem = this.GetSystem<IGamePauseSystem>();
-        weaponInstanceSystem = this.GetSystem<IWeaponInstanceSystem>();
-        weaponConfigs = this.GetUtility<IWeaponConfigProvider>();
-        roleContext = GetComponent<RoleContext>();
+        var roleContext = GetComponent<RoleContext>();
         playerStateMachine = roleContext.PlayerStateMachine;
         if (playerStateMachine == null)
         {
@@ -52,18 +47,6 @@ public class AttackListener : MonoBehaviour, IController, IAttackListener
         {
             ResetPress();
             return;
-        }
-
-        if (IsAttacking)
-        {
-            if (playerStateMachine.StateMachine.CurrentState != attackState)
-                EndAttack();
-            else
-            {
-                remainingAttackTime -= Time.deltaTime;
-                if (remainingAttackTime <= 0f)
-                    EndAttack();
-            }
         }
 
         if (Input.GetMouseButtonDown(0))
@@ -124,28 +107,18 @@ public class AttackListener : MonoBehaviour, IController, IAttackListener
     {
         if (IsAttacking || playerStateMachine == null) return;
 
-        var weapon = weaponInstanceSystem.TryGetWeapon(roleContext);
-        var config = weaponConfigs.GetWeaponConfig(weapon != null ? weapon.WeaponConfigId : -1);
-        var attackConfig = type == AttackType.Light ? config?.lightAttack : config?.heavyAttack;
-        if (attackConfig == null) return;
-
         // Ensure an initial state exists even if input is driven before the owner's Awake.
         if (playerStateMachine.StateMachine.CurrentState == null)
             playerStateMachine.StateMachine.Start<PlayerDefualtState>();
 
         attackType = type;
-        remainingAttackTime = Mathf.Max(0f, attackConfig.attackDuration);
-        IsAttacking = true;
         playerStateMachine.ChangeState<PlayerAttackState>();
         ResetPress();
     }
 
     private void EndAttack()
     {
-        IsAttacking = false;
-        remainingAttackTime = 0f;
-        if (playerStateMachine != null && attackState != null
-            && playerStateMachine.StateMachine.CurrentState == attackState)
+        if (IsAttacking)
             playerStateMachine.StateMachine.RevertState();
     }
 

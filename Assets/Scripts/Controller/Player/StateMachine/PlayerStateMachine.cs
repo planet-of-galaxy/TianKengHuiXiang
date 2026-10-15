@@ -6,6 +6,18 @@ using UnityEngine;
 public class PlayerStateMachine : MonoBehaviour
 {
     private StateMachine<PlayerStateMachine> _stateMachine;
+    [SerializeField] private RoleAnimatorController roleAnimatorController;
+
+    public RoleAnimatorController RoleAnimatorController
+    {
+        get
+        {
+            if (roleAnimatorController == null)
+                roleAnimatorController = GetComponentInChildren<RoleAnimatorController>(true);
+
+            return roleAnimatorController;
+        }
+    }
 
     public StateMachine<PlayerStateMachine> StateMachine
     {

@@ -1,100 +1,36 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 [RequireComponent(typeof(Animator))]
 public class RoleAnimatorController : MonoBehaviour
 {
     private Animator animator;
-    private StateMachine<PlayerStateMachine> stateMachine;
-    private PlayerMoveState moveState;
-    private PlayerAttackState attackState;
+    private Animator Animator => animator != null ? animator : animator = GetComponent<Animator>();
 
     public Action<AttackType> OnAttackStart;
     public Action OnAttackHitFrame;
     public Action OnAttackEnd;
 
-    private void Awake()
-    {
-        animator = GetComponent<Animator>();
-    }
-
-    private void OnEnable()
-    {
-        var roleContext = GetComponentInParent<RoleContext>();
-        if (roleContext == null || roleContext.PlayerStateMachine == null)
-            return;
-
-        stateMachine = roleContext.PlayerStateMachine.StateMachine;
-        stateMachine.OnStateChanged += HandleStateChanged;
-        HandleStateChanged(stateMachine.CurrentState);
-    }
-
-    private void OnDisable()
-    {
-        if (stateMachine != null)
-            stateMachine.OnStateChanged -= HandleStateChanged;
-
-        HandleAttackStateChanged(null);
-        stateMachine = null;
-        moveState = null;
-        animator.SetBool("IsRunning", false);
-        PlayMoveAnimation(0f, 0f);
-    }
-
-    private void HandleStateChanged(StateBase<PlayerStateMachine> state)
-    {
-        HandleAttackStateChanged(state as PlayerAttackState);
-        moveState = state as PlayerMoveState;
-        animator.SetBool("IsRunning", moveState?.IsRunning ?? false);
-        PlayMoveAnimation(moveState?.Vertical ?? 0f, moveState?.Horizontal ?? 0f);
-    }
-
-    private void HandleAttackStateChanged(PlayerAttackState nextAttackState)
-    {
-        if (attackState == nextAttackState) return;
-
-        bool wasAttacking = attackState != null;
-        attackState = nextAttackState;
-        if (wasAttacking)
-            OnAttackEnd?.Invoke();
-
-        if (attackState == null) return;
-
-        OnAttackStart?.Invoke(attackState.attackType);
-        if (attackState.attackType == AttackType.Light)
-            PlayLightAttackAnimation();
-        else
-            PlayHeavyAttackAnimation();
-    }
-
-    private void LateUpdate()
-    {
-        if (moveState != null)
-        {
-            animator.SetBool("IsRunning", moveState.IsRunning);
-            PlayMoveAnimation(moveState.Vertical, moveState.Horizontal);
-        }
-    }
-
     public void PlayMoveAnimation(float vertical, float horizontal)
     {
-        animator.SetFloat("MoveVertical", vertical);
-        animator.SetFloat("MoveHorizontal", horizontal);
+        Animator.SetFloat("MoveVertical", vertical);
+        Animator.SetFloat("MoveHorizontal", horizontal);
     }
 
-    public void PlayLightAttackAnimation()
+    public void SetRunning(bool isRunning)
     {
-        animator.SetTrigger("LightAttack");
+        Animator.SetBool("IsRunning", isRunning);
     }
 
-    public void PlayHeavyAttackAnimation()
+    public void StartAttack(AttackType attackType)
     {
-        animator.SetTrigger("HeavyAttack");
+        OnAttackStart?.Invoke(attackType);
+        Animator.SetTrigger(attackType == AttackType.Light ? "LightAttack" : "HeavyAttack");
     }
 
-    public void PlayAttackInterruptAnimation()
+    public void EndAttack()
     {
-        animator.SetTrigger("AttackInterrupt");
+        OnAttackEnd?.Invoke();
     }
 
     private void AttackHitFrame()
@@ -102,8 +38,4 @@ public class RoleAnimatorController : MonoBehaviour
         OnAttackHitFrame?.Invoke();
     }
 
-    private void AttackEnd()
-    {
-        // Attack completion is driven by the player state machine.
-    }
 }
