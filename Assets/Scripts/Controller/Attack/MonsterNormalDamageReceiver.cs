@@ -8,16 +8,33 @@ public class MonsterNormalDamageReceiver : DamageReceiverBase
 {
     private MonsterContext monsterContext;
     private IMonsterRuntimeSystem monsterRuntimeSystem;
+    private MonsterStateMachine monsterStateMachine;
+    private MonsterStunnedState stunnedState;
 
     private void Awake()
     {
         monsterContext = GetComponent<MonsterContext>();
         monsterRuntimeSystem = this.GetSystem<IMonsterRuntimeSystem>();
+        monsterStateMachine = monsterContext.MonsterStateMachine;
+        if (monsterStateMachine != null)
+        {
+            stunnedState = new MonsterStunnedState();
+            monsterStateMachine.RegisterState(stunnedState);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (monsterStateMachine != null && stunnedState != null)
+            monsterStateMachine.StateMachine.RemoveState(stunnedState);
     }
 
     public override void GetDamage(DamageInfo damageInfo)
     {
         // 普通怪物不做减伤，直接按伤害段数和每段数值扣血。
-        monsterRuntimeSystem.ChangeCurHealth(monsterContext, -damageInfo.hintCount * damageInfo.hintValue);
+        float damage = damageInfo.hintCount * damageInfo.hintValue;
+        monsterRuntimeSystem.ChangeCurHealth(monsterContext, -damage);
+        if (damage > 0f && monsterStateMachine != null)
+            monsterStateMachine.ChangeState<MonsterStunnedState>(0.2f);
     }
 }
