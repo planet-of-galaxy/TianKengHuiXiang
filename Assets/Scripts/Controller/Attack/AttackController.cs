@@ -21,7 +21,7 @@ public class AttackController : MonoBehaviour, IController
     {
         roleContext = GetComponent<RoleContext>();
         weaponInstanceSystem = this.GetSystem<IWeaponInstanceSystem>();
-        roleAnimatorController = GetComponentInChildren<RoleAnimatorController>(true);
+        roleAnimatorController = roleContext.RoleAnimatorController;
         RefreshWeapon();
     }
 

@@ -3,19 +3,20 @@ using UnityEngine;
 /// <summary>
 /// 持有并驱动玩家状态机。
 /// </summary>
+[RequireComponent(typeof(RoleContext))]
 public class PlayerStateMachine : MonoBehaviour
 {
     private StateMachine<PlayerStateMachine> _stateMachine;
-    [SerializeField] private RoleAnimatorController roleAnimatorController;
+    private RoleContext roleContext;
 
     public RoleAnimatorController RoleAnimatorController
     {
         get
         {
-            if (roleAnimatorController == null)
-                roleAnimatorController = GetComponentInChildren<RoleAnimatorController>(true);
+            if (roleContext == null)
+                roleContext = GetComponent<RoleContext>();
 
-            return roleAnimatorController;
+            return roleContext.RoleAnimatorController;
         }
     }
 
