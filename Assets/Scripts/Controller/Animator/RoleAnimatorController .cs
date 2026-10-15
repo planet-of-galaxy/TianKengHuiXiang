@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 
 [RequireComponent(typeof(Animator))]
@@ -7,7 +7,9 @@ public class RoleAnimatorController : MonoBehaviour
     private Animator animator;
     private StateMachine<PlayerStateMachine> stateMachine;
     private PlayerMoveState moveState;
+    private PlayerAttackState attackState;
 
+    public Action OnAttackStart;
     public Action OnAttackHitFrame;
     public Action OnAttackEnd;
 
@@ -32,6 +34,7 @@ public class RoleAnimatorController : MonoBehaviour
         if (stateMachine != null)
             stateMachine.OnStateChanged -= HandleStateChanged;
 
+        HandleAttackStateChanged(null);
         stateMachine = null;
         moveState = null;
         animator.SetBool("IsRunning", false);
@@ -40,9 +43,28 @@ public class RoleAnimatorController : MonoBehaviour
 
     private void HandleStateChanged(StateBase<PlayerStateMachine> state)
     {
+        HandleAttackStateChanged(state as PlayerAttackState);
         moveState = state as PlayerMoveState;
         animator.SetBool("IsRunning", moveState?.IsRunning ?? false);
         PlayMoveAnimation(moveState?.Vertical ?? 0f, moveState?.Horizontal ?? 0f);
+    }
+
+    private void HandleAttackStateChanged(PlayerAttackState nextAttackState)
+    {
+        if (attackState == nextAttackState) return;
+
+        bool wasAttacking = attackState != null;
+        attackState = nextAttackState;
+        if (wasAttacking)
+            OnAttackEnd?.Invoke();
+
+        if (attackState == null) return;
+
+        OnAttackStart?.Invoke();
+        if (attackState.attackType == AttackType.Light)
+            PlayLightAttackAnimation();
+        else
+            PlayHeavyAttackAnimation();
     }
 
     private void LateUpdate()
@@ -82,6 +104,6 @@ public class RoleAnimatorController : MonoBehaviour
 
     private void AttackEnd()
     {
-        OnAttackEnd?.Invoke();
+        // Attack completion is driven by the player state machine.
     }
 }

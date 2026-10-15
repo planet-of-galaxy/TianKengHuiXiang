@@ -1,4 +1,4 @@
-using QFramework;
+﻿using QFramework;
 using UnityEngine;
 
 /// <summary>将角色攻击输入转发给当前武器，并在武器切换后更新引用。</summary>
@@ -10,7 +10,6 @@ public class AttackController : MonoBehaviour, IController
     private bool enableDebugLog = true;
 
     private RoleContext roleContext;
-    private AttackListener attackListener;
     private IWeaponInstanceSystem weaponInstanceSystem;
     private WeaponContext weaponContext;
     private IAttack attack;
@@ -20,20 +19,12 @@ public class AttackController : MonoBehaviour, IController
     private void Awake()
     {
         roleContext = GetComponent<RoleContext>();
-        attackListener = GetComponent<AttackListener>();
-        if (attackListener == null)
-        {
-            attackListener = gameObject.AddComponent<AttackListener>();
-        }
-
         weaponInstanceSystem = this.GetSystem<IWeaponInstanceSystem>();
         RefreshWeapon();
     }
 
     private void OnEnable()
     {
-        attackListener.OnLightAttackKeyPressed += DoLightAttack;
-        attackListener.OnHeavyAttackKeyPressed += DoHeavyAttack;
         weaponInstanceSystem.OnWeaponChanged += HandleWeaponChanged;
         LogDebug("已订阅攻击输入和武器切换事件。");
         RefreshWeapon();
@@ -41,12 +32,6 @@ public class AttackController : MonoBehaviour, IController
 
     private void OnDisable()
     {
-        if (attackListener != null)
-        {
-            attackListener.OnLightAttackKeyPressed -= DoLightAttack;
-            attackListener.OnHeavyAttackKeyPressed -= DoHeavyAttack;
-        }
-
         if (weaponInstanceSystem != null)
         {
             weaponInstanceSystem.OnWeaponChanged -= HandleWeaponChanged;
