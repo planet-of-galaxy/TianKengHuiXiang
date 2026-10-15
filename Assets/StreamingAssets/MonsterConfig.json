@@ -2,7 +2,7 @@
   "monsters": [
     {
       "monsterId": 0,
-      "name": "史莱姆",
+      "name": "默认怪物",
       "moveSpeed": 2.0,
       "health": 10.0
     }
