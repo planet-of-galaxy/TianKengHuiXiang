@@ -8,16 +8,33 @@ public class PlayerNormalDamageReceiver : DamageReceiverBase
 {
     private RoleContext roleContext;
     private IRoleRuntimeSystem roleRuntimeSystem;
+    private PlayerStateMachine playerStateMachine;
+    private PlayerStunnedState stunnedState;
 
     private void Awake()
     {
         roleContext = GetComponent<RoleContext>();
         roleRuntimeSystem = this.GetSystem<IRoleRuntimeSystem>();
+        playerStateMachine = roleContext.PlayerStateMachine;
+        if (playerStateMachine != null)
+        {
+            stunnedState = new PlayerStunnedState();
+            playerStateMachine.RegisterState(stunnedState);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (playerStateMachine != null && stunnedState != null)
+            playerStateMachine.StateMachine.RemoveState(stunnedState);
     }
 
     public override void GetDamage(DamageInfo damageInfo)
     {
         // 不做减伤，直接按伤害段数和每段数值扣血。
-        roleRuntimeSystem.ChangeCurHealth(roleContext, -damageInfo.hintCount * damageInfo.hintValue);
+        float damage = damageInfo.hintCount * damageInfo.hintValue;
+        roleRuntimeSystem.ChangeCurHealth(roleContext, -damage);
+        if (damage > 0f && playerStateMachine != null)
+            playerStateMachine.ChangeState<PlayerStunnedState>(0.2f);
     }
 }

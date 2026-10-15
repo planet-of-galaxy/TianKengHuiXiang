@@ -86,6 +86,7 @@ public class StateMachine<TOwner> where TOwner : class
     /// </summary>
     public void Start<TState>() where TState : StateBase<TOwner>
     {
+        if (CurrentState != null && !CurrentState.CanExit) return;
         CurrentState = GetState<TState>();
         CurrentState.OnEnter();
         OnStateChanged?.Invoke(CurrentState);
@@ -96,6 +97,7 @@ public class StateMachine<TOwner> where TOwner : class
     /// </summary>
     public void ChangeState<TState>() where TState : StateBase<TOwner>
     {
+        if (CurrentState != null && !CurrentState.CanExit) return;
         var next = GetState<TState>();
         if (next == CurrentState) return;
 
@@ -104,6 +106,24 @@ public class StateMachine<TOwner> where TOwner : class
         CurrentState = next;
         CurrentState.OnEnter();
         OnStateChanged?.Invoke(CurrentState);
+    }
+
+    public void ChangeState<TState>(float parameter) where TState : StateBase<TOwner>
+    {
+        if (CurrentState != null && !CurrentState.CanExit) return;
+        var next = GetState<TState>();
+        if (next == CurrentState) return;
+
+        PreviousState = CurrentState;
+        CurrentState?.OnExit();
+        CurrentState = next;
+        CurrentState.OnEnter(parameter);
+        OnStateChanged?.Invoke(CurrentState);
+    }
+
+    public bool HasState<TState>() where TState : StateBase<TOwner>
+    {
+        return _states.ContainsKey(typeof(TState));
     }
 
     public void Update(float deltaTime)
@@ -121,6 +141,7 @@ public class StateMachine<TOwner> where TOwner : class
     /// </summary>
     public void RevertState()
     {
+        if (CurrentState != null && !CurrentState.CanExit) return;
         if (PreviousState == null)
         {
             Debug.LogWarning("[StateMachine] 没有可回退的状态");

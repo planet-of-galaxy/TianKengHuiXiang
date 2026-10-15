@@ -75,6 +75,8 @@ public class TestState : GameProcedureStateBase
 
         roleSystem.AddPlayerMoveController(player);
         roleSystem.AddAttackController(player);
+        roleSystem.AddPlayerNormalDamageReceiver(player);
+
         if (player.GetComponent<WeaponChanger>() == null)
         {
             player.gameObject.AddComponent<WeaponChanger>();

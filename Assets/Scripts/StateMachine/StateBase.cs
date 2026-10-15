@@ -6,6 +6,8 @@ public abstract class StateBase<TOwner> where TOwner : class
     public StateMachine<TOwner> StateMachine { get; internal set; }
     public TOwner Owner => StateMachine.Owner;
 
+    public virtual bool CanExit => true;
+
     /// <summary>
     /// 当前激活的子状态机（无子状态时为 null），供外层状态机进行层级查询
     /// </summary>
@@ -15,6 +17,8 @@ public abstract class StateBase<TOwner> where TOwner : class
     /// 进入状态时调用
     /// </summary>
     public virtual void OnEnter() { }
+
+    public virtual void OnEnter(float parameter) => OnEnter();
 
     /// <summary>
     /// 每帧更新

@@ -56,6 +56,11 @@ public class PlayerStateMachine : MonoBehaviour
         _stateMachine?.RemoveState<T>();
     }
 
+    public void ChangeState<T>(float parameter) where T : StateBase<PlayerStateMachine>
+    {
+        StateMachine.ChangeState<T>(parameter);
+    }
+
     private void Update()
     {
         StateMachine.Update(Time.deltaTime);

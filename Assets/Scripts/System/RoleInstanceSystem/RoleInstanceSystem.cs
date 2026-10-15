@@ -34,6 +34,9 @@ public interface IRoleInstanceSystem : ISystem
     /// <summary>移除角色的 AttackController 和 AttackListener。</summary>
     void RemoveAttackController(RoleContext roleContext);
 
+    /// <summary>为角色添加普通玩家伤害接收组件，已有组件直接复用。</summary>
+    void AddPlayerNormalDamageReceiver(RoleContext roleContext);
+
     /// <summary>按运行时 id 获取已创建的角色实例；不存在或已销毁时返回 null。</summary>
     RoleContext TryGetRoleInstance(int roleRuntimeId);
 }
@@ -184,6 +187,20 @@ public class RoleInstanceSystem : AbstractSystem, IRoleInstanceSystem
         {
             listener.enabled = false;
             Object.DestroyImmediate(listener);
+        }
+    }
+
+    public void AddPlayerNormalDamageReceiver(RoleContext roleContext)
+    {
+        if (roleContext == null)
+        {
+            Debug.LogError("[RoleInstanceSystem] AddPlayerNormalDamageReceiver 收到 null。");
+            return;
+        }
+
+        if (roleContext.GetComponent<PlayerNormalDamageReceiver>() == null)
+        {
+            roleContext.gameObject.AddComponent<PlayerNormalDamageReceiver>();
         }
     }
 

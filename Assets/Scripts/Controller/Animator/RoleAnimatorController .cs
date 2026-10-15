@@ -22,6 +22,11 @@ public class RoleAnimatorController : MonoBehaviour
         Animator.SetBool("IsRunning", isRunning);
     }
 
+    public void PlayHitAnimation()
+    {
+        Animator.SetTrigger("Hit");
+    }
+
     public void StartAttack(AttackType attackType)
     {
         OnAttackStart?.Invoke(attackType);
