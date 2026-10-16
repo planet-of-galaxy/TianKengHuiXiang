@@ -15,11 +15,8 @@ public class AttackListener : MonoBehaviour, IController, IAttackListener
     private PlayerStateMachine playerStateMachine;
     private PlayerAttackState attackState;
 
-    private float _lightPressTime;
-    private bool _isLightPressing;
-    private float _heavyPressTime;
-    private bool _isHeavyPressing;
-    private bool _heavyAttackTriggered;
+    private float _pressTime;
+    private bool _isPressing;
     private IGamePauseSystem pauseSystem;
 
     public IArchitecture GetArchitecture() => TianArchitecture.Interface;
@@ -51,41 +48,20 @@ public class AttackListener : MonoBehaviour, IController, IAttackListener
 
         if (Input.GetMouseButtonDown(0))
         {
-            _lightPressTime = Time.time;
-            _isLightPressing = true;
+            _pressTime = Time.time;
+            _isPressing = true;
         }
 
-        if (Input.GetMouseButtonUp(0) && _isLightPressing)
+        if (_isPressing && Time.time - _pressTime >= heavyAttackHoldTime)
         {
-            _isLightPressing = false;
-            if (Time.time - _lightPressTime < heavyAttackHoldTime)
-            {
-                BeginAttack(AttackType.Light);
-            }
-        }
-
-        if (Input.GetMouseButtonDown(1))
-        {
-            _heavyPressTime = Time.time;
-            _isHeavyPressing = true;
-            _heavyAttackTriggered = false;
-        }
-
-        if (!_isHeavyPressing)
-        {
-            return;
-        }
-
-        if (!_heavyAttackTriggered && Time.time - _heavyPressTime >= heavyAttackHoldTime)
-        {
-            _heavyAttackTriggered = true;
+            _isPressing = false;
             BeginAttack(AttackType.Heavy);
         }
 
-        if (Input.GetMouseButtonUp(1))
+        if (Input.GetMouseButtonUp(0) && _isPressing)
         {
-            _isHeavyPressing = false;
-            _heavyAttackTriggered = false;
+            _isPressing = false;
+            BeginAttack(AttackType.Light);
         }
     }
 
@@ -131,8 +107,6 @@ public class AttackListener : MonoBehaviour, IController, IAttackListener
 
     private void ResetPress()
     {
-        _isLightPressing = false;
-        _isHeavyPressing = false;
-        _heavyAttackTriggered = false;
+        _isPressing = false;
     }
 }
