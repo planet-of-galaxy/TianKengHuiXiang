@@ -22,6 +22,9 @@ public class WeaponConfig
 [System.Serializable]
 public class WeaponAttackConfig
 {
+    /// <summary>Resources-relative animation path without the file extension. Empty uses the default clip.</summary>
+    public string animationClip;
+
     public DamageType damageType;
     public float attackPower;
     public float attackSpeed;

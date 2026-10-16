@@ -9,6 +9,7 @@ public class WeaponChanger : MonoBehaviour, IController
     private RoleContext roleContext;
     private IPackageSystem packageSystem;
     private IWeaponInstanceSystem weaponInstanceSystem;
+    private IResourceStorage resourceStorage;
     private RolePackageInfo package;
     private IUnRegister heldIndexRegistration;
     private PropItemInfo heldItem;
@@ -21,6 +22,7 @@ public class WeaponChanger : MonoBehaviour, IController
         roleContext = GetComponent<RoleContext>();
         packageSystem = this.GetSystem<IPackageSystem>();
         weaponInstanceSystem = this.GetSystem<IWeaponInstanceSystem>();
+        resourceStorage = this.GetUtility<IResourceStorage>();
     }
 
     private void OnEnable()
@@ -64,6 +66,17 @@ public class WeaponChanger : MonoBehaviour, IController
 
     private void ChangeWeapon(PropItemInfo item)
     {
+        int configId = item is WeaponItemInfo heldWeapon ? heldWeapon.configId : -1;
+        var config = this.GetUtility<IWeaponConfigProvider>().GetWeaponConfig(configId);
+        string path = config?.lightAttack?.animationClip;
+        AnimationClip clip = null;
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            clip = resourceStorage.Load<AnimationClip>(path);
+        }
+
+        roleContext.RoleAnimatorController?.UpdateAttackAnimation(clip);
+
         if (item is WeaponItemInfo weapon)
         {
             // 实例系统负责停用并销毁旧武器，并通知攻击控制器更新引用。
@@ -74,4 +87,5 @@ public class WeaponChanger : MonoBehaviour, IController
             weaponInstanceSystem.RemoveWeapon(roleContext);
         }
     }
+
 }
