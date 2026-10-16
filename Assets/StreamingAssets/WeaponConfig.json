@@ -42,7 +42,7 @@
         "attackPower": 10.0,
         "attackSpeed": 1.0,
         "attackRange": 1.5,
-        "attackDuration": 0.3,
+        "attackDuration": 2,
         "attackWindup": 0.2,
         "criticalRate": 0.1,
         "criticalMultiplier": 1.5,
