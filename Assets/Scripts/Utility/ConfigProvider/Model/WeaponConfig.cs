@@ -10,6 +10,9 @@ public class WeaponConfig
     /// </summary>
     public string icon;
 
+    /// <summary>Resources-relative animator override controller path without the file extension.</summary>
+    public string animationOverrideController;
+
     public float durability;
 
     public WeaponAttackConfig lightAttack;
@@ -22,9 +25,6 @@ public class WeaponConfig
 [System.Serializable]
 public class WeaponAttackConfig
 {
-    /// <summary>Resources-relative animation path without the file extension. Empty uses the default clip.</summary>
-    public string animationClip;
-
     public DamageType damageType;
     public float attackPower;
     public float attackSpeed;

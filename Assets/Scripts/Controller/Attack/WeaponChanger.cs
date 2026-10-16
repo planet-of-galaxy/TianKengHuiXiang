@@ -68,14 +68,14 @@ public class WeaponChanger : MonoBehaviour, IController
     {
         int configId = item is WeaponItemInfo heldWeapon ? heldWeapon.configId : -1;
         var config = this.GetUtility<IWeaponConfigProvider>().GetWeaponConfig(configId);
-        string path = config?.lightAttack?.animationClip;
-        AnimationClip clip = null;
+        string path = config?.animationOverrideController;
+        AnimatorOverrideController overrideController = null;
         if (!string.IsNullOrWhiteSpace(path))
         {
-            clip = resourceStorage.Load<AnimationClip>(path);
+            overrideController = resourceStorage.Load<AnimatorOverrideController>(path);
         }
 
-        roleContext.RoleAnimatorController?.UpdateAttackAnimation(clip);
+        roleContext.RoleAnimatorController?.ReplaceAnimation(overrideController);
 
         if (item is WeaponItemInfo weapon)
         {

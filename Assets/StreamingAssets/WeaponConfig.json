@@ -4,9 +4,9 @@
       "weaponId": -1,
       "name": "无武器",
       "icon": "",
+      "animationOverrideController": "Montion/Attack/NoWeapon",
       "durability": 0.0,
       "lightAttack": {
-        "animationClip": "Montion/Attack/punching",
         "damageType": "Melee",
         "attackPower": 5.0,
         "attackSpeed": 1.5,
@@ -35,9 +35,9 @@
       "weaponId": 0,
       "name": "高尔夫球杆",
       "icon": "UI/PropItem/Weapon/icon_golf",
+      "animationOverrideController": "Montion/Attack/MeleeOneHand",
       "durability": 100.0,
       "lightAttack": {
-        "animationClip": "Montion/Attack/standing_melee_attack_horizontal",
         "damageType": "Blunt",
         "attackPower": 10.0,
         "attackSpeed": 1.0,

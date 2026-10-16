@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Animator))]
@@ -8,49 +7,14 @@ public class RoleAnimatorController : MonoBehaviour
     private Animator animator;
     private Animator Animator => animator != null ? animator : animator = GetComponent<Animator>();
 
-    private const string DefaultLightAttackClipName = "punching";
-    private RuntimeAnimatorController originalAnimatorController;
-    private AnimatorOverrideController overrideController;
-    private readonly Dictionary<string, AnimationClip> defaultClips = new();
-
-    /// <summary>Replace the light attack clip. Null restores its original animation.</summary>
-    public bool UpdateAttackAnimation(AnimationClip clip)
+    /// <summary>Replace the animator controller with the weapon's animation overrides.</summary>
+    public bool ReplaceAnimation(AnimatorOverrideController overrideController)
     {
-        return ReplaceAnimation(DefaultLightAttackClipName, clip);
-    }
-
-    /// <summary>Replace a clip by its original name. Null restores the original override or clip.</summary>
-    public bool ReplaceAnimation(string originalClipName, AnimationClip clip)
-    {
-        if (string.IsNullOrEmpty(originalClipName)) return false;
         if (overrideController == null)
-        {
-            if (Animator.runtimeAnimatorController == null) return false;
-            originalAnimatorController = Animator.runtimeAnimatorController;
-            overrideController = new AnimatorOverrideController(originalAnimatorController);
-            var overrides = new List<KeyValuePair<AnimationClip, AnimationClip>>();
-            overrideController.GetOverrides(overrides);
-            foreach (var entry in overrides)
-                defaultClips[entry.Key.name] = entry.Value != null ? entry.Value : entry.Key;
-            Animator.runtimeAnimatorController = overrideController;
-        }
+            throw new ArgumentNullException(nameof(overrideController));
 
-        if (!defaultClips.TryGetValue(originalClipName, out var defaultClip))
-        {
-            Debug.LogWarning($"[RoleAnimatorController] Animation '{originalClipName}' was not found.", this);
-            return false;
-        }
-
-        overrideController[originalClipName] = clip != null ? clip : defaultClip;
+        Animator.runtimeAnimatorController = overrideController;
         return true;
-    }
-
-    private void OnDestroy()
-    {
-        if (overrideController == null) return;
-        if (animator != null && animator.runtimeAnimatorController == overrideController)
-            animator.runtimeAnimatorController = originalAnimatorController;
-        Destroy(overrideController);
     }
 
     public Action<AttackType> OnAttackStart;
