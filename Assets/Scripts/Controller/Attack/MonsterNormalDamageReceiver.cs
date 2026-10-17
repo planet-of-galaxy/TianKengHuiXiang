@@ -10,6 +10,7 @@ public class MonsterNormalDamageReceiver : DamageReceiverBase
     private IMonsterRuntimeSystem monsterRuntimeSystem;
     private MonsterStateMachine monsterStateMachine;
     private MonsterStunnedState stunnedState;
+    private MonsterDeathState deathState;
 
     private void Awake()
     {
@@ -20,6 +21,8 @@ public class MonsterNormalDamageReceiver : DamageReceiverBase
         {
             stunnedState = new MonsterStunnedState();
             monsterStateMachine.RegisterState(stunnedState);
+            deathState = new MonsterDeathState(this);
+            monsterStateMachine.RegisterState(deathState);
         }
     }
 
@@ -27,11 +30,13 @@ public class MonsterNormalDamageReceiver : DamageReceiverBase
     {
         if (monsterStateMachine != null && stunnedState != null)
             monsterStateMachine.StateMachine.RemoveState(stunnedState);
+        if (monsterStateMachine != null && deathState != null)
+            monsterStateMachine.StateMachine.RemoveState(deathState);
     }
 
     public override void GetDamage(DamageInfo damageInfo)
     {
-        if (monsterStateMachine == null || monsterStateMachine.StateMachine.IsInState<MonsterDeathState>()) return;
+        if (IsDisabled || monsterStateMachine == null) return;
         if (!monsterRuntimeSystem.TryGetMonsterRuntime(monsterContext, out var runtimeInfo)) return;
 
         // 普通怪物不做减伤，直接按伤害段数和每段数值扣血。

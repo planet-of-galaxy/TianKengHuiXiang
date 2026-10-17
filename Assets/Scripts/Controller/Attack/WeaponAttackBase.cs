@@ -25,7 +25,7 @@ public abstract class WeaponAttackBase : MonoBehaviour, IAttack
         }
 
         var receiver = target.GetComponentInParent<IGetDamage>();
-        if (receiver == null)
+        if (receiver == null || receiver.IsDisabled)
         {
             return false;
         }

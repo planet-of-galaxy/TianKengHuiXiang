@@ -28,7 +28,6 @@ public class MonsterStateMachine : MonoBehaviour
             {
                 _stateMachine = new StateMachine<MonsterStateMachine>(this);
                 RegisterState(new MonsterDefualtState());
-                RegisterState(new MonsterDeathState());
             }
 
             return _stateMachine;

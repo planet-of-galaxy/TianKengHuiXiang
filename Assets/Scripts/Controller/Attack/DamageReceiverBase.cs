@@ -7,6 +7,8 @@ using UnityEngine;
 /// </summary>
 public abstract class DamageReceiverBase : MonoBehaviour, IGetDamage, IController
 {
+    public bool IsDisabled { get; set; }
+
     public IArchitecture GetArchitecture() => TianArchitecture.Interface;
 
     /// <summary>接收一次伤害。</summary>

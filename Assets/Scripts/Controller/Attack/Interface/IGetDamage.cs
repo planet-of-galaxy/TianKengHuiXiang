@@ -3,5 +3,7 @@
 /// </summary>
 public interface IGetDamage
 {
+    bool IsDisabled { get; }
+
     void GetDamage(DamageInfo damageInfo);
 }

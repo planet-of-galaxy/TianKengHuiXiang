@@ -10,6 +10,7 @@ public class PlayerNormalDamageReceiver : DamageReceiverBase
     private IRoleRuntimeSystem roleRuntimeSystem;
     private PlayerStateMachine playerStateMachine;
     private PlayerStunnedState stunnedState;
+    private PlayerDeathState deathState;
 
     private void Awake()
     {
@@ -20,6 +21,8 @@ public class PlayerNormalDamageReceiver : DamageReceiverBase
         {
             stunnedState = new PlayerStunnedState();
             playerStateMachine.RegisterState(stunnedState);
+            deathState = new PlayerDeathState(this);
+            playerStateMachine.RegisterState(deathState);
         }
     }
 
@@ -27,11 +30,13 @@ public class PlayerNormalDamageReceiver : DamageReceiverBase
     {
         if (playerStateMachine != null && stunnedState != null)
             playerStateMachine.StateMachine.RemoveState(stunnedState);
+        if (playerStateMachine != null && deathState != null)
+            playerStateMachine.StateMachine.RemoveState(deathState);
     }
 
     public override void GetDamage(DamageInfo damageInfo)
     {
-        if (playerStateMachine == null || playerStateMachine.StateMachine.IsInState<PlayerDeathState>()) return;
+        if (IsDisabled || playerStateMachine == null) return;
         if (!this.GetModel<IRoleRuntimeModel>().TryGetRoleRuntime(roleContext.RoleRuntimeIndex, out var runtimeInfo)) return;
 
         // 不做减伤，直接按伤害段数和每段数值扣血。
