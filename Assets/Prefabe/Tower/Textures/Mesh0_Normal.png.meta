@@ -1,0 +1,13 @@
+fileFormatVersion: 2
+guid: 6b9dea485bd94c8881dbbbfb1ff3b08b
+TextureImporter:
+  serializedVersion: 13
+  externalObjects: {}
+  mipmaps:
+    enableMipMap: 1
+    sRGBTexture: 0
+  textureType: 1
+  textureShape: 1
+  maxTextureSize: 2048
+  alphaSource: 1
+  alphaIsTransparency: 0
