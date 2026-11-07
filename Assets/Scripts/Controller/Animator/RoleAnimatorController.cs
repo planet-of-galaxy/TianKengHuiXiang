@@ -32,6 +32,11 @@ public class RoleAnimatorController : MonoBehaviour
         Animator.SetBool("IsRunning", isRunning);
     }
 
+    public void SetMining(bool isMining)
+    {
+        Animator.SetBool("IsMining", isMining);
+    }
+
     public void PlayHitAnimation()
     {
         Animator.SetTrigger("Hit");
