@@ -9,6 +9,8 @@ public class PlayerMineState : StateBase<PlayerStateMachine>, IStateWithParamete
 
     private int enteredFrame;
     private IGamePauseSystem pauseSystem;
+    private IMiningSystem miningSystem;
+    private RoleContext miner;
 
     public IArchitecture GetArchitecture() => TianArchitecture.Interface;
 
@@ -26,6 +28,14 @@ public class PlayerMineState : StateBase<PlayerStateMachine>, IStateWithParamete
 
         enteredFrame = Time.frameCount;
         pauseSystem = this.GetSystem<IGamePauseSystem>();
+        miningSystem = this.GetSystem<IMiningSystem>();
+        miner = Owner.GetComponent<RoleContext>();
+        if (!miningSystem.IsAvailable(Context))
+        {
+            ExitMining();
+            return;
+        }
+        miningSystem.BeginMining(miner);
 
         var direction = Context.Position - Owner.transform.position;
         direction.y = 0f;
@@ -40,6 +50,7 @@ public class PlayerMineState : StateBase<PlayerStateMachine>, IStateWithParamete
     public override void OnExit()
     {
         LastExitFrame = Time.frameCount;
+        if (miner != null) miningSystem?.EndMining(miner);
         Owner.RoleAnimatorController?.SetMining(false);
     }
 
@@ -49,8 +60,17 @@ public class PlayerMineState : StateBase<PlayerStateMachine>, IStateWithParamete
         if (Time.frameCount == enteredFrame || (pauseSystem != null && pauseSystem.IsPaused)) return;
         // 使用原始输入，避免平滑轴的残余值在松开移动键后取消挖矿。
         var moveInput = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
-        if (moveInput.sqrMagnitude <= 0.001f) return;
+        if (moveInput.sqrMagnitude > 0.001f)
+        {
+            ExitMining();
+            return;
+        }
+        if (!miningSystem.TickMining(miner, Context, deltaTime)) ExitMining();
 
+    }
+
+    private void ExitMining()
+    {
         if (StateMachine.HasState<PlayerMoveState>())
             Owner.ChangeState<PlayerMoveState>();
         else

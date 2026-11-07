@@ -21,6 +21,7 @@ public class PackageController : MonoBehaviour, IController
     private PropPanelController propPanel;
 
     private IUnRegister capacityUnRegister;
+    private IUnRegister goldUnRegister;
     private readonly List<IUnRegister> durabilityUnRegisters = new List<IUnRegister>();
 
     /// <summary>
@@ -116,6 +117,7 @@ public class PackageController : MonoBehaviour, IController
     private void RefreshAll()
     {
         RefreshTitle();
+        RefreshGold();
         RefreshCells();
     }
 
@@ -138,6 +140,15 @@ public class PackageController : MonoBehaviour, IController
     /// 道具 / 空 / 锁定（见 PropPanelController.Refresh）。
     /// 道具按各自的槽位号（PropItemInfo.index）落位，不是按列表顺序。
     /// </summary>
+    private void RefreshGold()
+    {
+        if (panel.Gold == null) return;
+        var role = CurrentRole;
+        int gold = role != null && roleRuntimeModel.TryGetRoleRuntime(role.RoleRuntimeIndex, out var info)
+            ? info.Gold.Value : 0;
+        panel.Gold.text = $"黄金：{gold:N0}";
+    }
+
     private void RefreshCells()
     {
         if (propPanel == null)
@@ -174,6 +185,11 @@ public class PackageController : MonoBehaviour, IController
     {
         UnRegisterPackage();
 
+        // 黄金属于角色运行时数据，即使尚未创建背包也要订阅。
+        if (roleContext != null && roleRuntimeModel.TryGetRoleRuntime(roleContext.RoleRuntimeIndex, out var runtime))
+            goldUnRegister = runtime.Gold.Register(_ => RefreshGold());
+        RefreshGold();
+
         if (roleContext == null || !packageModel.TryGetPackage(roleContext.RoleRuntimeIndex, out var package))
         {
             return;
@@ -188,6 +204,8 @@ public class PackageController : MonoBehaviour, IController
     /// <summary>退掉当前背包的容量与物品订阅；未订阅时是空操作。</summary>
     private void UnRegisterPackage()
     {
+        goldUnRegister?.UnRegister();
+        goldUnRegister = null;
         capacityUnRegister?.UnRegister();
         capacityUnRegister = null;
         UnRegisterWeaponDurabilities();

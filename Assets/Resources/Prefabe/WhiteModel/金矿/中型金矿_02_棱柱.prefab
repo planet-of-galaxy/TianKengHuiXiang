@@ -69,6 +69,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 476df015a5fcb7c47827d3a09a5e28cd, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5661059772732828149}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 476df015a5fcb7c47827d3a09a5e28cd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5661059772732828150}
   m_SourcePrefab: {fileID: 100100000, guid: 476df015a5fcb7c47827d3a09a5e28cd, type: 3}
 --- !u!4 &5271676055093700163 stripped
 Transform:
@@ -95,6 +98,7 @@ MonoBehaviour:
   triggerController: {fileID: 4968501940579352202}
   billboardController: {fileID: 6163157520099985791}
   mineId: 8
+  initialGold: 6000
 --- !u!1 &351839541488462701
 GameObject:
   m_ObjectHideFlags: 0
@@ -368,3 +372,24 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!65 &5661059772732828150
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2246019281165873811}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 2, y: 2, z: 2}
+  m_Center: {x: 0, y: 1, z: 0}

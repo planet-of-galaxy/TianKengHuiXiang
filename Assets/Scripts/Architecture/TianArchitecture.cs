@@ -31,6 +31,7 @@ public class TianArchitecture : Architecture<TianArchitecture>
         this.RegisterSystem<IWeaponInstanceSystem>(new WeaponInstanceSystem());
         this.RegisterSystem<IWareHouseSystem>(new WareHouseSystem());
         this.RegisterSystem<IGamePauseSystem>(new GamePauseSystem());
+        this.RegisterSystem<IMiningSystem>(new MiningSystem());
         this.RegisterSystem<IMonsterRuntimeSystem>(new MonsterRuntimeSystem());
         this.RegisterSystem<IQuestSystem>(new QuestSystem());
 
