@@ -1,6 +1,12 @@
 /// <summary>
-/// 状态基类，TOwner 为状态机持有者类型
+/// 支持在进入状态时接收指定类型的参数。
 /// </summary>
+public interface IStateWithParameter<in TParameter>
+{
+    void OnEnter(TParameter parameter);
+}
+
+/// <summary>状态基类，TOwner 为状态机持有者类型。</summary>
 public abstract class StateBase<TOwner> where TOwner : class
 {
     public StateMachine<TOwner> StateMachine { get; internal set; }

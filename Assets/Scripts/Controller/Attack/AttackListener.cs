@@ -15,6 +15,9 @@ public class AttackListener : MonoBehaviour, IController, IAttackListener
     private PlayerStateMachine playerStateMachine;
     private PlayerAttackState attackState;
 
+    private bool IsMining => playerStateMachine != null
+        && playerStateMachine.StateMachine.IsInState<PlayerMineState>();
+
     private float _pressTime;
     private bool _isPressing;
     private IGamePauseSystem pauseSystem;
@@ -39,8 +42,8 @@ public class AttackListener : MonoBehaviour, IController, IAttackListener
 
     private void Update()
     {
-        // 暂停时丢弃进行中的按键，恢复后需要重新按下才能攻击。
-        if (pauseSystem != null && pauseSystem.IsPaused)
+        // 暂停或挖矿时丢弃进行中的按键，恢复后需要重新按下才能攻击。
+        if ((pauseSystem != null && pauseSystem.IsPaused) || IsMining)
         {
             ResetPress();
             return;
@@ -81,6 +84,12 @@ public class AttackListener : MonoBehaviour, IController, IAttackListener
 
     private void BeginAttack(AttackType type)
     {
+        if (IsMining)
+        {
+            ResetPress();
+            return;
+        }
+
         if (IsAttacking || playerStateMachine == null) return;
 
         // Ensure an initial state exists even if input is driven before the owner's Awake.

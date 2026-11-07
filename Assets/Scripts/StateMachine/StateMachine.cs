@@ -121,6 +121,20 @@ public class StateMachine<TOwner> where TOwner : class
         OnStateChanged?.Invoke(CurrentState);
     }
 
+    public void ChangeState<TState, TParameter>(TParameter parameter)
+        where TState : StateBase<TOwner>, IStateWithParameter<TParameter>
+    {
+        if (CurrentState != null && !CurrentState.CanExit) return;
+        var next = GetState<TState>();
+        if (next == CurrentState) return;
+
+        PreviousState = CurrentState;
+        CurrentState?.OnExit();
+        CurrentState = next;
+        ((IStateWithParameter<TParameter>)next).OnEnter(parameter);
+        OnStateChanged?.Invoke(CurrentState);
+    }
+
     public bool HasState<TState>() where TState : StateBase<TOwner>
     {
         return _states.ContainsKey(typeof(TState));

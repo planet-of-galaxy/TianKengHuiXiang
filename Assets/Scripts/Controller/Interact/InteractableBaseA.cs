@@ -6,6 +6,20 @@ public abstract class InteractableBaseA : MonoBehaviour, IInteractableA, IContro
     [SerializeField] private TriggerController triggerController;
     [SerializeField] private BillboardController billboardController;
 
+    private bool interactionEnabled = true;
+
+    /// <summary>暂停交互时同时隐藏提示，恢复后重新按范围和聚焦条件注册。</summary>
+    protected void SetInteractionEnabled(bool isEnabled)
+    {
+        if (interactionEnabled == isEnabled) return;
+        interactionEnabled = isEnabled;
+        if (!isEnabled) StopListening();
+
+        if (billboardController != null)
+            billboardController.gameObject.SetActive(isEnabled
+                && triggerController != null && triggerController.IsTargetInside());
+    }
+
     /// <summary>交互A快捷键：默认读取全局 HotKeyUtility.InteractA，子类可按需重写。</summary>
     public virtual KeyCode InteractKey => HotKeyUtility.InteractA;
 
@@ -30,7 +44,8 @@ public abstract class InteractableBaseA : MonoBehaviour, IInteractableA, IContro
         }
 
         // 判断当前是否有带目标 tag 的物体在触发区内，决定初始启用状态
-        billboardController.gameObject.SetActive(triggerController.IsTargetInside());
+        if (billboardController != null)
+            billboardController.gameObject.SetActive(interactionEnabled && triggerController.IsTargetInside());
     }
 
     private void OnDestroy()
@@ -54,7 +69,7 @@ public abstract class InteractableBaseA : MonoBehaviour, IInteractableA, IContro
     {
         if (billboardController != null)
         {
-            billboardController.gameObject.SetActive(true);
+            billboardController.gameObject.SetActive(interactionEnabled);
         }
     }
 
@@ -78,6 +93,7 @@ public abstract class InteractableBaseA : MonoBehaviour, IInteractableA, IContro
 
     public void StartListening()
     {
+        if (!interactionEnabled) return;
         InteractSystem.Instance.AddTarget(this);
     }
 

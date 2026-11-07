@@ -62,6 +62,13 @@ public class PlayerStateMachine : MonoBehaviour
         StateMachine.ChangeState<T>(parameter);
     }
 
+    public void ChangeState<T>(MineContext context)
+        where T : StateBase<PlayerStateMachine>, IStateWithParameter<MineContext>
+    {
+        if (context == null) throw new System.ArgumentNullException(nameof(context));
+        StateMachine.ChangeState<T, MineContext>(context);
+    }
+
     private void Update()
     {
         StateMachine.Update(Time.deltaTime);
