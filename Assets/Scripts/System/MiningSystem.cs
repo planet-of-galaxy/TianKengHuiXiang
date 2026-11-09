@@ -68,7 +68,7 @@ public class MiningSystem : AbstractSystem, IMiningSystem
     public void BeginMining(RoleContext miner) => elapsedTimes[miner] = 0f;
     public void EndMining(RoleContext miner) => elapsedTimes.Remove(miner);
 
-    /// <returns>目标和挖矿者仍有效且金矿尚未耗尽。</returns>
+    /// <returns>目标和挖矿者仍有效、金矿尚未耗尽且背包仍可接收金矿。</returns>
     public bool TickMining(RoleContext miner, MineContext context, float deltaTime)
     {
         if (miner == null || !IsAvailable(context)) return false;
@@ -78,13 +78,24 @@ public class MiningSystem : AbstractSystem, IMiningSystem
         elapsed += Mathf.Max(0f, deltaTime);
         var mine = mines[context.MineId];
         var packageSystem = this.GetSystem<IPackageSystem>();
-        // 每 SecondsPerGold 秒向背包添加 1 个金矿道具；背包已满时跳过本次结算但计时照常扣除。
+        // 无法接收金矿时立即结束挖矿，不等待下一次结算，也不扣除矿脉数量。
+        if (!packageSystem.HasSpaceForItem(miner.RoleRuntimeIndex, ItemType.Item, GoldOreItemId))
+        {
+            TipUtility.ShowTip("背包已满");
+            EndMining(miner);
+            return false;
+        }
+
+        // 每 SecondsPerGold 秒采集 1 个金矿，只有成功入包后才扣除矿脉数量。
         while (elapsed >= SecondsPerGold && mine.RemainingGold > 0)
         {
+            if (!packageSystem.AddItemToRolePackage(miner.RoleRuntimeIndex, ItemType.Item, GoldOreItemId))
+            {
+                EndMining(miner);
+                return false;
+            }
             elapsed -= SecondsPerGold;
-            int amount = Mathf.Min(1, mine.RemainingGold);
-            mine.RemainingGold -= amount;
-            packageSystem.AddItemToRolePackage(miner.RoleRuntimeIndex, ItemType.Item, GoldOreItemId);
+            mine.RemainingGold -= 1;
         }
         elapsedTimes[miner] = elapsed;
         if (mine.RemainingGold > 0) return true;

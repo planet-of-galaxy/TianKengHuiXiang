@@ -34,9 +34,12 @@ public interface IPackageSystem : ISystem
 
     /// <summary>
     /// 依据 ItemType + configId 生成一件道具并加入指定角色的背包（仅内存，不落盘，需手动调用 SavePackage）。
-    /// 背包已满、角色不存在或 configId 无法解析时返回 false。
+    /// 背包已满时显示拾取失败提示并返回 false；角色不存在或 configId 无法解析时也返回 false。
     /// </summary>
     bool AddItemToRolePackage(int roleRuntimeId, ItemType itemType, int configId);
+
+    /// <summary>检查背包是否能容纳一件指定物品（含已有堆叠），不修改物品；背包不存在或容量无效时返回 false。</summary>
+    bool HasSpaceForItem(int roleRuntimeId, ItemType itemType, int configId);
 
     /// <summary>
     /// 按 amount 调整指定槽位的物品数量：正数增加，负数减少，结果不大于 0 时归零并移除物品。
@@ -244,6 +247,7 @@ public class PackageSystem : AbstractSystem, IPackageSystem
         if (package.Items.Count >= package.capacity.Value)
         {
             Debug.LogWarning($"[PackageSystem] 角色 {roleRuntimeId} 背包已满（{package.capacity.Value}），无法加入道具");
+            TipUtility.ShowTip("背包已满");
             return false;
         }
 
@@ -261,14 +265,20 @@ public class PackageSystem : AbstractSystem, IPackageSystem
         return true;
     }
 
-    /// <summary>
-    /// 在背包中查找同 configId 且尚未达到 maxStack 的普通道具槽位，并入 1 个；成功返回 true。
-    /// maxStack 取自 ItemConfig：未配置或 <= 1 视为不可堆叠，返回 false。
-    /// </summary>
-    private bool TryStackItem(RolePackageInfo package, int configId, int roleRuntimeId)
+    public bool HasSpaceForItem(int roleRuntimeId, ItemType itemType, int configId)
+    {
+        if (!packageModel.TryGetPackage(roleRuntimeId, out var package) || package.capacity.Value < 1)
+            return false;
+
+        return package.Items.Count < package.capacity.Value
+            || (itemType == ItemType.Item && FindStackableItem(package, configId) != null);
+    }
+
+    /// <summary>查找可继续堆叠的同类普通道具，容量检查与实际入包共用此规则。</summary>
+    private ItemItemInfo FindStackableItem(RolePackageInfo package, int configId)
     {
         var config = itemConfigProvider.GetItemConfig(configId);
-        if (config == null || config.maxStack <= 1) return false;
+        if (config == null || config.maxStack <= 1) return null;
 
         foreach (var item in package.Items)
         {
@@ -276,14 +286,23 @@ public class PackageSystem : AbstractSystem, IPackageSystem
                 && existing.configId == configId
                 && existing.num != null && existing.num.Value < config.maxStack)
             {
-                existing.num.Value += 1;
-                OnItemNumChanged?.Invoke(roleRuntimeId, existing);
-                Debug.Log($"[PackageSystem] 已将道具(configId={configId}) 堆叠到角色 {roleRuntimeId} 的已有槽位（未保存）");
-                return true;
+                return existing;
             }
         }
 
-        return false;
+        return null;
+    }
+
+    /// <summary>将一件普通道具并入已有的未满堆叠，成功后通知数量变化。</summary>
+    private bool TryStackItem(RolePackageInfo package, int configId, int roleRuntimeId)
+    {
+        var existing = FindStackableItem(package, configId);
+        if (existing == null) return false;
+
+        existing.num.Value += 1;
+        OnItemNumChanged?.Invoke(roleRuntimeId, existing);
+        Debug.Log($"[PackageSystem] 已将道具(configId={configId}) 堆叠到角色 {roleRuntimeId} 的已有槽位（未保存）");
+        return true;
     }
 
     /// <inheritdoc />
