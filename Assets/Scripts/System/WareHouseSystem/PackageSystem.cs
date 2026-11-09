@@ -109,6 +109,11 @@ public class PackageSystem : AbstractSystem, IPackageSystem
     private IWeaponConfigProvider weaponConfigProvider;
 
     /// <summary>
+    /// 道具配置提供者，用于拾取道具时校验 configId 合法性。
+    /// </summary>
+    private IItemConfigProvider itemConfigProvider;
+
+    /// <summary>
     /// AddPackageListener 创建的空物体，用于挂载 PackageListener。
     /// 切换场景时该物体可能被 Unity 销毁，此时与 null 相等，AddPackageListener 会重新创建。
     /// </summary>
@@ -129,6 +134,7 @@ public class PackageSystem : AbstractSystem, IPackageSystem
         packageModel = (PackageModel)this.GetModel<IPackageModel>();
         roleRuntimeModel = this.GetModel<IRoleRuntimeModel>();
         weaponConfigProvider = this.GetUtility<IWeaponConfigProvider>();
+        itemConfigProvider = this.GetUtility<IItemConfigProvider>();
         storage = this.GetUtility<IJsonStorage>();
 
         InitPackageModel();
@@ -383,6 +389,20 @@ public class PackageSystem : AbstractSystem, IPackageSystem
                     type = ItemType.Weapon,
                     num = 1,
                     durability = weaponConfig.durability,
+                };
+            case ItemType.Item:
+                var itemConfig = itemConfigProvider.GetItemConfig(configId);
+                if (itemConfig == null)
+                {
+                    Debug.LogWarning($"[PackageSystem] 未知的道具 configId={configId}，已忽略");
+                    return null;
+                }
+                return new PropItemData
+                {
+                    configId = configId,
+                    type = ItemType.Item,
+                    num = 1,
+                    durability = 0f,
                 };
             default:
                 Debug.LogWarning($"[PackageSystem] 暂不支持的道具类型 {itemType}");

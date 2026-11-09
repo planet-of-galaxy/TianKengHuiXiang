@@ -115,6 +115,15 @@ public class PropItemController : MonoBehaviour, IController
                         return;
                     }
                     break;
+
+                case ItemType.Item:
+                    if (item is ItemItemInfo)
+                    {
+                        index = itemIndex;
+                        SetItem((ItemItemInfo)item);
+                        return;
+                    }
+                    break;
             }
 
             Debug.LogError($"[PropItemController] 无法显示道具类型 {item.Type}（configId={item.configId}）");
@@ -132,6 +141,16 @@ public class PropItemController : MonoBehaviour, IController
         {
             Panel.SetDurability(weapon.durability?.Value ?? 0f, config.durability);
         }
+    }
+
+    private void SetItem(ItemItemInfo item)
+    {
+        var config = this.GetUtility<IItemConfigProvider>().GetItemConfig(item.configId);
+        Panel.SetName(config?.name);
+        Panel.SetIcon(LoadIcon(config?.icon));
+        Panel.SetNum(item.num?.Value ?? 1);
+        // 普通道具无耐久条，传入 0/0 让 UI 隐藏耐久显示
+        Panel.SetDurability(0f, 0f);
     }
 
     private Sprite LoadIcon(string path)
