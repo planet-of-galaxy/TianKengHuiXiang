@@ -1,0 +1,10 @@
+{
+  "tools": [
+    {
+      "toolId": 0,
+      "name": "石镐",
+      "icon": "UI/PropItem/Tool/Stone_Pickaxe_Icon",
+      "prefab": "Prefabe/Tool/石镐"
+    }
+  ]
+}
