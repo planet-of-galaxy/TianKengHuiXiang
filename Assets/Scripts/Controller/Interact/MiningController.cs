@@ -89,7 +89,24 @@ public class MiningController : InteractableBaseA
         if (player.StateMachine.PreviousState is PlayerMineState previousMine
             && previousMine.LastExitFrame == Time.frameCount) return;
 
+        // 只有装备镐类工具时才允许挖掘，否则给出提示并保持当前状态。
+        if (!IsHoldingPickaxe(role))
+        {
+            TipUtility.ShowTip("需要装备镐头");
+            return;
+        }
+
         player.ChangeState<PlayerMineState>(context);
         UpdateInteractionAvailability();
+    }
+
+    /// <summary>判断角色当前手持物是否为镐类工具。</summary>
+    private bool IsHoldingPickaxe(RoleContext role)
+    {
+        var heldItem = this.GetSystem<IPackageSystem>().GetHeldItem(role.RoleRuntimeIndex);
+        if (heldItem == null || heldItem.Type != ItemType.Weapon) return false;
+
+        var config = this.GetUtility<IWeaponConfigProvider>().GetWeaponConfig(heldItem.configId);
+        return config != null && config.weaponType == WeaponType.Pickaxe;
     }
 }

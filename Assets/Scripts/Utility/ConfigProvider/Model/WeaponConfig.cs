@@ -4,6 +4,9 @@ public class WeaponConfig
     public int weaponId;
     public string name;
 
+    /// <summary>武器类型，用于区分特殊工具行为（如石镐可挖掘金矿）。</summary>
+    public WeaponType weaponType;
+
     /// <summary>
     /// 道具图标的 Resources 路径（不含扩展名），如 "UI/PropItem/Weapon/icon_golf"。
     /// 留空表示该武器没有图标，UI 不显示图标。

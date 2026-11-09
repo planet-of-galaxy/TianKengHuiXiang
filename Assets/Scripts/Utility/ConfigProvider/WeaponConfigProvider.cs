@@ -20,6 +20,9 @@ public class WeaponConfigProvider : IWeaponConfigProvider
         // 支持配置中使用 "Blunt" 等伤害类型名称。
         LitJson.JsonMapper.RegisterImporter<string, DamageType>(
             value => (DamageType)System.Enum.Parse(typeof(DamageType), value));
+        // 支持配置中使用 "Pickaxe" 等武器类型名称。
+        LitJson.JsonMapper.RegisterImporter<string, WeaponType>(
+            value => (WeaponType)System.Enum.Parse(typeof(WeaponType), value));
         var data = _storage.Load<WeaponConfigData>("WeaponConfig");
 
         if (data?.weapons == null || data.weapons.Length == 0)
