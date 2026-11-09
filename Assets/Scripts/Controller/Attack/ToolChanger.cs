@@ -1,10 +1,10 @@
 using QFramework;
 using UnityEngine;
 
-/// <summary>根据角色背包的手持物创建并切换武器实例。</summary>
+/// <summary>根据角色背包的手持物类型切换实例，未手持时恢复徒手。</summary>
 [DisallowMultipleComponent]
 [RequireComponent(typeof(RoleContext))]
-public class WeaponChanger : MonoBehaviour, IController
+public class ToolChanger : MonoBehaviour, IController
 {
     private RoleContext roleContext;
     private IPackageSystem packageSystem;
@@ -41,7 +41,7 @@ public class WeaponChanger : MonoBehaviour, IController
     {
         heldIndexRegistration?.UnRegister();
         heldIndexRegistration = null;
-        if (package != null) package.OnItemListChanged -= RefreshWeapon;
+        if (package != null) package.OnItemListChanged -= RefreshHeldItem;
         package = null;
         heldItem = null;
     }
@@ -50,23 +50,28 @@ public class WeaponChanger : MonoBehaviour, IController
     {
         package = this.GetModel<IPackageModel>().GetOrCreatePackage(roleContext.RoleRuntimeIndex);
 
-        heldIndexRegistration = package.heldIndex.Register(_ => RefreshWeapon());
-        package.OnItemListChanged += RefreshWeapon;
+        heldIndexRegistration = package.heldIndex.Register(_ => RefreshHeldItem());
+        package.OnItemListChanged += RefreshHeldItem;
         heldItem = packageSystem.GetHeldItem(roleContext.RoleRuntimeIndex);
-        ChangeWeapon(heldItem);
+        ChangeTool(heldItem);
     }
 
-    private void RefreshWeapon()
+    private void RefreshHeldItem()
     {
         var item = packageSystem.GetHeldItem(roleContext.RoleRuntimeIndex);
         if (ReferenceEquals(heldItem, item)) return;
         heldItem = item;
-        ChangeWeapon(item);
+        ChangeTool(item);
     }
 
-    private void ChangeWeapon(PropItemInfo item)
+    private void ChangeTool(PropItemInfo item)
     {
-        int configId = item is WeaponItemInfo heldWeapon ? heldWeapon.configId : -1;
+        // 配置 id 在不同类型之间可能相同，必须先按类型分发。
+        int configId = item?.Type switch
+        {
+            ItemType.Weapon => item.configId,
+            _ => -1
+        };
         var config = this.GetUtility<IWeaponConfigProvider>().GetWeaponConfig(configId);
         string path = config?.animationOverrideController;
         AnimatorOverrideController overrideController = null;
@@ -75,16 +80,21 @@ public class WeaponChanger : MonoBehaviour, IController
             overrideController = resourceStorage.Load<AnimatorOverrideController>(path);
         }
 
-        roleContext.RoleAnimatorController?.ReplaceAnimation(overrideController);
-
-        if (item is WeaponItemInfo weapon)
+        if (overrideController != null)
         {
-            // 实例系统负责停用并销毁旧武器，并通知攻击控制器更新引用。
-            weaponInstanceSystem.CreateWeapon(roleContext, weapon.configId);
+            roleContext.RoleAnimatorController?.ReplaceAnimation(overrideController);
         }
-        else
+
+        switch (item?.Type)
         {
-            weaponInstanceSystem.RemoveWeapon(roleContext);
+            case ItemType.Weapon:
+                // 实例系统负责停用并销毁旧武器，并通知攻击控制器更新引用。
+                weaponInstanceSystem.CreateWeapon(roleContext, item.configId);
+                break;
+            default:
+                // 未手持或尚未支持的类型恢复徒手。
+                weaponInstanceSystem.RemoveWeapon(roleContext);
+                break;
         }
     }
 

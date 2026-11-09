@@ -188,11 +188,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8967914658855804442, guid: e90e171bc2b7d460986a404a098b4bea, type: 3}
       propertyPath: itemType
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 8967914658855804442, guid: e90e171bc2b7d460986a404a098b4bea, type: 3}
       propertyPath: configId
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8967914658855804442, guid: e90e171bc2b7d460986a404a098b4bea, type: 3}
       propertyPath: destroyOnPickup

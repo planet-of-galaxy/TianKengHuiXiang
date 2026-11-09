@@ -86,9 +86,8 @@ public class WeaponInstanceSystem : AbstractSystem, IWeaponInstanceSystem
             return;
         }
 
+        // 保留预制体的位置和旋转，作为相对手持挂点的局部偏移。
         var weapon = Object.Instantiate(prefabContext, roleContext.WeaponPosition, false);
-        weapon.transform.localPosition = Vector3.zero;
-        weapon.transform.localRotation = Quaternion.identity;
 
         if (!weapons.TryGetValue(roleContext, out var previousWeapon))
         {

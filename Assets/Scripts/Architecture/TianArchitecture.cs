@@ -12,7 +12,6 @@ public class TianArchitecture : Architecture<TianArchitecture>
         this.RegisterUtility<IResourceStorage>(new ResourceStorage());
         this.RegisterUtility<IRoleConfigProvider>(new RoleConfigProvider(this.GetUtility<IJsonStorage>()));
         this.RegisterUtility<IWeaponConfigProvider>(new WeaponConfigProvider(this.GetUtility<IJsonStorage>()));
-        this.RegisterUtility<IToolConfigProvider>(new ToolConfigProvider(this.GetUtility<IJsonStorage>()));
         this.RegisterUtility<IMonsterConfigProvider>(new MonsterConfigProvider(this.GetUtility<IJsonStorage>()));
 
         // 注册Model

@@ -391,8 +391,6 @@ public class WareHousePanel : UIPanel, IController
         {
             case ItemType.Weapon:
                 return weaponConfigProvider.GetWeaponConfig(item.configId)?.name ?? $"武器{item.configId}";
-            case ItemType.Tool:
-                return this.GetUtility<IToolConfigProvider>().GetToolConfig(item.configId)?.name ?? $"工具{item.configId}";
             default:
                 return $"道具{item.configId}";
         }

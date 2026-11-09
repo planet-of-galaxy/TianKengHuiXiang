@@ -36,20 +36,20 @@ public class PropItemController : MonoBehaviour, IController
         CloseMenu();
     }
 
-    private bool TryGetWeapon(out RolePackageInfo package, out WeaponItemInfo weapon)
+    private bool TryGetHeldItem(out RolePackageInfo package, out PropItemInfo heldItem)
     {
         package = null;
-        weapon = null;
+        heldItem = null;
         if (Panel.IsLocked || index < 0) return false;
         var role = this.GetSystem<IRoleInstanceSystem>().ControllingRole;
         if (role == null || !this.GetModel<IPackageModel>().TryGetPackage(role.RoleRuntimeIndex, out package))
             return false;
         foreach (var item in package.Items)
         {
-            if (item != null && item.index == index && item.Type == ItemType.Weapon)
+            if (item != null && item.index == index)
             {
-                weapon = item as WeaponItemInfo;
-                return weapon != null;
+                heldItem = item;
+                return true;
             }
         }
         return false;
@@ -58,7 +58,7 @@ public class PropItemController : MonoBehaviour, IController
     private void OpenMenu()
     {
         CloseMenu();
-        if (!TryGetWeapon(out var package, out var weapon)) return;
+        if (!TryGetHeldItem(out var package, out var heldItem)) return;
         if (Panel.MenuSpawnPoint == null) return;
         var prefab = this.GetUtility<IResourceStorage>().Load<GameObject>("UI/Panel/PropItemMenu");
         if (prefab == null) return;
@@ -76,8 +76,8 @@ public class PropItemController : MonoBehaviour, IController
         menu.Initialize(equipped ? "卸下" : "装备", Panel.MenuFont, () =>
             {
                 // 菜单打开后角色、物品或装备状态可能已发生变化，执行前重新校验。
-                if (!TryGetWeapon(out var currentPackage, out var currentWeapon)
-                    || !ReferenceEquals(package, currentPackage) || !ReferenceEquals(weapon, currentWeapon)
+                if (!TryGetHeldItem(out var currentPackage, out var currentItem)
+                    || !ReferenceEquals(package, currentPackage) || !ReferenceEquals(heldItem, currentItem)
                     || (currentPackage.heldIndex.Value == index) != equipped) return;
                 currentPackage.heldIndex.Value = equipped ? -1 : index;
             });
@@ -115,14 +115,6 @@ public class PropItemController : MonoBehaviour, IController
                         return;
                     }
                     break;
-                case ItemType.Tool:
-                    if (item is ToolItemInfo tool)
-                    {
-                        index = itemIndex;
-                        SetTool(tool);
-                        return;
-                    }
-                    break;
             }
 
             Debug.LogError($"[PropItemController] 无法显示道具类型 {item.Type}（configId={item.configId}）");
@@ -140,15 +132,6 @@ public class PropItemController : MonoBehaviour, IController
         {
             Panel.SetDurability(weapon.durability?.Value ?? 0f, config.durability);
         }
-    }
-
-    private void SetTool(ToolItemInfo tool)
-    {
-        var config = this.GetUtility<IToolConfigProvider>().GetToolConfig(tool.configId);
-        Panel.SetName(config?.name);
-        Panel.SetIcon(LoadIcon(config?.icon));
-        Panel.SetNum(tool.num?.Value ?? 1);
-        Panel.HideDurability();
     }
 
     private Sprite LoadIcon(string path)

@@ -77,9 +77,9 @@ public class TestState : GameProcedureStateBase
         roleSystem.AddAttackController(player);
         roleSystem.AddPlayerNormalDamageReceiver(player);
 
-        if (player.GetComponent<WeaponChanger>() == null)
+        if (player.GetComponent<ToolChanger>() == null)
         {
-            player.gameObject.AddComponent<WeaponChanger>();
+            player.gameObject.AddComponent<ToolChanger>();
         }
 
         if (player.ThirdViewCinema != null)

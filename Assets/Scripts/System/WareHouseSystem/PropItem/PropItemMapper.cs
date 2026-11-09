@@ -24,13 +24,6 @@ public static class PropItemMapper
                     num = new BindableProperty<int>(data.num),
                     durability = new BindableProperty<float>(data.durability),
                 };
-            case ItemType.Tool:
-                return new ToolItemInfo
-                {
-                    index = data.index,
-                    configId = data.configId,
-                    num = new BindableProperty<int>(data.num),
-                };
             default:
                 Debug.LogWarning($"[PropItem] 未知的道具类型 {data.type}，已跳过 configId={data.configId}");
                 return null;
@@ -69,12 +62,6 @@ public static class PropItemMapper
                 }
 
                 Debug.LogError($"[PropItem] {info.GetType().Name} 声明为 {ItemType.Weapon} 但不是 WeaponItemInfo，无法落盘（configId={info.configId}）");
-                return null;
-
-            case ItemType.Tool:
-                if (info is ToolItemInfo) break;
-
-                Debug.LogError($"[PropItem] {info.GetType().Name} 声明为 {ItemType.Tool} 但不是 ToolItemInfo，无法落盘（configId={info.configId}）");
                 return null;
 
             default:
