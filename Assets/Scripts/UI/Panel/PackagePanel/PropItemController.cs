@@ -115,6 +115,14 @@ public class PropItemController : MonoBehaviour, IController
                         return;
                     }
                     break;
+                case ItemType.Tool:
+                    if (item is ToolItemInfo tool)
+                    {
+                        index = itemIndex;
+                        SetTool(tool);
+                        return;
+                    }
+                    break;
             }
 
             Debug.LogError($"[PropItemController] 无法显示道具类型 {item.Type}（configId={item.configId}）");
@@ -125,8 +133,8 @@ public class PropItemController : MonoBehaviour, IController
     private void SetWeapon(WeaponItemInfo weapon)
     {
         var config = this.GetUtility<IWeaponConfigProvider>().GetWeaponConfig(weapon.configId);
-        Panel.SetName(config.name);
-        Panel.SetIcon(LoadIcon(config));
+        Panel.SetName(config?.name);
+        Panel.SetIcon(LoadIcon(config?.icon));
         Panel.SetNum(weapon.num?.Value ?? 1);
         if (config != null)
         {
@@ -134,14 +142,23 @@ public class PropItemController : MonoBehaviour, IController
         }
     }
 
-    private Sprite LoadIcon(WeaponConfig config)
+    private void SetTool(ToolItemInfo tool)
     {
-        if (config == null || string.IsNullOrEmpty(config.icon)) return null;
+        var config = this.GetUtility<IToolConfigProvider>().GetToolConfig(tool.configId);
+        Panel.SetName(config?.name);
+        Panel.SetIcon(LoadIcon(config?.icon));
+        Panel.SetNum(tool.num?.Value ?? 1);
+        Panel.HideDurability();
+    }
 
-        if (!iconCache.TryGetValue(config.icon, out var sprite))
+    private Sprite LoadIcon(string path)
+    {
+        if (string.IsNullOrEmpty(path)) return null;
+
+        if (!iconCache.TryGetValue(path, out var sprite))
         {
-            sprite = this.GetUtility<IResourceStorage>().Load<Sprite>(config.icon);
-            iconCache[config.icon] = sprite;
+            sprite = this.GetUtility<IResourceStorage>().Load<Sprite>(path);
+            iconCache[path] = sprite;
         }
 
         return sprite;

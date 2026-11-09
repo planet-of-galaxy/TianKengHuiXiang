@@ -107,6 +107,7 @@ public class PackageSystem : AbstractSystem, IPackageSystem
     /// 武器配置提供者，用于拾取武器时初始化耐久，以及修复武器时限制满耐久。
     /// </summary>
     private IWeaponConfigProvider weaponConfigProvider;
+    private IToolConfigProvider toolConfigProvider;
 
     /// <summary>
     /// AddPackageListener 创建的空物体，用于挂载 PackageListener。
@@ -129,6 +130,7 @@ public class PackageSystem : AbstractSystem, IPackageSystem
         packageModel = (PackageModel)this.GetModel<IPackageModel>();
         roleRuntimeModel = this.GetModel<IRoleRuntimeModel>();
         weaponConfigProvider = this.GetUtility<IWeaponConfigProvider>();
+        toolConfigProvider = this.GetUtility<IToolConfigProvider>();
         storage = this.GetUtility<IJsonStorage>();
 
         InitPackageModel();
@@ -383,6 +385,18 @@ public class PackageSystem : AbstractSystem, IPackageSystem
                     type = ItemType.Weapon,
                     num = 1,
                     durability = weaponConfig.durability,
+                };
+            case ItemType.Tool:
+                if (!toolConfigProvider.HasTool(configId))
+                {
+                    Debug.LogWarning($"[PackageSystem] 未知的工具 configId={configId}，已忽略");
+                    return null;
+                }
+                return new PropItemData
+                {
+                    configId = configId,
+                    type = ItemType.Tool,
+                    num = 1,
                 };
             default:
                 Debug.LogWarning($"[PackageSystem] 暂不支持的道具类型 {itemType}");

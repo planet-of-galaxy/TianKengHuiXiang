@@ -387,8 +387,15 @@ public class WareHousePanel : UIPanel, IController
 
     private string GetItemName(PropItemInfo item)
     {
-        var config = weaponConfigProvider.GetWeaponConfig(item.configId);
-        return config != null ? config.name : $"道具{item.configId}";
+        switch (item.Type)
+        {
+            case ItemType.Weapon:
+                return weaponConfigProvider.GetWeaponConfig(item.configId)?.name ?? $"武器{item.configId}";
+            case ItemType.Tool:
+                return this.GetUtility<IToolConfigProvider>().GetToolConfig(item.configId)?.name ?? $"工具{item.configId}";
+            default:
+                return $"道具{item.configId}";
+        }
     }
 
     // ==================== UI 工具 ====================

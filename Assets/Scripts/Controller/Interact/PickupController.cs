@@ -10,10 +10,10 @@ using UnityEngine;
 public class PickupController : InteractableBaseA
 {
     [Header("拾取道具")]
-    [Tooltip("道具类型：目前仅支持 Weapon")]
+    [Tooltip("道具类型：Weapon（武器）或 Tool（工具）")]
     [SerializeField] private ItemType itemType;
 
-    [Tooltip("对应配置表中的配置 id，例如武器 id（WeaponConfig.json 的 weaponId）")]
+    [Tooltip("对应配置表中的配置 id：WeaponConfig.json 的 weaponId 或 ToolConfig.json 的 toolId")]
     [SerializeField] private int configId;
 
     [Tooltip("拾取成功后是否销毁本物体（测试用，默认 true）")]
