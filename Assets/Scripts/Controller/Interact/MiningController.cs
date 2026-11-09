@@ -6,7 +6,9 @@ using UnityEngine;
 public class MiningController : InteractableBaseA
 {
     [SerializeField, Min(1)] private int mineId = 1;
-    [SerializeField, Min(1)] private int initialGold = 4000;
+
+    [Tooltip("金矿可采集的黄金个数：大型 12、中型 6、小型 4")]
+    [SerializeField, Min(1)] private int initialGold = 4;
 
     public int RemainingGold { get; internal set; } = -1;
     private IMiningSystem miningSystem;

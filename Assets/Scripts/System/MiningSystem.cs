@@ -16,6 +16,9 @@ public interface IMiningSystem : ISystem
 /// <summary>管理金矿登记、逐秒结算与耗尽销毁。</summary>
 public class MiningSystem : AbstractSystem, IMiningSystem
 {
+    /// <summary>采集 1 个黄金所需的持续挖矿时间（秒）。</summary>
+    private const float SecondsPerGold = 10f;
+
     private readonly Dictionary<int, MiningController> mines = new();
     private readonly Dictionary<RoleContext, float> elapsedTimes = new();
     private int nextId = 1;
@@ -73,11 +76,11 @@ public class MiningSystem : AbstractSystem, IMiningSystem
         elapsedTimes.TryGetValue(miner, out float elapsed);
         elapsed += Mathf.Max(0f, deltaTime);
         var mine = mines[context.MineId];
-        // 一帧跨过多秒时补齐结算，最后一笔不会超过剩余储量。
-        while (elapsed >= 1f && mine.RemainingGold > 0)
+        // 每 SecondsPerGold 秒产出 1 个黄金；一帧跨过多个周期时补齐结算，最后一笔不会超过剩余储量。
+        while (elapsed >= SecondsPerGold && mine.RemainingGold > 0)
         {
-            elapsed -= 1f;
-            int amount = Mathf.Min(100, mine.RemainingGold);
+            elapsed -= SecondsPerGold;
+            int amount = Mathf.Min(1, mine.RemainingGold);
             mine.RemainingGold -= amount;
             runtime.Gold.Value += amount;
         }

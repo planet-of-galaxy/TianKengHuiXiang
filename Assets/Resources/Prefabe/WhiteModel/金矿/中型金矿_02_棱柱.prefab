@@ -98,7 +98,7 @@ MonoBehaviour:
   triggerController: {fileID: 4968501940579352202}
   billboardController: {fileID: 6163157520099985791}
   mineId: 8
-  initialGold: 6000
+  initialGold: 6
 --- !u!1 &351839541488462701
 GameObject:
   m_ObjectHideFlags: 0

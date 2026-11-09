@@ -146,7 +146,7 @@ public class PackageController : MonoBehaviour, IController
         var role = CurrentRole;
         int gold = role != null && roleRuntimeModel.TryGetRoleRuntime(role.RoleRuntimeIndex, out var info)
             ? info.Gold.Value : 0;
-        panel.Gold.text = $"黄金：{gold:N0}";
+        panel.Gold.text = $"黄金：{gold}个";
     }
 
     private void RefreshCells()
