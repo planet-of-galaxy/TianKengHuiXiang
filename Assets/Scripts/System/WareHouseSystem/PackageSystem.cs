@@ -224,12 +224,6 @@ public class PackageSystem : AbstractSystem, IPackageSystem
             return false;
         }
 
-        var data = CreateItemData(itemType, configId);
-        if (data == null) return false;
-
-        var item = PropItemMapper.ToPropItemInfo(data);
-        if (item == null) return false;
-
         var package = packageModel.GetOrCreatePackage(roleRuntimeId);
 
         // capacity < 1 说明该背包未初始化：PackageModel 创建背包时会补默认容量，走到这里说明
@@ -241,11 +235,23 @@ public class PackageSystem : AbstractSystem, IPackageSystem
             return false;
         }
 
+        // 可堆叠的普通道具优先并入已有未满的同类槽位，不占用新栏位。
+        if (itemType == ItemType.Item && TryStackItem(package, configId, roleRuntimeId))
+        {
+            return true;
+        }
+
         if (package.Items.Count >= package.capacity.Value)
         {
             Debug.LogWarning($"[PackageSystem] 角色 {roleRuntimeId} 背包已满（{package.capacity.Value}），无法加入道具");
             return false;
         }
+
+        var data = CreateItemData(itemType, configId);
+        if (data == null) return false;
+
+        var item = PropItemMapper.ToPropItemInfo(data);
+        if (item == null) return false;
 
         // 槽位号由背包自己分配（当前最大槽位号 + 1），加入后触发 OnItemListChanged 通知 UI
         package.AddItem(item);
@@ -253,6 +259,31 @@ public class PackageSystem : AbstractSystem, IPackageSystem
 
         Debug.Log($"[PackageSystem] 已将 {itemType}(configId={configId}) 加入角色 {roleRuntimeId} 的背包（未保存）");
         return true;
+    }
+
+    /// <summary>
+    /// 在背包中查找同 configId 且尚未达到 maxStack 的普通道具槽位，并入 1 个；成功返回 true。
+    /// maxStack 取自 ItemConfig：未配置或 <= 1 视为不可堆叠，返回 false。
+    /// </summary>
+    private bool TryStackItem(RolePackageInfo package, int configId, int roleRuntimeId)
+    {
+        var config = itemConfigProvider.GetItemConfig(configId);
+        if (config == null || config.maxStack <= 1) return false;
+
+        foreach (var item in package.Items)
+        {
+            if (item is ItemItemInfo existing
+                && existing.configId == configId
+                && existing.num != null && existing.num.Value < config.maxStack)
+            {
+                existing.num.Value += 1;
+                OnItemNumChanged?.Invoke(roleRuntimeId, existing);
+                Debug.Log($"[PackageSystem] 已将道具(configId={configId}) 堆叠到角色 {roleRuntimeId} 的已有槽位（未保存）");
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <inheritdoc />

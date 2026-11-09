@@ -4,7 +4,7 @@
       "itemId": 0,
       "name": "金矿",
       "icon": "UI/PropItem/Item/icon_gold_mine",
-      "maxStack": 10
+      "maxStack": 9
     }
   ]
 }

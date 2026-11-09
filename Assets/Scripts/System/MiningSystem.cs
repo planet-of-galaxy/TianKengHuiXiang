@@ -16,8 +16,11 @@ public interface IMiningSystem : ISystem
 /// <summary>管理金矿登记、逐秒结算与耗尽销毁。</summary>
 public class MiningSystem : AbstractSystem, IMiningSystem
 {
-    /// <summary>采集 1 个黄金所需的持续挖矿时间（秒）。</summary>
+    /// <summary>采集 1 个金矿所需的持续挖矿时间（秒）。</summary>
     private const float SecondsPerGold = 10f;
+
+    /// <summary>金矿道具在 ItemConfig 中的 itemId。</summary>
+    private const int GoldOreItemId = 0;
 
     private readonly Dictionary<int, MiningController> mines = new();
     private readonly Dictionary<RoleContext, float> elapsedTimes = new();
@@ -68,21 +71,20 @@ public class MiningSystem : AbstractSystem, IMiningSystem
     /// <returns>目标和挖矿者仍有效且金矿尚未耗尽。</returns>
     public bool TickMining(RoleContext miner, MineContext context, float deltaTime)
     {
-        if (miner == null || !IsAvailable(context)
-            || !this.GetModel<IRoleRuntimeModel>().TryGetRoleRuntime(miner.RoleRuntimeIndex, out var runtime))
-            return false;
+        if (miner == null || !IsAvailable(context)) return false;
         if (this.GetSystem<IGamePauseSystem>().IsPaused) return true;
 
         elapsedTimes.TryGetValue(miner, out float elapsed);
         elapsed += Mathf.Max(0f, deltaTime);
         var mine = mines[context.MineId];
-        // 每 SecondsPerGold 秒产出 1 个黄金；一帧跨过多个周期时补齐结算，最后一笔不会超过剩余储量。
+        var packageSystem = this.GetSystem<IPackageSystem>();
+        // 每 SecondsPerGold 秒向背包添加 1 个金矿道具；背包已满时跳过本次结算但计时照常扣除。
         while (elapsed >= SecondsPerGold && mine.RemainingGold > 0)
         {
             elapsed -= SecondsPerGold;
             int amount = Mathf.Min(1, mine.RemainingGold);
             mine.RemainingGold -= amount;
-            runtime.Gold.Value += amount;
+            packageSystem.AddItemToRolePackage(miner.RoleRuntimeIndex, ItemType.Item, GoldOreItemId);
         }
         elapsedTimes[miner] = elapsed;
         if (mine.RemainingGold > 0) return true;

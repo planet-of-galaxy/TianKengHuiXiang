@@ -18,10 +18,10 @@ public class PackageController : MonoBehaviour, IController
     private IPackageModel packageModel;
     private IRoleRuntimeModel roleRuntimeModel;
     private IRoleInstanceSystem roleInstanceSystem;
+    private IPackageSystem packageSystem;
     private PropPanelController propPanel;
 
     private IUnRegister capacityUnRegister;
-    private IUnRegister goldUnRegister;
     private readonly List<IUnRegister> durabilityUnRegisters = new List<IUnRegister>();
 
     /// <summary>
@@ -71,6 +71,7 @@ public class PackageController : MonoBehaviour, IController
         packageModel = this.GetModel<IPackageModel>();
         roleRuntimeModel = this.GetModel<IRoleRuntimeModel>();
         roleInstanceSystem = this.GetSystem<IRoleInstanceSystem>();
+        packageSystem = this.GetSystem<IPackageSystem>();
 
         propPanel = panel.PropPanelController;
         if (propPanel == null)
@@ -117,7 +118,6 @@ public class PackageController : MonoBehaviour, IController
     private void RefreshAll()
     {
         RefreshTitle();
-        RefreshGold();
         RefreshCells();
     }
 
@@ -133,20 +133,6 @@ public class PackageController : MonoBehaviour, IController
         panel.Title.text = role != null && roleRuntimeModel.TryGetRoleRuntime(role.RoleRuntimeIndex, out var info)
             ? $"背包 - {info.name}"
             : "背包";
-    }
-
-    /// <summary>
-    /// 刷新全部栏位：把当前角色的背包道具列表与容量交给容器，由它决定每个栏位画成
-    /// 道具 / 空 / 锁定（见 PropPanelController.Refresh）。
-    /// 道具按各自的槽位号（PropItemInfo.index）落位，不是按列表顺序。
-    /// </summary>
-    private void RefreshGold()
-    {
-        if (panel.Gold == null) return;
-        var role = CurrentRole;
-        int gold = role != null && roleRuntimeModel.TryGetRoleRuntime(role.RoleRuntimeIndex, out var info)
-            ? info.Gold.Value : 0;
-        panel.Gold.text = $"黄金：{gold}个";
     }
 
     private void RefreshCells()
@@ -185,11 +171,6 @@ public class PackageController : MonoBehaviour, IController
     {
         UnRegisterPackage();
 
-        // 黄金属于角色运行时数据，即使尚未创建背包也要订阅。
-        if (roleContext != null && roleRuntimeModel.TryGetRoleRuntime(roleContext.RoleRuntimeIndex, out var runtime))
-            goldUnRegister = runtime.Gold.Register(_ => RefreshGold());
-        RefreshGold();
-
         if (roleContext == null || !packageModel.TryGetPackage(roleContext.RoleRuntimeIndex, out var package))
         {
             return;
@@ -199,13 +180,15 @@ public class PackageController : MonoBehaviour, IController
         capacityUnRegister = package.capacity.Register(OnCapacityChanged);
         subscribedPackage.OnItemListChanged += OnPackageItemsChanged;
         RegisterWeaponDurabilities(package);
+        // 订阅全局数量变化，过滤当前角色以刷新堆叠数显示
+        packageSystem.OnItemNumChanged += OnSystemItemNumChanged;
     }
 
     /// <summary>退掉当前背包的容量与物品订阅；未订阅时是空操作。</summary>
     private void UnRegisterPackage()
     {
-        goldUnRegister?.UnRegister();
-        goldUnRegister = null;
+        if (packageSystem != null)
+            packageSystem.OnItemNumChanged -= OnSystemItemNumChanged;
         capacityUnRegister?.UnRegister();
         capacityUnRegister = null;
         UnRegisterWeaponDurabilities();
@@ -231,6 +214,14 @@ public class PackageController : MonoBehaviour, IController
         }
 
         RefreshCells();
+    }
+
+    /// <summary>全局道具数量变化时，仅刷新当前受控角色的背包栏位（堆叠数显示）。</summary>
+    private void OnSystemItemNumChanged(int roleRuntimeId, PropItemInfo item)
+    {
+        var role = CurrentRole;
+        if (role != null && role.RoleRuntimeIndex == roleRuntimeId)
+            RefreshCells();
     }
 
     /// <summary>

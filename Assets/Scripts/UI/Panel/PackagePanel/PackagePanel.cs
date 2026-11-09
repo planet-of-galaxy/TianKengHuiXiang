@@ -23,9 +23,6 @@ public class PackagePanel : UIPanel
     [Tooltip("标题文本（TextMeshProUGUI），显示为「背包 - 当前角色名称」。")]
     public TextMeshProUGUI Title;
 
-    [Tooltip("当前受控角色的黄金数量。")]
-    public TextMeshProUGUI Gold;
-
     /// <summary>
     /// 同物体上的 UI 逻辑控制器，OnInit 时取一次。
     /// 这里不加 [RequireComponent]：PackageController 已经声明了依赖 PackagePanel，

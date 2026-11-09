@@ -59,6 +59,8 @@ public class PropItemController : MonoBehaviour, IController
     {
         CloseMenu();
         if (!TryGetHeldItem(out var package, out var heldItem)) return;
+        // 普通道具不支持装备，不弹出菜单。
+        if (heldItem.Type == ItemType.Item) return;
         if (Panel.MenuSpawnPoint == null) return;
         var prefab = this.GetUtility<IResourceStorage>().Load<GameObject>("UI/Panel/PropItemMenu");
         if (prefab == null) return;
