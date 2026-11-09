@@ -7,6 +7,7 @@ public abstract class InteractableBaseA : MonoBehaviour, IInteractableA, IContro
     [SerializeField] private BillboardController billboardController;
 
     private bool interactionEnabled = true;
+    private InteractSystem interactSystem;
 
     /// <summary>暂停交互时同时隐藏提示，恢复后重新按范围和聚焦条件注册。</summary>
     protected void SetInteractionEnabled(bool isEnabled)
@@ -50,13 +51,13 @@ public abstract class InteractableBaseA : MonoBehaviour, IInteractableA, IContro
 
     private void OnDestroy()
     {
-        if (triggerController == null)
-        {
-            return;
-        }
+        StopListening();
 
-        triggerController.OnTriggerEnterEvent.RemoveListener(OnTriggerEntered);
-        triggerController.OnTriggerExitEvent.RemoveListener(OnTriggerExited);
+        if (triggerController != null)
+        {
+            triggerController.OnTriggerEnterEvent.RemoveListener(OnTriggerEntered);
+            triggerController.OnTriggerExitEvent.RemoveListener(OnTriggerExited);
+        }
 
         if (billboardController != null)
         {
@@ -94,12 +95,17 @@ public abstract class InteractableBaseA : MonoBehaviour, IInteractableA, IContro
     public void StartListening()
     {
         if (!interactionEnabled) return;
-        InteractSystem.Instance.AddTarget(this);
+        interactSystem = InteractSystem.Instance;
+        if (interactSystem != null)
+            interactSystem.AddTarget(this);
     }
 
     public void StopListening()
     {
-        InteractSystem.Instance.RemoveTarget(this);
+        // 注销只使用注册时的实例，避免场景清理时重新创建已销毁的单例。
+        if (interactSystem != null)
+            interactSystem.RemoveTarget(this);
+        interactSystem = null;
     }
 
     public IArchitecture GetArchitecture() => TianArchitecture.Interface;
