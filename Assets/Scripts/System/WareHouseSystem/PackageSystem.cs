@@ -260,6 +260,7 @@ public class PackageSystem : AbstractSystem, IPackageSystem
         // 槽位号由背包自己分配（当前最大槽位号 + 1），加入后触发 OnItemListChanged 通知 UI
         package.AddItem(item);
         OnItemAddToPackage?.Invoke(roleRuntimeId, item);
+        BroadcastItemAdded(item, 1);
 
         Debug.Log($"[PackageSystem] 已将 {itemType}(configId={configId}) 加入角色 {roleRuntimeId} 的背包（未保存）");
         return true;
@@ -301,6 +302,7 @@ public class PackageSystem : AbstractSystem, IPackageSystem
 
         existing.num.Value += 1;
         OnItemNumChanged?.Invoke(roleRuntimeId, existing);
+        BroadcastItemAdded(existing, 1);
         Debug.Log($"[PackageSystem] 已将道具(configId={configId}) 堆叠到角色 {roleRuntimeId} 的已有槽位（未保存）");
         return true;
     }
@@ -324,7 +326,25 @@ public class PackageSystem : AbstractSystem, IPackageSystem
         }
 
         OnItemNumChanged?.Invoke(roleRuntimeId, item);
+        if (amount > 0) BroadcastItemAdded(item, amount);
         return true;
+    }
+
+    /// <summary>只广播本次实际增加的数量，不使用堆叠后的总数。</summary>
+    private void BroadcastItemAdded(PropItemInfo item, int amount)
+    {
+        string itemName = item.Type switch
+        {
+            ItemType.Weapon => weaponConfigProvider.GetWeaponConfig(item.configId)?.name,
+            ItemType.Item => itemConfigProvider.GetItemConfig(item.configId)?.name,
+            _ => null,
+        };
+        if (string.IsNullOrWhiteSpace(itemName))
+        {
+            itemName = item.Type == ItemType.Weapon ? $"武器{item.configId}" : $"道具{item.configId}";
+        }
+
+        BroadUtility.Broadcast($"获取{itemName} * {amount}");
     }
 
     /// <inheritdoc />
