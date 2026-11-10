@@ -11,6 +11,7 @@ public class PlayerMineState : StateBase<PlayerStateMachine>, IStateWithParamete
     private IGamePauseSystem pauseSystem;
     private IMiningSystem miningSystem;
     private RoleContext miner;
+    private int displayedRemainingGold = -1;
 
     public IArchitecture GetArchitecture() => TianArchitecture.Interface;
 
@@ -36,6 +37,8 @@ public class PlayerMineState : StateBase<PlayerStateMachine>, IStateWithParamete
             return;
         }
         miningSystem.BeginMining(miner);
+        displayedRemainingGold = -1;
+        UpdateProgressPanel();
 
         var direction = Context.Position - Owner.transform.position;
         direction.y = 0f;
@@ -51,6 +54,7 @@ public class PlayerMineState : StateBase<PlayerStateMachine>, IStateWithParamete
     {
         LastExitFrame = Time.frameCount;
         if (miner != null) miningSystem?.EndMining(miner);
+        ProgressUtility.CloseProgress();
         Owner.RoleAnimatorController?.SetMining(false);
     }
 
@@ -65,8 +69,27 @@ public class PlayerMineState : StateBase<PlayerStateMachine>, IStateWithParamete
             ExitMining();
             return;
         }
-        if (!miningSystem.TickMining(miner, Context, deltaTime)) ExitMining();
+        if (!miningSystem.TickMining(miner, Context, deltaTime))
+        {
+            ExitMining();
+            return;
+        }
+        UpdateProgressPanel();
+    }
 
+    private void UpdateProgressPanel()
+    {
+        int remainingGold = miningSystem.GetRemainingGold(Context.MineId);
+        float progress = miningSystem.GetMiningProgress(miner);
+        if (remainingGold != displayedRemainingGold)
+        {
+            ProgressUtility.ShowProgress($"正在挖掘金矿，剩余{remainingGold}块", progress);
+            displayedRemainingGold = remainingGold;
+        }
+        else
+        {
+            ProgressUtility.SetProgress(progress);
+        }
     }
 
     private void ExitMining()

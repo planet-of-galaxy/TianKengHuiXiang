@@ -8,6 +8,8 @@ public interface IMiningSystem : ISystem
     void Unregister(MiningController mine);
     bool IsAvailable(MineContext context);
     int GetRemainingGold(int mineId);
+    /// <summary>当前单块金矿的采集进度，范围为 0～1。</summary>
+    float GetMiningProgress(RoleContext miner);
     void BeginMining(RoleContext miner);
     void EndMining(RoleContext miner);
     bool TickMining(RoleContext miner, MineContext context, float deltaTime);
@@ -68,6 +70,12 @@ public class MiningSystem : AbstractSystem, IMiningSystem
     public void BeginMining(RoleContext miner) => elapsedTimes[miner] = 0f;
     public void EndMining(RoleContext miner) => elapsedTimes.Remove(miner);
 
+    public float GetMiningProgress(RoleContext miner)
+    {
+        return miner != null && elapsedTimes.TryGetValue(miner, out float elapsed)
+            ? Mathf.Clamp01(elapsed / SecondsPerGold) : 0f;
+    }
+
     /// <returns>目标和挖矿者仍有效、金矿尚未耗尽且背包仍可接收金矿。</returns>
     public bool TickMining(RoleContext miner, MineContext context, float deltaTime)
     {
@@ -96,6 +104,14 @@ public class MiningSystem : AbstractSystem, IMiningSystem
             }
             elapsed -= SecondsPerGold;
             mine.RemainingGold -= 1;
+            // 本块入包后立即检查下一块的容量，装满时不再开始新的采集。
+            if (mine.RemainingGold > 0
+                && !packageSystem.HasSpaceForItem(miner.RoleRuntimeIndex, ItemType.Item, GoldOreItemId))
+            {
+                TipUtility.ShowTip("背包已满");
+                EndMining(miner);
+                return false;
+            }
         }
         elapsedTimes[miner] = elapsed;
         if (mine.RemainingGold > 0) return true;
